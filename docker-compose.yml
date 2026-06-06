@@ -1,0 +1,16 @@
+# Development environment: `docker compose up` for a hot-reloading dev server.
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      # Bind-mount source for live editing; keep container's node_modules.
+      - .:/app
+      - /app/node_modules
+    environment:
+      # Helps file watching detect changes across the bind mount.
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev -- --host
