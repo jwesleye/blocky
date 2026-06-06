@@ -9,7 +9,6 @@ import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { createBrickId } from '@/domain/model/ids'
 import {
   buildConnectionGraph,
-  canPlaceBrick,
   translateBrick,
   mirrorBricks,
   canPlaceGroup,
@@ -120,7 +119,12 @@ export const useBuildStore = create<BuildStore>()(
           const candidate = { id, ...brick }
 
           if (
-            !canPlaceBrick(candidate, Object.values(get().bricks), PART_CATALOG)
+            !canPlaceGroup(
+              [candidate],
+              Object.values(get().bricks),
+              PART_CATALOG,
+              get().baseplateSize,
+            )
           ) {
             return null
           }

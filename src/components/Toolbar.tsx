@@ -9,8 +9,12 @@ export const Toolbar: React.FC = () => {
   const [, setRefresh] = useState(0)
 
   useEffect(() => {
-    const temporalState = temporal.getState()
-    const unsubscribe = (temporalState as any).subscribe?.(() => {
+    const temporalState = temporal.getState() as ReturnType<
+      typeof temporal.getState
+    > & {
+      subscribe?: (listener: () => void) => () => void
+    }
+    const unsubscribe = temporalState.subscribe?.(() => {
       setRefresh((v) => v + 1)
     })
     return () => unsubscribe?.()
