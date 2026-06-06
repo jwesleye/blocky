@@ -1,4 +1,9 @@
+import type Graph from 'graphology'
+import { connectedComponents } from 'graphology-components'
 import { polygonContains, polygonHull } from 'd3-polygon'
+import type { PlacedBrick } from '../model/types'
+import type { PartCatalog } from '../parts/catalog'
+import { getOccupiedCells } from '../parts/footprint'
 
 export type GridPoint = readonly [x: number, z: number]
 
@@ -86,6 +91,77 @@ export function evaluateComponentBalance(
     supportContacts: supportContactList,
     supportFootprint,
   }
+}
+
+type Point2D = [number, number]
+
+/**
+ * Returns the IDs of all bricks that belong to an unbalanced connected
+ * component. For Phase 1 MVP the whole component topples (no smart shear).
+ *
+ * A component is unbalanced when its center-of-mass projection (X/Z) falls
+ * outside the convex hull of the baseplate contact footprint.
+ */
+export function getUnbalancedBricks(
+  bricks: PlacedBrick[],
+  graph: Graph,
+  catalog: PartCatalog,
+): Set<string> {
+  const brickById = new Map<string, PlacedBrick>()
+  for (const brick of bricks) brickById.set(brick.id, brick)
+
+  const unbalanced = new Set<string>()
+  const components = connectedComponents(graph)
+
+  for (const component of components) {
+    const componentBricks = component.map((id) => brickById.get(id)!).filter(Boolean)
+
+    // Skip floating components — grounding handles those
+    const isGrounded = componentBricks.some((b) => b.y === 0)
+    if (!isGrounded) continue
+
+    // Collect support corners (the 4 XZ corners of each cell touching y=0)
+    const supportCorners: Point2D[] = []
+    for (const brick of componentBricks) {
+      if (brick.y !== 0) continue
+      const def = catalog[brick.partId]
+      if (!def) continue
+      for (const { x, z } of getOccupiedCells(brick, def)) {
+        supportCorners.push([x, z], [x + 1, z], [x, z + 1], [x + 1, z + 1])
+      }
+    }
+
+    if (supportCorners.length === 0) continue
+
+    // Compute center of mass (mass ∝ footprint area × height)
+    let totalMass = 0
+    let comX = 0
+    let comZ = 0
+
+    for (const brick of componentBricks) {
+      const def = catalog[brick.partId]
+      if (!def) continue
+      const cells = getOccupiedCells(brick, def)
+      const mass = cells.length * def.height
+      const cx = cells.reduce((s, c) => s + c.x + 0.5, 0) / cells.length
+      const cz = cells.reduce((s, c) => s + c.z + 0.5, 0) / cells.length
+      comX += cx * mass
+      comZ += cz * mass
+      totalMass += mass
+    }
+
+    if (totalMass === 0) continue
+    comX /= totalMass
+    comZ /= totalMass
+
+    if (isOutsideSupport(supportCorners, comX, comZ)) {
+      for (const id of component) {
+        unbalanced.add(id)
+      }
+    }
+  }
+
+  return unbalanced
 }
 
 function getWorldFootprint(brick: BalanceComponentBrick): GridPoint[] {
@@ -224,4 +300,21 @@ function isPointOnSegment(
 
 function almostEqual(a: number, b: number): boolean {
   return Math.abs(a - b) <= 1e-9
+}
+
+function isOutsideSupport(corners: Point2D[], comX: number, comZ: number): boolean {
+  const hull = polygonHull(corners)
+
+  if (!hull) {
+    // Degenerate (all points collinear): check bounding box
+    const xs = corners.map((c) => c[0])
+    const zs = corners.map((c) => c[1])
+    const minX = Math.min(...xs)
+    const maxX = Math.max(...xs)
+    const minZ = Math.min(...zs)
+    const maxZ = Math.max(...zs)
+    return comX < minX || comX > maxX || comZ < minZ || comZ > maxZ
+  }
+
+  return !polygonContains(hull, [comX, comZ])
 }
