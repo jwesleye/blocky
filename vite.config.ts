@@ -1,10 +1,9 @@
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
-import { defineConfig as defineVitestConfig, mergeConfig } from 'vitest/config'
 
 // https://vite.dev/config/  |  https://vitest.dev/config/
-const viteConfig = defineConfig({
+export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
@@ -17,15 +16,3 @@ const viteConfig = defineConfig({
     port: 5173,
   },
 })
-
-export default mergeConfig(
-  viteConfig,
-  defineVitestConfig({
-    test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./tests/setup.ts'],
-      include: ['tests/unit/**/*.{test,spec}.{ts,tsx}'],
-    },
-  }),
-)
