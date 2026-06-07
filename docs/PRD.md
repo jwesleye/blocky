@@ -1,4 +1,4 @@
-# Product Requirements Document — Brick Building Sandbox (codename: *blocky*)
+# Product Requirements Document — Brick Building Sandbox (codename: _blocky_)
 
 **Status:** Draft v1
 **Last updated:** 2026-06-06
@@ -8,7 +8,7 @@
 
 ## 1. Overview & Vision
 
-*blocky* is a single-page web micro-app that lets anyone build freeform 3D
+_blocky_ is a single-page web micro-app that lets anyone build freeform 3D
 structures out of interlocking toy bricks, directly in the browser, with no
 install and no account. It emulates the feel of building with physical
 snap-together bricks: pieces connect on a stud grid, and the world honors
@@ -21,6 +21,7 @@ real and to provide consequence — the satisfying drama of a structure that tip
 over when you push it too far.
 
 ### One-line pitch
+
 > A browser sandbox for building almost anything out of bricks, where gravity
 > is real and bad designs fall down.
 
@@ -29,6 +30,7 @@ over when you push it too far.
 ## 2. Goals & Non-Goals
 
 ### Goals
+
 - Let a user build "almost any design that the physics allow" out of a few dozen
   brick types in many colors, in true 3D.
 - Make connection feel authentic: studs, anti-studs, snap-to-grid, clutch.
@@ -39,6 +41,7 @@ over when you push it too far.
 - Run smoothly with thousands of bricks on a typical desktop browser.
 
 ### Non-Goals (for v1)
+
 - Not a game: no objectives, scoring, progression, or multiplayer.
 - Not a continuous physics simulator: standing structures are static; only
   collapses are simulated, and only briefly.
@@ -58,6 +61,7 @@ over when you push it too far.
 - **Curious visitors** who enjoy the "knock it down" spectacle.
 
 Representative use cases:
+
 - Build a house, vehicle, tower, or pixel-art mosaic and save/share it.
 - Experiment with how far a cantilever or overhang can go before it shears off.
 - Start from a shared link of someone else's build and remix it.
@@ -67,14 +71,15 @@ Representative use cases:
 ## 4. Core Concepts & Domain Model
 
 ### 4.1 Coordinate system & units
+
 The world is a **discrete stud grid**. All geometry derives from real brick
 proportions:
 
-| Quantity | Real value | Internal unit |
-|---|---|---|
-| Horizontal stud pitch | 8 mm | 1 grid unit in X and Z |
-| Plate height | 3.2 mm | 1 grid unit in Y |
-| Brick height | 9.6 mm | **3** Y units |
+| Quantity              | Real value | Internal unit          |
+| --------------------- | ---------- | ---------------------- |
+| Horizontal stud pitch | 8 mm       | 1 grid unit in X and Z |
+| Plate height          | 3.2 mm     | 1 grid unit in Y       |
+| Brick height          | 9.6 mm     | **3** Y units          |
 
 - Horizontal position: integer `(x, z)` in studs.
 - Vertical position: integer `y` in **plate units** (a brick spans 3; a plate
@@ -84,6 +89,7 @@ proportions:
 - Orientation: 90° rotations about the Y axis only (4 states). No tilting.
 
 ### 4.2 Piece (part) catalog (~36 parts)
+
 A part is defined by its **footprint** (set of stud cells it occupies in X/Z),
 its **height** in Y units, and its **type** (which determines stud/anti-stud
 pattern and silhouette).
@@ -99,11 +105,13 @@ pattern and silhouette).
 > footprint + height + type, so adding parts is cheap.
 
 ### 4.3 Color palette (~14)
+
 Red, Blue, Yellow, Green, White, Black, Light Gray, Dark Gray, Brown, Orange,
 Tan, Lime, Azure, Magenta. Every placed brick stores a color id. Inventory is
 unlimited (sandbox).
 
 ### 4.4 The model
+
 A build is a set of **placed bricks**, each: `{ partId, color, position (x,y,z),
 rotation (0–3) }`. Plus a derived **connection graph** and **connected
 components** used by the physics (§5).
@@ -116,6 +124,7 @@ Physics is a **placement/edit-time constraint plus a one-shot collapse
 simulation** — never a continuously running sim of the standing build.
 
 ### 5.1 Connection (anti-floating) — hard rule
+
 - Two bricks **connect** when a stud face of one aligns with an anti-stud face
   of the other on the grid (vertical stud/tube coupling, classic stacking).
 - A brick is **grounded** if it rests on the baseplate or connects (transitively)
@@ -125,6 +134,7 @@ simulation** — never a continuously running sim of the standing build.
   brick shows red and won't place.
 
 ### 5.2 Balance (center of mass) — evaluated per edit
+
 - Each part has a mass proportional to its volume.
 - For each **connected component**, compute its center of mass and the **support
   footprint** = convex hull (in the X/Z plane) of the studs where the component
@@ -134,6 +144,7 @@ simulation** — never a continuously running sim of the standing build.
 - Balance is re-evaluated after every place and delete.
 
 ### 5.3 Collapse — one-shot real tumble, then fade
+
 When an edit produces an invalid state, the offending bricks **collapse**:
 
 - **Floating case (from a deletion):** only the sub-part(s) that lost their path
@@ -149,11 +160,13 @@ and does not move. A collapse is a single atomic, **undoable** action
 (Ctrl+Z restores the pre-collapse state).
 
 ### 5.4 Smart shear (highest-risk component)
+
 Algorithm intent: when a component is unbalanced, find the smallest set of
 "upper/overhanging" bricks whose removal restores balance for the remainder,
 break exactly that set off, and recursively re-check the remainder.
 
 Because robust 3D shear-boundary detection is hard, this is **phased**:
+
 - **Phase 1 (MVP):** the entire unbalanced connected component topples (whole-
   component collapse). Simple, dramatic, honest.
 - **Phase 2:** upgrade to smart shear (break only the overhanging region).
@@ -177,10 +190,12 @@ the chosen end-state behavior.
 ## 7. Functional Requirements (Features)
 
 ### 7.1 Camera
+
 - Orbit, pan, and zoom around the build (perspective camera).
 - Sensible default framing on the baseplate; "reset view" control.
 
 ### 7.2 Placement & editing
+
 - A translucent **ghost cursor brick** follows the pointer, snapping to the stud
   grid via raycast against existing brick faces and the ground plane.
 - Ghost shows **green = placeable**, **red = invalid** (would float / collide).
@@ -193,6 +208,7 @@ the chosen end-state behavior.
 (re-color existing brick), eyedropper.
 
 ### 7.3 Persistence & sharing
+
 - **Autosave** current build to `localStorage`.
 - **Export / Import** a build as a JSON file.
 - **Shareable URL**: build state encoded (compressed) into the link; opening it
@@ -200,6 +216,7 @@ the chosen end-state behavior.
 - **New / clear** with confirmation.
 
 ### 7.4 Feedback
+
 - Visual collapse animation (the core spectacle).
 - Optional sound effects for place / delete / collapse (stretch).
 - Brick/part count indicator.
@@ -235,10 +252,11 @@ the chosen end-state behavior.
 - **Client-only:** no server, no database, no auth. Static hosting.
 
 ### 9.0 Engineering principles (dependency philosophy)
+
 - **Single-ecosystem:** the entire codebase stays in the **JavaScript /
   TypeScript** ecosystem. No components written in Python, Rust, C++, Go, etc.,
   and no toolchains requiring a non-JS native compiler. (Pre-compiled WASM that
-  ships *inside* an npm package — e.g. Rapier's bundled WASM — is fine, since it
+  ships _inside_ an npm package — e.g. Rapier's bundled WASM — is fine, since it
   is consumed as an off-the-shelf JS library, not authored or built by us.)
 - **Buy, don't build (off-the-shelf first):** prefer mature, well-maintained
   pre-built libraries over hand-rolled code. This is an explicit project goal.
@@ -257,36 +275,38 @@ the chosen end-state behavior.
   a thin glue layer is genuinely simpler. Such choices should be noted.
 
 ### 9.0.1 Candidate libraries (off-the-shelf picks)
+
 All candidates are JS/TS-ecosystem packages installable from npm. Picks are
 indicative, not final; the point is that each concern has an established library
 so we are not hand-rolling.
 
-| Concern | Candidate library | Notes |
-|---|---|---|
-| Language | **TypeScript** | Typed authoring across the codebase |
-| UI framework | **React** | Component model for the HUD |
-| Build / dev server | **Vite** | Fast HMR dev server; multi-stage prod build |
-| 3D engine | **three.js** | Core WebGL2 rendering |
-| React ↔ three bridge | **@react-three/fiber** | Declarative three.js in React |
-| 3D helpers | **@react-three/drei** | `OrbitControls`, instancing helpers, env/lighting |
-| Camera controls | **drei `OrbitControls`** (or **camera-controls**) | Orbit/pan/zoom; camera-controls if we need finer control |
-| Physics engine (collapse) | **Rapier** via **@react-three/rapier** (`@dimforge/rapier3d`) | Off-the-shelf rigid-body engine; ships pre-compiled WASM consumed as a JS lib |
-| App state | **zustand** | Model, selection, undo/redo stacks |
-| Undo/redo | **zundo** (zustand temporal middleware) | Off-the-shelf history for the zustand store |
-| Connection graph / components | **graphology** + **graphology-components** | Build the stud-connection graph; connected components (or a lightweight **union-find** for grounding checks) |
-| Convex hull + point-in-polygon | **d3-polygon** (`polygonHull`, `polygonContains`) | Support footprint hull and center-of-mass-inside-footprint test for the balance check |
-| Geometry / vector math | **three.js math** (`Vector3`, `Box3`) | Reuse three's math; avoid a separate math lib |
-| URL state compression | **lz-string** | Compress build JSON into a shareable URL |
-| Import validation | **zod** | Validate imported/`localStorage` build JSON against the schema |
-| UI controls / pickers | **Radix UI** primitives (or **leva** for quick dev controls) | Accessible toolbar/menus/color & part pickers |
-| Icons | **lucide-react** | Toolbar iconography |
-| Sound (stretch) | **howler.js** | Place/delete/collapse SFX |
-| Unit/integration tests | **Vitest** + **@testing-library/react** | Test the domain core and components |
-| End-to-end tests | **Playwright** | Browser-level interaction/placement tests |
-| Lint / format | **ESLint** + **Prettier** | Code quality |
-| Static prod server | **nginx** (slim image) | Serves the built SPA in the production container |
+| Concern                        | Candidate library                                             | Notes                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Language                       | **TypeScript**                                                | Typed authoring across the codebase                                                                          |
+| UI framework                   | **React**                                                     | Component model for the HUD                                                                                  |
+| Build / dev server             | **Vite**                                                      | Fast HMR dev server; multi-stage prod build                                                                  |
+| 3D engine                      | **three.js**                                                  | Core WebGL2 rendering                                                                                        |
+| React ↔ three bridge           | **@react-three/fiber**                                        | Declarative three.js in React                                                                                |
+| 3D helpers                     | **@react-three/drei**                                         | `OrbitControls`, instancing helpers, env/lighting                                                            |
+| Camera controls                | **drei `OrbitControls`** (or **camera-controls**)             | Orbit/pan/zoom; camera-controls if we need finer control                                                     |
+| Physics engine (collapse)      | **Rapier** via **@react-three/rapier** (`@dimforge/rapier3d`) | Off-the-shelf rigid-body engine; ships pre-compiled WASM consumed as a JS lib                                |
+| App state                      | **zustand**                                                   | Model, selection, undo/redo stacks                                                                           |
+| Undo/redo                      | **zundo** (zustand temporal middleware)                       | Off-the-shelf history for the zustand store                                                                  |
+| Connection graph / components  | **graphology** + **graphology-components**                    | Build the stud-connection graph; connected components (or a lightweight **union-find** for grounding checks) |
+| Convex hull + point-in-polygon | **d3-polygon** (`polygonHull`, `polygonContains`)             | Support footprint hull and center-of-mass-inside-footprint test for the balance check                        |
+| Geometry / vector math         | **three.js math** (`Vector3`, `Box3`)                         | Reuse three's math; avoid a separate math lib                                                                |
+| URL state compression          | **lz-string**                                                 | Compress build JSON into a shareable URL                                                                     |
+| Import validation              | **zod**                                                       | Validate imported/`localStorage` build JSON against the schema                                               |
+| UI controls / pickers          | **Radix UI** primitives (or **leva** for quick dev controls)  | Accessible toolbar/menus/color & part pickers                                                                |
+| Icons                          | **lucide-react**                                              | Toolbar iconography                                                                                          |
+| Sound (stretch)                | **howler.js**                                                 | Place/delete/collapse SFX                                                                                    |
+| Unit/integration tests         | **Vitest** + **@testing-library/react**                       | Test the domain core and components                                                                          |
+| End-to-end tests               | **Playwright**                                                | Browser-level interaction/placement tests                                                                    |
+| Lint / format                  | **ESLint** + **Prettier**                                     | Code quality                                                                                                 |
+| Static prod server             | **nginx** (slim image)                                        | Serves the built SPA in the production container                                                             |
 
 ### 9.1 Containerized development & deployment
+
 - The app must be developed and run inside a **containerized environment**
   (Docker). A `Dockerfile` and `docker-compose` (or equivalent) define the dev
   and build/serve setup so the project runs identically across machines with no
@@ -301,6 +321,7 @@ so we are not hand-rolling.
   installs) and the image kept small.
 
 ### 9.2 Data model / serialization
+
 ```
 Build {
   version: number
@@ -313,6 +334,7 @@ Build {
   }>
 }
 ```
+
 Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 
 ---
@@ -334,6 +356,7 @@ Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 ## 11. Roadmap / Phasing
 
 ### MVP (v1)
+
 - Stud grid, core part catalog, full palette.
 - Camera, ghost placement, place/delete, rotate, color/part pickers.
 - Connection graph + anti-floating hard rule.
@@ -343,6 +366,7 @@ Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 - Instanced rendering.
 
 ### v1.1+
+
 - **Smart shear** (Phase 2 of §5.4).
 - Multi-select / move / duplicate / mirror / paint.
 - Touch support.
@@ -350,6 +374,7 @@ Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 - Larger / selectable baseplate sizes; screenshot export.
 
 ### Later / maybe
+
 - SNOT and additional connection types (major scope expansion).
 - Build gallery / community sharing (would require a backend).
 
@@ -379,22 +404,22 @@ Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 
 - Do **not** use the "LEGO" trademark anywhere in product, code, or marketing.
   Refer to "bricks" / "brick-building." Avoid copying trademarked specific part
-  designs or the LEGO logo on studs. App name TBD (codename *blocky*).
+  designs or the LEGO logo on studs. App name TBD (codename _blocky_).
 
 ---
 
 ## 14. Decisions Log (resolved during scoping)
 
-| # | Decision | Choice |
-|---|---|---|
-| 1 | Core experience | Pure creative sandbox |
-| 2 | Physics role | Placement constraint + balance check (not live sim) |
-| 3 | Dimensionality | True 3D (three.js / r3f) |
-| 4 | Connection grammar | Classic stud-stacking, axis-aligned, 90° rotations |
-| 5 | Units | Bricks + plates; vertical grid in plate units |
-| 6 | Instability behavior | One-shot collapse (not prevent / not advisory-only) |
-| 7 | Collapse fidelity | Real brief tumble (Rapier), debris fades after settling |
-| 8 | Collapse scope (unbalanced) | Smart shear (phased; whole-component topple in MVP) |
-| 9 | Dev/deploy environment | Containerized (Docker): dev container + multi-stage static-serve image |
-| 10 | Language scope | JS/TS ecosystem only (no Python/Rust/C++/etc.); TypeScript + React retained |
-| 11 | Dependency philosophy | Off-the-shelf libraries first; core physics engine must be off-the-shelf (Rapier) |
+| #   | Decision                    | Choice                                                                            |
+| --- | --------------------------- | --------------------------------------------------------------------------------- |
+| 1   | Core experience             | Pure creative sandbox                                                             |
+| 2   | Physics role                | Placement constraint + balance check (not live sim)                               |
+| 3   | Dimensionality              | True 3D (three.js / r3f)                                                          |
+| 4   | Connection grammar          | Classic stud-stacking, axis-aligned, 90° rotations                                |
+| 5   | Units                       | Bricks + plates; vertical grid in plate units                                     |
+| 6   | Instability behavior        | One-shot collapse (not prevent / not advisory-only)                               |
+| 7   | Collapse fidelity           | Real brief tumble (Rapier), debris fades after settling                           |
+| 8   | Collapse scope (unbalanced) | Smart shear (phased; whole-component topple in MVP)                               |
+| 9   | Dev/deploy environment      | Containerized (Docker): dev container + multi-stage static-serve image            |
+| 10  | Language scope              | JS/TS ecosystem only (no Python/Rust/C++/etc.); TypeScript + React retained       |
+| 11  | Dependency philosophy       | Off-the-shelf libraries first; core physics engine must be off-the-shelf (Rapier) |
