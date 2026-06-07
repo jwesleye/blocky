@@ -1,1 +1,5 @@
 export * from './collapseSimulation'
+export { selectCollapsingBricks } from './collapse'
+export { buildConnectionGraph } from './graph'
+export { getFloatingBricks } from './grounding'
+export { getUnbalancedBricks, evaluateComponentBalance } from './balance'
