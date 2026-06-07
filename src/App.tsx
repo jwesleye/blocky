@@ -1,8 +1,12 @@
 import { PersistenceControls } from './components/PersistenceControls'
 import { useStore } from './state/useStore'
+import { useUndoRedo } from './hooks/useUndoRedo'
 
 export function App() {
   const bricks = useStore((state) => state.bricks)
+
+  // Enable Ctrl/Cmd+Z (undo) and Ctrl/Cmd+Y (redo) keyboard shortcuts.
+  useUndoRedo()
 
   return (
     <main style={{ padding: '1rem' }}>
