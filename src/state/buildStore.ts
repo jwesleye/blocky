@@ -3,7 +3,7 @@ import type { PlacedBrick } from '@/domain/model/types'
 import { PART_CATALOG, type PartCatalog } from '@/domain/parts/catalog'
 import { canPlaceBrick } from '@/domain/physics'
 
-export interface BuildState {
+export interface PlacementBuildState {
   bricks: PlacedBrick[]
   placeBrick: (candidate: PlacedBrick) => boolean
 }
@@ -12,7 +12,7 @@ export function createBuildStore(
   initialBricks: readonly PlacedBrick[] = [],
   catalog: PartCatalog = PART_CATALOG,
 ) {
-  return createStore<BuildState>()((set, get) => ({
+  return createStore<PlacementBuildState>()((set, get) => ({
     bricks: [...initialBricks],
     placeBrick(candidate) {
       if (!canPlaceBrick(candidate, get().bricks, catalog)) {

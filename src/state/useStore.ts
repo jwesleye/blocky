@@ -2,14 +2,14 @@ import { create } from 'zustand'
 import { temporal } from 'zundo'
 import type { PlacedBrick } from '@/domain/model/types'
 
-interface BuildState {
+interface LegacyBuildState {
   bricks: PlacedBrick[]
   setBricks: (bricks: PlacedBrick[]) => void
   addBrick: (brick: PlacedBrick) => void
   removeBrick: (id: string) => void
 }
 
-export const useStore = create<BuildState>()(
+export const useStore = create<LegacyBuildState>()(
   temporal((set) => ({
     bricks: [],
     setBricks: (bricks) => set({ bricks }),
