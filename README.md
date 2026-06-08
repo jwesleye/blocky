@@ -51,16 +51,16 @@ npm run dev          # http://localhost:5173
 
 ## Scripts
 
-| Script | Description |
-|---|---|
-| `npm run dev` | Start the Vite dev server (HMR) |
-| `npm run build` | Type-check and build the static SPA to `dist/` |
-| `npm run preview` | Preview the production build locally |
-| `npm run typecheck` | Type-check without emitting |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Format with Prettier |
-| `npm run test` | Run unit/integration tests (Vitest) |
-| `npm run test:e2e` | Run end-to-end tests (Playwright) |
+| Script              | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `npm run dev`       | Start the Vite dev server (HMR)                |
+| `npm run build`     | Type-check and build the static SPA to `dist/` |
+| `npm run preview`   | Preview the production build locally           |
+| `npm run typecheck` | Type-check without emitting                    |
+| `npm run lint`      | Run ESLint                                     |
+| `npm run format`    | Format with Prettier                           |
+| `npm run test`      | Run unit/integration tests (Vitest)            |
+| `npm run test:e2e`  | Run end-to-end tests (Playwright)              |
 
 ## Docker
 

@@ -37,3 +37,15 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+.agentshore/
+.agents/
+.beads/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+agentshore.yaml
+timelapse-runs/
+closed_issue_refs.txt
+open_bead_refs.txt
