@@ -49,16 +49,22 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   // The remaining bricks are floating (y=3, far from any y=0 brick) to exercise
   // buildConnectionGraph + getFloatingBricks BFS with mixed partIds and all four
   // rotations — covering PART_CATALOG footprint and rotation-aware cell geometry.
-  const bricks: FixtureBrick[] = []
-  for (let i = 0; i < COLLAPSE_BRICK_COUNT; i++) {
+  const bricks: FixtureBrick[] = [
+    { id: 'base', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+    // CoM of this component projects outside the 1×1 support hull → unbalanced
+    { id: 'overhang', partId: 'brick-2x4', color: 'blue', x: 0, y: 3, z: 0, rot: 0 },
+  ]
+  const floatingPartIds = ['brick-2x4', 'brick-1x2', 'plate-2x4', 'brick-2x2']
+  for (let i = 2; i < COLLAPSE_BRICK_COUNT; i++) {
     bricks.push({
-      id: `b${i}`,
-      partId: 'brick-2x4',
-      color: 'red',
-      x: i, // Leaning tower: each brick offset by 1
-      y: i * 3,
-      z: 0,
-      rot: 0,
+      id: `f${i}`,
+      partId: floatingPartIds[i % floatingPartIds.length] as string,
+      color: 'gray',
+      // Offset far from the anchor so no stud connection forms
+      x: 50 + (i % 20) * 5,
+      y: 3,
+      z: Math.floor(i / 20) * 5,
+      rot: (i % 4) as 0 | 1 | 2 | 3,
     })
   }
 
@@ -222,7 +228,6 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   ).toBeLessThan(LONG_FRAME_THRESHOLD_MS)
 
   // p95 must stay within the ~60 fps render budget.
-  console.log(`Perf Results: computeMs=${result.computeMs.toFixed(2)}, maxFrame=${maxFrame.toFixed(2)}, p95=${p95.toFixed(2)}`)
   expect(
     p95,
     `p95 frame time ${p95.toFixed(1)} ms exceeds the ${P95_FRAME_BUDGET_MS} ms render budget`,
