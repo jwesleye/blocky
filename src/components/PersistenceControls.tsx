@@ -3,7 +3,8 @@ import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { useBuildStore } from '@/state/store'
 
 export function PersistenceControls() {
-  const { exportToJSON, importFromJSON, publishToGallery } = useBuildPersistence()
+  const { exportToJSON, importFromJSON, publishToGallery } =
+    useBuildPersistence()
   const placeBrick = useBuildStore((state) => state.placeBrick)
   const [publishStatus, setPublishStatus] = useState<
     'idle' | 'publishing' | 'success' | 'error'
@@ -52,12 +53,22 @@ export function PersistenceControls() {
         <button onClick={handleAddSample}>Add Sample Brick</button>
         <button onClick={exportToJSON}>Export JSON</button>
         <button onClick={importFromJSON}>Import JSON</button>
-        <button onClick={handlePublish} disabled={publishStatus === 'publishing'}>
-          {publishStatus === 'publishing' ? 'Publishing…' : 'Publish to Gallery'}
+        <button
+          onClick={handlePublish}
+          disabled={publishStatus === 'publishing'}
+        >
+          {publishStatus === 'publishing'
+            ? 'Publishing…'
+            : 'Publish to Gallery'}
         </button>
       </div>
       {publishMessage && (
-        <p style={{ marginTop: '0.5rem', color: publishStatus === 'error' ? 'red' : 'green' }}>
+        <p
+          style={{
+            marginTop: '0.5rem',
+            color: publishStatus === 'error' ? 'red' : 'green',
+          }}
+        >
           {publishMessage}
         </p>
       )}

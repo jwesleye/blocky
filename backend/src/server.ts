@@ -1,4 +1,8 @@
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from 'node:http'
 import { generateBuildId, getBuild, listBuilds, storeBuild } from './store.js'
 import {
   SHARED_BUILD_CONTRACT_VERSION,
@@ -60,7 +64,10 @@ const server = createServer(async (req, res) => {
 
     const parsed = PublishRequestSchema.safeParse(data)
     if (!parsed.success) {
-      sendJSON(res, 422, { error: 'Invalid publish request', details: parsed.error.issues })
+      sendJSON(res, 422, {
+        error: 'Invalid publish request',
+        details: parsed.error.issues,
+      })
       return
     }
 

@@ -1,7 +1,5 @@
 import type { Build } from '@/domain/model/build'
-import {
-  safeParseSharedBuildPayload,
-} from './sharedBuildContract'
+import { safeParseSharedBuildPayload } from './sharedBuildContract'
 import type {
   SharedBuildAuthorIdentity,
   SharedBuildPayload,
@@ -21,7 +19,11 @@ export type GalleryPublishResult =
   | { ok: true; payload: SharedBuildPayload }
   | {
       ok: false
-      reason: 'network-error' | 'unauthorized' | 'validation-error' | 'server-error'
+      reason:
+        | 'network-error'
+        | 'unauthorized'
+        | 'validation-error'
+        | 'server-error'
       message: string
     }
 
@@ -29,7 +31,11 @@ export type GalleryLoadResult =
   | { ok: true; payload: SharedBuildPayload }
   | {
       ok: false
-      reason: 'not-found' | 'network-error' | 'validation-error' | 'server-error'
+      reason:
+        | 'not-found'
+        | 'network-error'
+        | 'validation-error'
+        | 'server-error'
       message: string
     }
 
@@ -39,8 +45,7 @@ export interface GalleryClient {
 }
 
 export function createGalleryClient(baseUrl: string): GalleryClient {
-  const url = (path: string) =>
-    `${baseUrl.replace(/\/$/, '')}${path}`
+  const url = (path: string) => `${baseUrl.replace(/\/$/, '')}${path}`
 
   return {
     async publish(request) {
@@ -60,7 +65,11 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
       }
 
       if (response.status === 401) {
-        return { ok: false, reason: 'unauthorized', message: 'Authentication required' }
+        return {
+          ok: false,
+          reason: 'unauthorized',
+          message: 'Authentication required',
+        }
       }
 
       if (!response.ok) {
@@ -75,12 +84,20 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
       try {
         raw = await response.text()
       } catch {
-        return { ok: false, reason: 'server-error', message: 'Failed to read response body' }
+        return {
+          ok: false,
+          reason: 'server-error',
+          message: 'Failed to read response body',
+        }
       }
 
       const payload = safeParseSharedBuildPayload(raw)
       if (!payload) {
-        return { ok: false, reason: 'validation-error', message: 'Server returned invalid payload' }
+        return {
+          ok: false,
+          reason: 'validation-error',
+          message: 'Server returned invalid payload',
+        }
       }
 
       return { ok: true, payload }
@@ -114,12 +131,20 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
       try {
         raw = await response.text()
       } catch {
-        return { ok: false, reason: 'server-error', message: 'Failed to read response body' }
+        return {
+          ok: false,
+          reason: 'server-error',
+          message: 'Failed to read response body',
+        }
       }
 
       const payload = safeParseSharedBuildPayload(raw)
       if (!payload) {
-        return { ok: false, reason: 'validation-error', message: 'Server returned invalid payload' }
+        return {
+          ok: false,
+          reason: 'validation-error',
+          message: 'Server returned invalid payload',
+        }
       }
 
       return { ok: true, payload }

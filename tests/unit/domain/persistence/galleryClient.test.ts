@@ -9,9 +9,7 @@ import {
 } from '@/domain/persistence/autosave'
 import type { KeyValueStorage } from '@/domain/persistence/autosave'
 import { createGalleryClient } from '@/domain/persistence/galleryClient'
-import {
-  SHARED_BUILD_CONTRACT_VERSION,
-} from '@/domain/persistence/sharedBuildContract'
+import { SHARED_BUILD_CONTRACT_VERSION } from '@/domain/persistence/sharedBuildContract'
 import type { SharedBuildPayload } from '@/domain/persistence/sharedBuildContract'
 
 const makeBuild = (): Build => ({
@@ -38,8 +36,12 @@ function memoryStorage(): KeyValueStorage & { map: Map<string, string> } {
   return {
     map,
     getItem: (k) => (map.has(k) ? (map.get(k) as string) : null),
-    setItem: (k, v) => { map.set(k, v) },
-    removeItem: (k) => { map.delete(k) },
+    setItem: (k, v) => {
+      map.set(k, v)
+    },
+    removeItem: (k) => {
+      map.delete(k)
+    },
   }
 }
 
@@ -97,7 +99,9 @@ describe('galleryClient.publish', () => {
       'http://localhost:4000/builds',
       expect.objectContaining({
         method: 'POST',
-        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+        }),
       }),
     )
   })
@@ -218,7 +222,9 @@ describe('galleryClient.load', () => {
     const client = createGalleryClient('http://localhost:4000')
     await client.load('srv_abc123')
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:4000/builds/srv_abc123')
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:4000/builds/srv_abc123',
+    )
   })
 
   it('returns not-found result when server responds 404', async () => {
