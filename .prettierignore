@@ -4,4 +4,5 @@ playwright-report
 test-results
 package-lock.json
 pnpm-lock.yaml
+# Exclude large minified test fixtures to prevent diff bloat
 fixtures
