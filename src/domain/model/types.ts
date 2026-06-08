@@ -24,6 +24,13 @@ export interface BuildState {
   bricks: Record<string, PlacedBrick>
   selection: Set<string>
   connectionGraph: Graph
+  /**
+   * Metadata for the most recent collapse transaction, or `null` if the last
+   * history entry was not a collapse. Rides the same zundo history entry as the
+   * collapse itself so undo clears it and redo restores it, letting the UI label
+   * the action (e.g. "Undo collapse").
+   */
+  lastCollapse: { count: number; label: string } | null
 }
 
 export interface BrickBodySnapshot {

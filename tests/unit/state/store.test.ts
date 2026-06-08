@@ -23,6 +23,7 @@ const resetStore = () => {
     bricks: {},
     selection: new Set<string>(),
     connectionGraph: new Graph({ type: 'undirected', allowSelfLoops: false }),
+    lastCollapse: null,
   })
   temporal.clear()
   temporal.resume()
@@ -262,6 +263,109 @@ describe('useBuildStore', () => {
 
       useBuildStore.getState().redo()
       expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(2)
+    })
+  })
+
+  describe('triggerCollapse', () => {
+    // A grounded 2x4 at the origin (stays standing) plus two 1x1 bricks that
+    // float high above the baseplate, clear of the 2x4 footprint and of each
+    // other (no stud path to the ground → both collapse).
+    const seedCollapseModel = () => {
+      const grounded = useBuildStore.getState().placeBrick(sampleBrick)
+      const floatA = useBuildStore.getState().placeBrick({
+        ...sampleBrick,
+        partId: 'brick-1x1',
+        x: 10,
+        y: 3,
+        z: 10,
+      })
+      const floatB = useBuildStore.getState().placeBrick({
+        ...sampleBrick,
+        partId: 'brick-1x1',
+        x: 14,
+        y: 3,
+        z: 10,
+      })
+      return { grounded, floatA, floatB }
+    }
+
+    const pastStateCount = () =>
+      (useBuildStore as unknown as BuildStoreWithTemporal).temporal.getState()
+        .pastStates.length
+
+    it('removes all collapsing bricks in a single undoable history entry', () => {
+      const { grounded, floatA, floatB } = seedCollapseModel()
+      const preSnapshot = Object.values(useBuildStore.getState().bricks)
+      expect(preSnapshot).toHaveLength(3)
+
+      const before = pastStateCount()
+      useBuildStore.getState().triggerCollapse()
+
+      const collapsed = useBuildStore.getState()
+      expect(Object.keys(collapsed.bricks)).toEqual([grounded])
+      expect(collapsed.bricks[floatA]).toBeUndefined()
+      expect(collapsed.bricks[floatB]).toBeUndefined()
+      // Exactly one history entry was added (the graph subscription must not
+      // record a second one, since connectionGraph is not partialized).
+      expect(pastStateCount()).toBe(before + 1)
+
+      useBuildStore.getState().undo()
+      const restored = useBuildStore.getState()
+      expect(Object.values(restored.bricks)).toEqual(preSnapshot)
+      expect(restored.connectionGraph.order).toBe(3)
+    })
+
+    it('redo re-applies the stored collapse diff', () => {
+      const { grounded } = seedCollapseModel()
+      useBuildStore.getState().triggerCollapse()
+      const postCollapse = { ...useBuildStore.getState().bricks }
+
+      useBuildStore.getState().undo()
+      expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(3)
+
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().bricks).toEqual(postCollapse)
+      expect(Object.keys(useBuildStore.getState().bricks)).toEqual([grounded])
+    })
+
+    it('clears collapsing bricks from the selection', () => {
+      const { grounded, floatA } = seedCollapseModel()
+      useBuildStore.getState().selectBrick(grounded)
+      useBuildStore.getState().selectBrick(floatA, true)
+
+      useBuildStore.getState().triggerCollapse()
+      const { selection } = useBuildStore.getState()
+      expect(selection).toEqual(new Set([grounded]))
+    })
+
+    it('is a no-op (no history entry) when nothing collapses', () => {
+      useBuildStore.getState().placeBrick(sampleBrick)
+      const before = pastStateCount()
+      const bricksRef = useBuildStore.getState().bricks
+
+      useBuildStore.getState().triggerCollapse()
+
+      expect(useBuildStore.getState().bricks).toBe(bricksRef)
+      expect(pastStateCount()).toBe(before)
+      expect(useBuildStore.getState().lastCollapse).toBeNull()
+    })
+
+    it('labels the collapse and round-trips the label through undo/redo', () => {
+      seedCollapseModel()
+      useBuildStore.getState().triggerCollapse()
+      expect(useBuildStore.getState().lastCollapse).toEqual({
+        count: 2,
+        label: 'Undo collapse',
+      })
+
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().lastCollapse).toBeNull()
+
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().lastCollapse).toEqual({
+        count: 2,
+        label: 'Undo collapse',
+      })
     })
   })
 })

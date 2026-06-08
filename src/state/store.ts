@@ -10,6 +10,7 @@ import {
   buildConnectionGraph,
   translateBrick,
   canPlaceGroup,
+  selectCollapsingBricks,
 } from '@/domain/physics'
 import { PART_CATALOG } from '@/domain/parts/catalog'
 
@@ -46,6 +47,13 @@ export interface BuildActions {
   selectBrick: (id: string, additive?: boolean) => void
   /** Clears the entire selection. */
   clearSelection: () => void
+  /**
+   * Removes every brick that should fall after a smart-shear edit (floating
+   * bricks plus sheared unstable sub-regions) in a single zundo history entry,
+   * so one undo restores the entire pre-collapse build and one redo re-applies
+   * the stored diff. No-op (adds no history entry) when nothing collapses.
+   */
+  triggerCollapse: () => void
   /** Undo the last state-changing action. */
   undo: () => void
   /** Redo the last undone action. */
@@ -70,6 +78,7 @@ export const useBuildStore = create<BuildStore>()(
           type: 'undirected',
           allowSelfLoops: false,
         }),
+        lastCollapse: null,
 
         placeBrick: (brick) => {
           const id = createBrickId()
@@ -184,6 +193,28 @@ export const useBuildStore = create<BuildStore>()(
 
         clearSelection: () => set({ selection: new Set<string>() }),
 
+        triggerCollapse: () =>
+          set((state) => {
+            const collapsing = selectCollapsingBricks(
+              Object.values(state.bricks),
+            )
+            if (collapsing.size === 0) return state
+
+            const bricks: Record<string, PlacedBrick> = {}
+            for (const brick of Object.values(state.bricks)) {
+              if (!collapsing.has(brick.id)) bricks[brick.id] = brick
+            }
+
+            const selection = new Set(state.selection)
+            for (const id of collapsing) selection.delete(id)
+
+            return {
+              bricks,
+              selection,
+              lastCollapse: { count: collapsing.size, label: 'Undo collapse' },
+            }
+          }),
+
         undo: () => {
           ;(useBuildStore as unknown as BuildStoreWithTemporal).temporal
             .getState()
@@ -199,8 +230,8 @@ export const useBuildStore = create<BuildStore>()(
       {
         limit: 50,
         partialize: (state) => {
-          const { bricks, selection } = state
-          return { bricks, selection }
+          const { bricks, selection, lastCollapse } = state
+          return { bricks, selection, lastCollapse }
         },
         equality: (pastState, currentState) =>
           pastState.bricks === currentState.bricks &&
