@@ -6,3 +6,17 @@ export {
   saveBuild,
 } from './autosave'
 export type { Autosaver, AutosaverOptions, KeyValueStorage } from './autosave'
+export {
+  SHARED_BUILD_CONTRACT_VERSION,
+  SharedBuildGalleryMetadataSchema,
+  SharedBuildPayloadSchema,
+  parseSharedBuildPayload,
+  safeParseSharedBuildPayload,
+  serializeSharedBuildPayload,
+  validateSharedBuildPayload,
+} from './sharedBuildContract'
+export type {
+  SharedBuildAuthorIdentity,
+  SharedBuildGalleryMetadata,
+  SharedBuildPayload,
+} from './sharedBuildContract'

@@ -224,6 +224,11 @@ the chosen end-state behavior.
 - **Export / Import** a build as a JSON file.
 - **Shareable URL**: build state encoded (compressed) into the link; opening it
   loads the build. No backend required.
+- **Future gallery/community sharing is accepted future scope:** autosave, JSON
+  import/export, and shareable URLs stay client-only and continue to exchange
+  the same `Build` JSON payload. A later backend-mediated gallery may wrap that
+  `Build` in a versioned shared-build contract without replacing local-only
+  flows.
 - **New / clear** with confirmation.
 
 ### 7.4 Feedback
@@ -261,6 +266,11 @@ the chosen end-state behavior.
 - **Domain core:** a pure, framework-agnostic module for the grid, connection
   graph, component detection, balance check, and shear — independently testable.
 - **Client-only:** no server, no database, no auth. Static hosting.
+- **Future gallery backend boundary:** community publish/load is allowed only as
+  a later, explicit backend path. It must preserve the current static SPA and
+  `Build` serialization semantics for autosave/import/export/shareable URLs,
+  keep the implementation in the JS/TS ecosystem, and use server-owned IDs,
+  timestamps, and storage instead of coupling local persistence to a service.
 
 ### 9.0 Engineering principles (dependency philosophy)
 
@@ -352,6 +362,11 @@ envelope, while `version: 2` adds optional half-stud offsets without changing
 legacy integer anchor semantics. URL-sharing uses a compressed encoding of
 this.
 
+Future gallery publishing/loading must reuse this exact `Build` payload inside a
+versioned shared-build contract rather than forking the build schema. The
+backend-owned wrapper adds gallery metadata (title, optional description,
+visibility, author identity mode) plus server-owned identifiers and timestamps.
+
 ---
 
 ## 10. Non-Functional Requirements
@@ -365,6 +380,10 @@ this.
 - **Robustness:** no operation can leave the model in an invalid (floating/
   overlapping) persisted state; autosave never corrupts a build.
 - **Privacy:** all data stays client-side unless the user shares a link.
+- **Future gallery privacy boundary:** community publishing is an intentional
+  backend action, not an automatic extension of autosave or URL sharing. Any
+  later backend must make authorship, visibility, storage, and deletion policy
+  explicit.
 
 ---
 
@@ -391,7 +410,9 @@ this.
 ### Later / maybe
 
 - SNOT and additional connection types (major scope expansion).
-- Build gallery / community sharing (would require a backend).
+- Build gallery / community sharing after an explicit backend path is added,
+  using the shared-build contract while leaving v1 local-only persistence
+  unchanged.
 
 ---
 
@@ -438,3 +459,4 @@ this.
 | 9   | Dev/deploy environment      | Containerized (Docker): dev container + multi-stage static-serve image            |
 | 10  | Language scope              | JS/TS ecosystem only (no Python/Rust/C++/etc.); TypeScript + React retained       |
 | 11  | Dependency philosophy       | Off-the-shelf libraries first; core physics engine must be off-the-shelf (Rapier) |
+| 12  | Community sharing scope     | Accepted as future scope only; any gallery path must be backend-mediated, explicit, and preserve v1 client-only persistence |
