@@ -7,8 +7,7 @@ COPY package.json package-lock.json* ./
 
 # ---- Dependencies ----
 FROM base AS deps
-# Use a clean, lockfile-based install when a lockfile exists; fall back otherwise.
-RUN npm ci || npm install
+RUN npm ci
 
 # ---- Development: Vite dev server with HMR ----
 FROM base AS dev
