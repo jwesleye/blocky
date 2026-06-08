@@ -8,6 +8,7 @@ export {
   computeCoM,
   isBalanced,
 } from './balance'
+export { findShearRegion } from './shear'
 export {
   BASEPLATE,
   BASEPLATE_TOP_Y,
