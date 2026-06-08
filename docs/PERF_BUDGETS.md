@@ -70,19 +70,19 @@ npm run test:e2e -- tests/perf/collapse-perf.spec.ts
 entry bundle gzip size must stay under the documented ceiling enforced by the Vite
 build gate.
 
-**Measurement method:** Playwright perf spec measures time-to-first-interaction under
-simulated broadband throttling; the Vite build step rejects the bundle if any entry
-chunk exceeds the gzip ceiling.
+**Measurement method:** The Vite build step rejects the bundle if any entry chunk
+exceeds the gzip ceiling. A Playwright perf spec measuring time-to-first-interaction
+under simulated broadband throttling is planned for
+[#53](https://github.com/jwesleye/blocky/issues/53).
 
-**Verification commands:**
+**Verification command (currently enforceable):**
 
 ```sh
 npm run build        # fails if entry bundle exceeds the gzip ceiling
-npm run test:perf    # Playwright load-time spec under throttled broadband
 ```
 
-**Owning spec:** Vite bundle-size gate + `tests/perf/load-budget.spec.ts`
-(lands with [#53](https://github.com/jwesleye/blocky/issues/53))
+**Owning spec:** Vite bundle-size gate (enforced now); `tests/perf/load-budget.spec.ts`
+and the `test:perf` npm script land with [#53](https://github.com/jwesleye/blocky/issues/53).
 
 ---
 
@@ -116,15 +116,15 @@ deleted or stripped of its numeric thresholds.
 
 Quick reference:
 
-| Budget              | Threshold                  | Verification                        |
-| ------------------- | -------------------------- | ----------------------------------- |
-| Render p95          | ≤ 17 ms                    | `test:e2e -- render-perf.spec.ts`   |
-| Collapse long-frame | < 50 ms                    | `test:e2e -- collapse-perf.spec.ts` |
-| Collapse p95        | ≤ 17 ms                    | `test:e2e -- collapse-perf.spec.ts` |
-| Bundle gzip         | see Vite gate              | `npm run build`                     |
-| Load TTI            | couple of seconds          | `npm run test:perf`                 |
-| Browser matrix      | Chrome/Edge/Firefox/WebKit | `npm run test:e2e`                  |
-| WebGL2              | supported in all browsers  | `test:e2e -- webgl2.spec.ts`        |
+| Budget              | Threshold                       | Verification                        |
+| ------------------- | ------------------------------- | ----------------------------------- |
+| Render p95          | ≤ 17 ms                         | `test:e2e -- render-perf.spec.ts`   |
+| Collapse long-frame | < 50 ms                         | `test:e2e -- collapse-perf.spec.ts` |
+| Collapse p95        | ≤ 17 ms                         | `test:e2e -- collapse-perf.spec.ts` |
+| Bundle gzip         | see Vite gate                   | `npm run build`                     |
+| Load TTI            | couple of seconds (planned #53) | test:perf script (lands with #53)   |
+| Browser matrix      | Chrome/Edge/Firefox/WebKit      | `npm run test:e2e`                  |
+| WebGL2              | supported in all browsers       | `test:e2e -- webgl2.spec.ts`        |
 
 ---
 

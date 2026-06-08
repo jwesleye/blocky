@@ -18,6 +18,13 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(doc).toMatch(/2[\s,]?000\s*brick/i)
     })
+
+    it('owning spec file exists', () => {
+      expect(
+        existsSync(join(process.cwd(), 'tests/perf/render-perf.spec.ts')),
+        'tests/perf/render-perf.spec.ts not found — doc references it',
+      ).toBe(true)
+    })
   })
 
   describe('collapse smoothness budget (issue #52)', () => {
@@ -30,12 +37,40 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(doc).toMatch(/300\s*brick/i)
     })
+
+    it('owning spec file exists', () => {
+      expect(
+        existsSync(join(process.cwd(), 'tests/perf/collapse-perf.spec.ts')),
+        'tests/perf/collapse-perf.spec.ts not found — doc references it',
+      ).toBe(true)
+    })
   })
 
   describe('load budget (issue #53)', () => {
-    it('mentions the test:perf verification command', () => {
+    it('notes that load-budget spec and test:perf script land with #53', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(/test:perf/)
+      expect(doc).toMatch(/#53/)
+    })
+
+    it('does not claim npm run test:perf without the script and spec both existing', () => {
+      const doc = readFileSync(DOC_PATH, 'utf-8')
+      // Guard: if the doc lists `npm run test:perf` as a runnable command, both the
+      // package.json script and the owning spec must be present on this branch.
+      if (doc.match(/`npm run test:perf`/)) {
+        const pkg = JSON.parse(
+          readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
+        ) as {
+          scripts?: Record<string, string>
+        }
+        expect(
+          pkg.scripts?.['test:perf'],
+          'doc claims `npm run test:perf` but script is absent from package.json',
+        ).toBeDefined()
+        expect(
+          existsSync(join(process.cwd(), 'tests/perf/load-budget.spec.ts')),
+          'doc claims `npm run test:perf` but tests/perf/load-budget.spec.ts is absent',
+        ).toBe(true)
+      }
     })
   })
 
@@ -53,6 +88,13 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
     it('mentions WebGL2', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(doc).toMatch(/WebGL2/i)
+    })
+
+    it('owning spec file exists', () => {
+      expect(
+        existsSync(join(process.cwd(), 'tests/e2e/webgl2.spec.ts')),
+        'tests/e2e/webgl2.spec.ts not found — doc references it',
+      ).toBe(true)
     })
   })
 })
