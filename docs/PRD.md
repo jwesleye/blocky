@@ -446,17 +446,17 @@ visibility, author identity mode) plus server-owned identifiers and timestamps.
 
 ## 14. Decisions Log (resolved during scoping)
 
-| #   | Decision                    | Choice                                                                            |
-| --- | --------------------------- | --------------------------------------------------------------------------------- |
-| 1   | Core experience             | Pure creative sandbox                                                             |
-| 2   | Physics role                | Placement constraint + balance check (not live sim)                               |
-| 3   | Dimensionality              | True 3D (three.js / r3f)                                                          |
-| 4   | Connection grammar          | Classic stud-stacking, axis-aligned, 90° rotations                                |
-| 5   | Units                       | Bricks + plates; vertical grid in plate units                                     |
-| 6   | Instability behavior        | One-shot collapse (not prevent / not advisory-only)                               |
-| 7   | Collapse fidelity           | Real brief tumble (Rapier), debris fades after settling                           |
-| 8   | Collapse scope (unbalanced) | Smart shear (phased; whole-component topple in MVP)                               |
-| 9   | Dev/deploy environment      | Containerized (Docker): dev container + multi-stage static-serve image            |
-| 10  | Language scope              | JS/TS ecosystem only (no Python/Rust/C++/etc.); TypeScript + React retained       |
-| 11  | Dependency philosophy       | Off-the-shelf libraries first; core physics engine must be off-the-shelf (Rapier) |
+| #   | Decision                    | Choice                                                                                                                      |
+| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Core experience             | Pure creative sandbox                                                                                                       |
+| 2   | Physics role                | Placement constraint + balance check (not live sim)                                                                         |
+| 3   | Dimensionality              | True 3D (three.js / r3f)                                                                                                    |
+| 4   | Connection grammar          | Classic stud-stacking, axis-aligned, 90° rotations                                                                          |
+| 5   | Units                       | Bricks + plates; vertical grid in plate units                                                                               |
+| 6   | Instability behavior        | One-shot collapse (not prevent / not advisory-only)                                                                         |
+| 7   | Collapse fidelity           | Real brief tumble (Rapier), debris fades after settling                                                                     |
+| 8   | Collapse scope (unbalanced) | Smart shear (phased; whole-component topple in MVP)                                                                         |
+| 9   | Dev/deploy environment      | Containerized (Docker): dev container + multi-stage static-serve image                                                      |
+| 10  | Language scope              | JS/TS ecosystem only (no Python/Rust/C++/etc.); TypeScript + React retained                                                 |
+| 11  | Dependency philosophy       | Off-the-shelf libraries first; core physics engine must be off-the-shelf (Rapier)                                           |
 | 12  | Community sharing scope     | Accepted as future scope only; any gallery path must be backend-mediated, explicit, and preserve v1 client-only persistence |

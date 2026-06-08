@@ -104,9 +104,9 @@ describe('serializeSharedBuildPayload / parseSharedBuildPayload', () => {
   it('round-trips a shared-build payload through JSON without loss', () => {
     const payload = makePayload()
 
-    expect(parseSharedBuildPayload(serializeSharedBuildPayload(payload))).toEqual(
-      payload,
-    )
+    expect(
+      parseSharedBuildPayload(serializeSharedBuildPayload(payload)),
+    ).toEqual(payload)
   })
 
   it('returns null for malformed JSON in safeParseSharedBuildPayload', () => {

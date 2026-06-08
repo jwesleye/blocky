@@ -40,9 +40,8 @@ export type SharedBuildGalleryMetadata = z.infer<
 >
 export type SharedBuildPayload = z.infer<typeof SharedBuildPayloadSchema>
 
-export const validateSharedBuildPayload = (
-  data: unknown,
-): SharedBuildPayload => SharedBuildPayloadSchema.parse(data)
+export const validateSharedBuildPayload = (data: unknown): SharedBuildPayload =>
+  SharedBuildPayloadSchema.parse(data)
 
 export const serializeSharedBuildPayload = (
   payload: SharedBuildPayload,

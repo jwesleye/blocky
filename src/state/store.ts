@@ -156,7 +156,11 @@ export const useBuildStore = create<BuildStore>()(
             nextSelection.add(b.id)
           }
 
-          set({ bricks: nextBricks, selection: nextSelection, lastCollapse: null })
+          set({
+            bricks: nextBricks,
+            selection: nextSelection,
+            lastCollapse: null,
+          })
           return true
         },
 
