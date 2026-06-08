@@ -382,6 +382,57 @@ describe('useBuildStore', () => {
       })
     })
 
+    it('spawns dynamic bodies only for the collapsing bricks', () => {
+      const { grounded, floatA, floatB } = seedCollapseModel()
+
+      useBuildStore.getState().triggerCollapse()
+      const { activeCollapse } = useBuildStore.getState()
+
+      expect(activeCollapse).not.toBeNull()
+      const bodyIds = activeCollapse!.collapsingBodies.map((b) => b.id).sort()
+      expect(bodyIds).toEqual([floatA, floatB].sort())
+      // The stable remainder is recorded as standing, never as a dynamic body.
+      expect(activeCollapse!.standingBricks.map((b) => b.id)).toEqual([
+        grounded,
+      ])
+      // Bodies carry their original grid-derived position.
+      const floatBody = activeCollapse!.collapsingBodies.find(
+        (b) => b.id === floatA,
+      )
+      expect(floatBody?.position[1]).toBeGreaterThan(0)
+    })
+
+    it('undo clears activeCollapse; redo leaves it null', () => {
+      seedCollapseModel()
+      useBuildStore.getState().triggerCollapse()
+      expect(useBuildStore.getState().activeCollapse).not.toBeNull()
+
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().activeCollapse).toBeNull()
+
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().activeCollapse).toBeNull()
+    })
+
+    it('completeCollapse clears the active collapse without touching bricks', () => {
+      const { grounded } = seedCollapseModel()
+      useBuildStore.getState().triggerCollapse()
+      expect(useBuildStore.getState().activeCollapse).not.toBeNull()
+
+      const bricksRef = useBuildStore.getState().bricks
+      useBuildStore.getState().completeCollapse()
+
+      expect(useBuildStore.getState().activeCollapse).toBeNull()
+      expect(useBuildStore.getState().bricks).toBe(bricksRef)
+      expect(Object.keys(useBuildStore.getState().bricks)).toEqual([grounded])
+    })
+
+    it('leaves activeCollapse null when nothing collapses', () => {
+      useBuildStore.getState().placeBrick(sampleBrick)
+      useBuildStore.getState().triggerCollapse()
+      expect(useBuildStore.getState().activeCollapse).toBeNull()
+    })
+
     it('clears lastCollapse on a subsequent non-collapse edit', () => {
       seedCollapseModel()
       useBuildStore.getState().triggerCollapse()

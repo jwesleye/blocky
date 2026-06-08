@@ -3,10 +3,13 @@ import { describe, expect, it } from 'vitest'
 import type { BrickBodySnapshot, PlacedBrick } from '@/domain/model/types'
 import {
   advanceCollapseTransaction,
+  brickToBodySnapshot,
+  bricksToBodySnapshots,
   createCollapseTransaction,
   markCollapseBodySettled,
   restoreCollapseUndoSnapshot,
 } from '@/domain/physics'
+import { getBrickColor } from '@/domain/model/colors'
 import { createCollapseSceneBodies } from '@/scene/collapseSceneBodies'
 
 function placedBrick(id: string): PlacedBrick {
@@ -30,6 +33,66 @@ function collapseBody(id: string): BrickBodySnapshot {
     size: [1, 1, 1],
   }
 }
+
+describe('brickToBodySnapshot', () => {
+  it('places a brick at its grid-derived center with catalog dimensions', () => {
+    const brick: PlacedBrick = {
+      id: 'b1',
+      partId: 'brick-2x4',
+      color: 'red',
+      x: 4,
+      y: 3,
+      z: 2,
+      rot: 0,
+    }
+
+    const snapshot = brickToBodySnapshot(brick)
+
+    // brick-2x4: width 2 studs, length 4 studs, height 3 plate units.
+    expect(snapshot.size).toEqual([2, 3, 4])
+    // Position is the center of the occupied volume, not the corner origin.
+    expect(snapshot.position).toEqual([4 + 1, 3 + 1.5, 2 + 2])
+    expect(snapshot.id).toBe('b1')
+    expect(snapshot.color).toBe(getBrickColor('red')?.hex)
+  })
+
+  it('swaps width and length for 90-degree rotations', () => {
+    const rotated = brickToBodySnapshot({
+      id: 'b2',
+      partId: 'brick-2x4',
+      color: 'blue',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 1,
+    })
+
+    expect(rotated.size).toEqual([4, 3, 2])
+    expect(rotated.position).toEqual([2, 1.5, 1])
+  })
+
+  it('throws for an unknown part id', () => {
+    expect(() =>
+      brickToBodySnapshot({
+        id: 'x',
+        partId: 'not-a-real-part',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      }),
+    ).toThrow()
+  })
+
+  it('converts a batch of bricks preserving order and ids', () => {
+    const snapshots = bricksToBodySnapshots([
+      placedBrick('a'),
+      placedBrick('b'),
+    ])
+    expect(snapshots.map((s) => s.id)).toEqual(['a', 'b'])
+  })
+})
 
 describe('collapse simulation transaction', () => {
   it('keeps a full undo snapshot of the pre-collapse build', () => {
