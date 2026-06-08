@@ -5,7 +5,17 @@ import {
   buildToBricks,
 } from '@/domain/model/build'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { createGalleryClient } from '@/domain/persistence/galleryClient'
+import type {
+  GalleryPublishRequest,
+  GalleryPublishResult,
+} from '@/domain/persistence/galleryClient'
 import { useStore } from '@/state/useStore'
+
+const GALLERY_BASE_URL =
+  typeof import.meta.env !== 'undefined'
+    ? (import.meta.env['VITE_GALLERY_URL'] as string | undefined) ?? ''
+    : ''
 
 export function useBuildPersistence() {
   const bricks = useStore((state) => state.bricks)
@@ -57,5 +67,16 @@ export function useBuildPersistence() {
     })
   }, [setBricks])
 
-  return { exportToJSON, importFromJSON }
+  const publishToGallery = useCallback(
+    async (
+      meta: Pick<GalleryPublishRequest['gallery'], 'title' | 'description' | 'visibility' | 'author'>,
+    ): Promise<GalleryPublishResult> => {
+      const build = bricksToBuild(bricks, BASEPLATE_SIZE_STUDS)
+      const client = createGalleryClient(GALLERY_BASE_URL)
+      return client.publish({ build, gallery: meta })
+    },
+    [bricks],
+  )
+
+  return { exportToJSON, importFromJSON, publishToGallery }
 }
