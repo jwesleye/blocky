@@ -1,6 +1,6 @@
 import Graph from 'graphology'
 import type { PlacedBrick } from '../model/types'
-import type { PartCatalog } from '../parts/catalog'
+import type { PartCatalog } from '../parts/types'
 import { getOccupiedCells } from '../parts/footprint'
 
 /**
@@ -25,7 +25,7 @@ export function buildConnectionGraph(
   for (const brick of bricks) {
     const def = catalog[brick.partId]
     if (!def) continue
-    const yTop = brick.y + def.height
+    const yTop = brick.y + def.heightY
     for (const { x, z } of getOccupiedCells(brick, def)) {
       topFaceMap.set(`${x},${z},${yTop}`, brick.id)
     }

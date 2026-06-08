@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { PART_CATALOG } from '@/domain/parts/catalog'
 import { partDefSchema, PartCategory } from '@/domain/parts/types'
 
 describe('partDefSchema', () => {
@@ -55,5 +56,17 @@ describe('partDefSchema', () => {
     }
     const result = partDefSchema.safeParse(badCategory)
     expect(result.success).toBe(false)
+  })
+
+  it('matches the shared part catalog contract', () => {
+    expect(PART_CATALOG['brick-2x4']).toEqual({
+      id: 'brick-2x4',
+      category: PartCategory.brick,
+      widthX: 2,
+      widthZ: 4,
+      heightY: 3,
+      hasTopStuds: true,
+    })
+    expect(partDefSchema.safeParse(PART_CATALOG['tile-2x4']).success).toBe(true)
   })
 })

@@ -2,7 +2,7 @@ import type Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
 import { polygonContains, polygonHull } from 'd3-polygon'
 import type { PlacedBrick } from '../model/types'
-import type { PartCatalog } from '../parts/catalog'
+import type { PartCatalog } from '../parts/types'
 import { getOccupiedCells } from '../parts/footprint'
 
 export type GridPoint = readonly [x: number, z: number]
@@ -142,7 +142,7 @@ export function getUnbalancedBricks(
       const def = catalog[brick.partId]
       if (!def) continue
       const cells = getOccupiedCells(brick, def)
-      const mass = cells.length * def.height
+      const mass = cells.length * def.heightY
       const cx = cells.reduce((s, c) => s + c.x + 0.5, 0) / cells.length
       const cz = cells.reduce((s, c) => s + c.z + 0.5, 0) / cells.length
       comX += cx * mass

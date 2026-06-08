@@ -19,3 +19,5 @@ export const partDefSchema = z.object({
 })
 
 export type PartDef = z.infer<typeof partDefSchema>
+
+export type PartCatalog = Record<string, PartDef>
