@@ -2,11 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import Graph from 'graphology'
 
 import type { PlacedBrick } from '@/domain/model/types'
-import {
-  BUILD_SCHEMA_VERSION,
-  deserialize,
-  serialize,
-} from '@/state/schema'
+import { BUILD_SCHEMA_VERSION, deserialize, serialize } from '@/state/schema'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
 const sampleBrick: Omit<PlacedBrick, 'id'> = {
@@ -19,8 +15,9 @@ const sampleBrick: Omit<PlacedBrick, 'id'> = {
 }
 
 const resetStore = () => {
-  const temporal = (useBuildStore as unknown as BuildStoreWithTemporal).temporal
-    .getState()
+  const temporal = (
+    useBuildStore as unknown as BuildStoreWithTemporal
+  ).temporal.getState()
   temporal.pause()
   useBuildStore.setState({
     bricks: {},
