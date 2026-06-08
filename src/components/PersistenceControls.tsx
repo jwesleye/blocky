@@ -1,19 +1,17 @@
 import { useState } from 'react'
-import { createBrickId } from '@/domain/model/ids'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
-import { useStore } from '@/state/useStore'
+import { useBuildStore } from '@/state/store'
 
 export function PersistenceControls() {
   const { exportToJSON, importFromJSON, publishToGallery } = useBuildPersistence()
-  const addBrick = useStore((state) => state.addBrick)
+  const placeBrick = useBuildStore((state) => state.placeBrick)
   const [publishStatus, setPublishStatus] = useState<
     'idle' | 'publishing' | 'success' | 'error'
   >('idle')
   const [publishMessage, setPublishMessage] = useState('')
 
   const handleAddSample = () => {
-    addBrick({
-      id: createBrickId(),
+    placeBrick({
       partId: 'brick-2x4',
       color: 'red',
       x: Math.floor(Math.random() * 20),

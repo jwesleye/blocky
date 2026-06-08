@@ -10,7 +10,7 @@ import type {
   GalleryPublishRequest,
   GalleryPublishResult,
 } from '@/domain/persistence/galleryClient'
-import { useStore } from '@/state/useStore'
+import { useBuildStore } from '@/state/store'
 
 const GALLERY_BASE_URL =
   typeof import.meta.env !== 'undefined'
@@ -18,11 +18,10 @@ const GALLERY_BASE_URL =
     : ''
 
 export function useBuildPersistence() {
-  const bricks = useStore((state) => state.bricks)
-  const setBricks = useStore((state) => state.setBricks)
+  const bricks = useBuildStore((state) => state.bricks)
 
   const exportToJSON = useCallback(() => {
-    const build = bricksToBuild(bricks, BASEPLATE_SIZE_STUDS)
+    const build = bricksToBuild(Object.values(bricks), BASEPLATE_SIZE_STUDS)
     const blob = new Blob([JSON.stringify(build, null, 2)], {
       type: 'application/json',
     })
@@ -52,7 +51,9 @@ export function useBuildPersistence() {
           const data = JSON.parse(text)
           const build = validateBuild(data)
           const newBricks = buildToBricks(build)
-          setBricks(newBricks)
+          useBuildStore.setState({
+            bricks: Object.fromEntries(newBricks.map((brick) => [brick.id, brick])),
+          })
           resolve()
         } catch (err) {
           console.error('Failed to import build:', err)
@@ -65,7 +66,7 @@ export function useBuildPersistence() {
       }
       input.click()
     })
-  }, [setBricks])
+  }, [])
 
   const publishToGallery = useCallback(
     async (
