@@ -100,5 +100,6 @@ export function deserialize(json: string): BuildState {
     bricks,
     selection: new Set<string>(),
     connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
+    lastCollapse: null,
   }
 }
