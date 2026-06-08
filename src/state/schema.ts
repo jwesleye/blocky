@@ -30,8 +30,8 @@ const serializedBrickSchema = z.object({
 })
 
 export const buildSchema = z.object({
-  version: z.number().int(),
-  baseplate: z.object({ size: z.number().int() }),
+  version: z.literal(BUILD_SCHEMA_VERSION),
+  baseplate: z.object({ size: z.literal(BASEPLATE_SIZE_STUDS) }),
   bricks: z.array(serializedBrickSchema),
 })
 

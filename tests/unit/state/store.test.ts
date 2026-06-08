@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { PlacedBrick } from '@/domain/model/types'
-import { deserialize, serialize } from '@/state/schema'
+import {
+  BUILD_SCHEMA_VERSION,
+  deserialize,
+  serialize,
+} from '@/state/schema'
 import { useBuildStore } from '@/state/store'
 
 const sampleBrick: Omit<PlacedBrick, 'id'> = {
@@ -71,6 +75,16 @@ describe('useBuildStore', () => {
     useBuildStore.getState().clearSelection()
     expect(useBuildStore.getState().selection.size).toBe(0)
   })
+
+  it('selectBrick is a no-op for an unknown id', () => {
+    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    useBuildStore.getState().selectBrick(id)
+    useBuildStore.getState().selectBrick('does-not-exist', true)
+    expect(useBuildStore.getState().selection).toEqual(new Set([id]))
+
+    useBuildStore.getState().selectBrick('still-missing')
+    expect(useBuildStore.getState().selection).toEqual(new Set([id]))
+  })
 })
 
 describe('build schema serialization', () => {
@@ -117,5 +131,27 @@ describe('build schema serialization', () => {
       ),
     ).toThrow()
     expect(() => deserialize('not json')).toThrow()
+  })
+
+  it('deserialize rejects unsupported schema envelopes', () => {
+    expect(() =>
+      deserialize(
+        JSON.stringify({
+          version: BUILD_SCHEMA_VERSION + 1,
+          baseplate: { size: 32 },
+          bricks: [],
+        }),
+      ),
+    ).toThrow()
+
+    expect(() =>
+      deserialize(
+        JSON.stringify({
+          version: BUILD_SCHEMA_VERSION,
+          baseplate: { size: 16 },
+          bricks: [],
+        }),
+      ),
+    ).toThrow()
   })
 })
