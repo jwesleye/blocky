@@ -143,7 +143,7 @@ export function recursiveShear(bricks: PlacedBrick[]): {
   let currentBricks = [...bricks]
   const collapsed: PlacedBrick[][] = []
 
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     if (currentBricks.length === 0) break
 

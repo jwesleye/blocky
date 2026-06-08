@@ -179,7 +179,9 @@ describe('useBuildStore', () => {
       useBuildStore.getState().selectBrick(a)
       useBuildStore.getState().selectBrick(b, true)
 
-      const success = useBuildStore.getState().moveSelection({ dx: 1, dy: 0, dz: 0 })
+      const success = useBuildStore
+        .getState()
+        .moveSelection({ dx: 1, dy: 0, dz: 0 })
       expect(success).toBe(true)
 
       const { bricks, selection } = useBuildStore.getState()
@@ -194,8 +196,10 @@ describe('useBuildStore', () => {
       useBuildStore.getState().selectBrick(a)
 
       const initialState = useBuildStore.getState().bricks
-      const success = useBuildStore.getState().moveSelection({ dx: 100, dy: 0, dz: 0 }) // Out of bounds
-      
+      const success = useBuildStore
+        .getState()
+        .moveSelection({ dx: 100, dy: 0, dz: 0 }) // Out of bounds
+
       expect(success).toBe(false)
       expect(useBuildStore.getState().bricks).toBe(initialState)
     })
@@ -203,7 +207,7 @@ describe('useBuildStore', () => {
     it('is captured as a single undoable step', () => {
       const a = useBuildStore.getState().placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
-      
+
       useBuildStore.getState().moveSelection({ dx: 1, dy: 0, dz: 0 })
       expect(useBuildStore.getState().bricks[a].x).toBe(1)
 
@@ -220,13 +224,15 @@ describe('useBuildStore', () => {
       const a = useBuildStore.getState().placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
 
-      const success = useBuildStore.getState().duplicateSelection({ dx: 0, dy: 3, dz: 0 })
+      const success = useBuildStore
+        .getState()
+        .duplicateSelection({ dx: 0, dy: 3, dz: 0 })
       expect(success).toBe(true)
 
       const { bricks, selection } = useBuildStore.getState()
       expect(Object.keys(bricks)).toHaveLength(2)
       expect(selection.size).toBe(1)
-      
+
       const cloneId = [...selection][0]
       expect(cloneId).not.toBe(a)
       expect(bricks[cloneId]).toEqual({
@@ -242,8 +248,10 @@ describe('useBuildStore', () => {
       useBuildStore.getState().selectBrick(a)
 
       const initialState = useBuildStore.getState()
-      const success = useBuildStore.getState().duplicateSelection({ dx: 0, dy: 0, dz: 0 }) // Collision with original
-      
+      const success = useBuildStore
+        .getState()
+        .duplicateSelection({ dx: 0, dy: 0, dz: 0 }) // Collision with original
+
       expect(success).toBe(false)
       expect(useBuildStore.getState().bricks).toBe(initialState.bricks)
       expect(useBuildStore.getState().selection).toBe(initialState.selection)
@@ -252,7 +260,7 @@ describe('useBuildStore', () => {
     it('is captured as a single undoable step', () => {
       const a = useBuildStore.getState().placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
-      
+
       useBuildStore.getState().duplicateSelection({ dx: 0, dy: 3, dz: 0 })
       expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(2)
 

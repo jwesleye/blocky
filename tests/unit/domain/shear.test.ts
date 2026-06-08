@@ -94,7 +94,9 @@ describe('recursiveShear', () => {
     expect(collapsed.map((batch) => batch.map((b) => b.id))).toEqual([
       ['c2-overhang'],
     ])
-    expect(stable.map((b) => b.id).sort()).toEqual(['c1-base', 'c2-base'].sort())
+    expect(stable.map((b) => b.id).sort()).toEqual(
+      ['c1-base', 'c2-base'].sort(),
+    )
   })
 
   it('is a pure function and does not mutate input', () => {
