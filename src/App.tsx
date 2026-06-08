@@ -1,3 +1,4 @@
+import { Canvas } from '@react-three/fiber'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
 import { ColorPicker } from '@/components/ColorPicker'
@@ -117,8 +118,17 @@ export function App() {
 
       {/* Main canvas area */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '1rem', flex: 1 }}>
-          <p style={{ color: '#555' }}>3D canvas coming soon</p>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <Canvas>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} />
+            <mesh>
+              <boxGeometry />
+              <meshStandardMaterial color="orange" />
+            </mesh>
+          </Canvas>
+        </div>
+        <div style={{ padding: '1rem' }}>
           <PersistenceControls />
           <div>
             <h2>Build Status</h2>
@@ -137,5 +147,3 @@ export function App() {
     </div>
   )
 }
-
-export default App
