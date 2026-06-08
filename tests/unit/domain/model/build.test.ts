@@ -37,6 +37,16 @@ describe('validateBuild', () => {
     }
     expect(() => validateBuild(invalidBuild)).toThrow()
   })
+
+  it('rejects a wrong baseplate size', () => {
+    const badBaseplate = {
+      version: 1,
+      baseplate: { size: 16 },
+      bricks: [],
+    }
+    expect(() => validateBuild(badBaseplate)).toThrow()
+    expect(safeParseBuild(JSON.stringify(badBaseplate))).toBeNull()
+  })
 })
 
 describe('bricksToBuild / buildToBricks', () => {

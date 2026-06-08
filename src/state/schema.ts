@@ -1,9 +1,13 @@
-import { z } from 'zod'
-
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { buildConnectionGraph } from '@/domain/physics/graph'
 import { PART_CATALOG } from '@/domain/parts/catalog'
+
+import {
+  buildSchema,
+  BUILD_SCHEMA_VERSION,
+} from '@/domain/model/build'
+import type { Build, SerializedBrick } from '@/domain/model/build'
 
 /**
  * Build JSON schema and (de)serialization helpers.
@@ -13,40 +17,8 @@ import { PART_CATALOG } from '@/domain/parts/catalog'
  * per-session brick ids are intentionally excluded — ids are regenerated on
  * load so two clients never collide on a shared build.
  */
-export const BUILD_SCHEMA_VERSION = 2
-
-const buildVersionSchema = z.union([z.literal(1), z.literal(2)])
-
-const rotationSchema = z.union([
-  z.literal(0),
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-])
-
-const halfStudOffsetSchema = z.object({
-  x: z.union([z.literal(0), z.literal(1)]),
-  z: z.union([z.literal(0), z.literal(1)]),
-})
-
-const serializedBrickSchema = z.object({
-  partId: z.string(),
-  color: z.string(),
-  x: z.number().int(),
-  y: z.number().int(),
-  z: z.number().int(),
-  rot: rotationSchema,
-  offset: halfStudOffsetSchema.optional(),
-})
-
-export const buildSchema = z.object({
-  version: buildVersionSchema,
-  baseplate: z.object({ size: z.literal(BASEPLATE_SIZE_STUDS) }),
-  bricks: z.array(serializedBrickSchema),
-})
-
-export type SerializedBrick = z.infer<typeof serializedBrickSchema>
-export type Build = z.infer<typeof buildSchema>
+export { buildSchema, BUILD_SCHEMA_VERSION }
+export type { Build, SerializedBrick }
 
 let idCounter = 0
 
