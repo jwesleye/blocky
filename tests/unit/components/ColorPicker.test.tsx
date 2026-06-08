@@ -8,20 +8,30 @@ describe('ColorPicker', () => {
   it('renders a swatch for every palette color', () => {
     render(<ColorPicker selected="red" onSelect={() => undefined} />)
     for (const color of BRICK_COLORS) {
-      expect(screen.getByRole('radio', { name: color.name })).toBeInTheDocument()
+      expect(
+        screen.getByRole('radio', { name: color.name }),
+      ).toBeInTheDocument()
     }
   })
 
   it('exposes each color name as an accessible label (not color-only)', () => {
     render(<ColorPicker selected="red" onSelect={() => undefined} />)
-    expect(screen.getByRole('radio', { name: 'Light Gray' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('radio', { name: 'Light Gray' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Dark Gray' })).toBeInTheDocument()
   })
 
   it('marks the selected color as checked', () => {
     render(<ColorPicker selected="blue" onSelect={() => undefined} />)
-    expect(screen.getByRole('radio', { name: 'Blue' })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('radio', { name: 'Red' })).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('radio', { name: 'Blue' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(screen.getByRole('radio', { name: 'Red' })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
   })
 
   it('calls onSelect with the color id when a swatch is clicked', () => {
@@ -33,7 +43,9 @@ describe('ColorPicker', () => {
 
   it('groups swatches under a radiogroup with an accessible label', () => {
     render(<ColorPicker selected="red" onSelect={() => undefined} />)
-    expect(screen.getByRole('radiogroup', { name: 'Brick color' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('radiogroup', { name: 'Brick color' }),
+    ).toBeInTheDocument()
   })
 
   it('supports keyboard navigation with arrow keys', () => {

@@ -136,7 +136,8 @@ export function App() {
             <ul>
               {bricks.slice(0, 10).map((brick) => (
                 <li key={brick.id}>
-                  {brick.partId} ({brick.color}) at {brick.x},{brick.y},{brick.z}
+                  {brick.partId} ({brick.color}) at {brick.x},{brick.y},
+                  {brick.z}
                 </li>
               ))}
               {bricks.length > 10 && <li>... and {bricks.length - 10} more</li>}
