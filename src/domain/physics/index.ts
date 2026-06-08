@@ -8,7 +8,7 @@ export {
   computeCoM,
   isBalanced,
 } from './balance'
-export { findShearRegion } from './shear'
+export { findShearRegion, recursiveShear } from './shear'
 export {
   translateBrick,
   findCollisions,
