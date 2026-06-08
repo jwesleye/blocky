@@ -109,7 +109,9 @@ describe('useBuildPersistence', () => {
     )
 
     let handleChange:
-      | ((event: { target: { files: Array<{ text: () => Promise<string> }> } }) => Promise<void>)
+      | ((event: {
+          target: { files: Array<{ text: () => Promise<string> }> }
+        }) => Promise<void>)
       | null = null
 
     const input = {

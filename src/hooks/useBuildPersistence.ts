@@ -14,7 +14,7 @@ import { useBuildStore } from '@/state/store'
 
 const GALLERY_BASE_URL =
   typeof import.meta.env !== 'undefined'
-    ? (import.meta.env['VITE_GALLERY_URL'] as string | undefined) ?? ''
+    ? ((import.meta.env['VITE_GALLERY_URL'] as string | undefined) ?? '')
     : ''
 
 export function useBuildPersistence() {
@@ -52,7 +52,9 @@ export function useBuildPersistence() {
           const build = validateBuild(data)
           const newBricks = buildToBricks(build)
           useBuildStore.setState({
-            bricks: Object.fromEntries(newBricks.map((brick) => [brick.id, brick])),
+            bricks: Object.fromEntries(
+              newBricks.map((brick) => [brick.id, brick]),
+            ),
           })
           resolve()
         } catch (err) {
@@ -70,9 +72,12 @@ export function useBuildPersistence() {
 
   const publishToGallery = useCallback(
     async (
-      meta: Pick<GalleryPublishRequest['gallery'], 'title' | 'description' | 'visibility' | 'author'>,
+      meta: Pick<
+        GalleryPublishRequest['gallery'],
+        'title' | 'description' | 'visibility' | 'author'
+      >,
     ): Promise<GalleryPublishResult> => {
-      const build = bricksToBuild(bricks, BASEPLATE_SIZE_STUDS)
+      const build = bricksToBuild(Object.values(bricks), BASEPLATE_SIZE_STUDS)
       const client = createGalleryClient(GALLERY_BASE_URL)
       return client.publish({ build, gallery: meta })
     },
