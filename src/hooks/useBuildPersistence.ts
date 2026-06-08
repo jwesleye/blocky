@@ -1,5 +1,9 @@
 import { useCallback } from 'react'
-import { bricksToBuild, validateBuild, buildToBricks } from '@/domain/model/build'
+import {
+  bricksToBuild,
+  validateBuild,
+  buildToBricks,
+} from '@/domain/model/build'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import { useStore } from '@/state/useStore'
 
@@ -42,7 +46,10 @@ export function useBuildPersistence() {
           resolve()
         } catch (err) {
           console.error('Failed to import build:', err)
-          alert('Invalid build file: ' + (err instanceof Error ? err.message : String(err)))
+          alert(
+            'Invalid build file: ' +
+              (err instanceof Error ? err.message : String(err)),
+          )
           resolve()
         }
       }

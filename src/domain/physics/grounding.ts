@@ -6,7 +6,10 @@ import type { PlacedBrick } from '../model/types'
  * baseplate. A brick at y=0 is directly grounded; all bricks reachable from
  * any grounded brick via the connection graph are also grounded.
  */
-export function getFloatingBricks(bricks: PlacedBrick[], graph: Graph): Set<string> {
+export function getFloatingBricks(
+  bricks: PlacedBrick[],
+  graph: Graph,
+): Set<string> {
   const grounded = new Set<string>()
   const queue: string[] = []
 
