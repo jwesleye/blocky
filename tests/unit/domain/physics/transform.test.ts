@@ -5,7 +5,9 @@ import {
   findCollisions,
   canPlaceGroup,
   bricksOutsideBaseplate,
+  mirrorBricks,
 } from '@/domain/physics/transform'
+import { getOccupiedCells } from '@/domain/parts/footprint'
 import type { PlacedBrick } from '@/domain/model/types'
 
 describe('Transform Physics', () => {
@@ -112,6 +114,79 @@ describe('Transform Physics', () => {
       }
       expect(bricksOutsideBaseplate([b], 32, PART_CATALOG)).toEqual([])
       expect(bricksOutsideBaseplate([b], 16, PART_CATALOG)).toEqual(['b1'])
+    })
+  })
+
+  describe('mirrorBricks', () => {
+    it('reflects origins about the group bounding box and preserves partId/color/y', () => {
+      // Two 2x4 bricks at x=0 and x=6 (W=2 each), group X bounding box = [0..7]
+      const b1: PlacedBrick = { id: 'b1', partId: 'brick-2x4', x: 0, y: 0, z: 10, rot: 0, color: 'red' }
+      const b2: PlacedBrick = { id: 'b2', partId: 'brick-2x4', x: 6, y: 0, z: 10, rot: 0, color: 'blue' }
+
+      const mirrored = mirrorBricks([b1, b2], 'x', PART_CATALOG)
+
+      const mb1 = mirrored.find((b) => b.id === 'b1')!
+      const mb2 = mirrored.find((b) => b.id === 'b2')!
+
+      // Reflect x: new_x = minX+maxX-(x+W-1) where minX=0,maxX=7,W=2
+      expect(mb1.x).toBe(6)  // 0+7-(0+2-1)=6
+      expect(mb2.x).toBe(0)  // 0+7-(6+2-1)=0
+      expect(mb1.partId).toBe('brick-2x4')
+      expect(mb1.color).toBe('red')
+      expect(mb1.y).toBe(0)
+      expect(mb1.z).toBe(10)
+    })
+
+    it('mirrored footprint cells equal the reflected original cells', () => {
+      const b1: PlacedBrick = { id: 'b1', partId: 'brick-2x4', x: 0, y: 0, z: 0, rot: 0, color: 'red' }
+      const b2: PlacedBrick = { id: 'b2', partId: 'brick-1x1', x: 6, y: 0, z: 0, rot: 0, color: 'blue' }
+
+      // bounding box X: cells from b1 (0,1) and b2 (6) → minX=0, maxX=6
+      const mirrored = mirrorBricks([b1, b2], 'x', PART_CATALOG)
+      const mb1 = mirrored.find((b) => b.id === 'b1')!
+      const mb2 = mirrored.find((b) => b.id === 'b2')!
+
+      const def2x4 = PART_CATALOG['brick-2x4']
+      const def1x1 = PART_CATALOG['brick-1x1']
+
+      const origCells1 = getOccupiedCells(b1, def2x4).map((c) => c.x).sort()
+      const mirroredCells1 = getOccupiedCells(mb1, def2x4).map((c) => c.x).sort()
+      const reflectedCells1 = origCells1.map((x) => 6 - x).sort()
+
+      expect(mirroredCells1).toEqual(reflectedCells1)
+
+      const origCells2 = getOccupiedCells(b2, def1x1).map((c) => c.x)
+      const mirroredCells2 = getOccupiedCells(mb2, def1x1).map((c) => c.x)
+      expect(mirroredCells2).toEqual(origCells2.map((x) => 6 - x))
+    })
+
+    it('remaps rot so footprint width parity is preserved (rot 1 → rot 3)', () => {
+      const b: PlacedBrick = { id: 'b', partId: 'brick-2x4', x: 0, y: 0, z: 0, rot: 1, color: 'red' }
+      // rot=1: W=4 (def.length), L=2 (def.width)
+      const [mirrored] = mirrorBricks([b], 'x', PART_CATALOG)
+
+      expect(mirrored.rot).toBe(3)  // (4-1)%4 = 3
+      // W for rot=3 is still def.length=4 — same footprint width
+      const def = PART_CATALOG['brick-2x4']
+      const origW = b.rot % 2 === 0 ? def.width : def.length
+      const newW = mirrored.rot % 2 === 0 ? def.width : def.length
+      expect(newW).toBe(origW)
+    })
+
+    it('mirroring the same group twice across the same axis returns original bricks (involution)', () => {
+      const b1: PlacedBrick = { id: 'b1', partId: 'brick-2x4', x: 0, y: 0, z: 0, rot: 0, color: 'red' }
+      const b2: PlacedBrick = { id: 'b2', partId: 'brick-1x1', x: 6, y: 0, z: 0, rot: 0, color: 'blue' }
+
+      const once = mirrorBricks([b1, b2], 'x', PART_CATALOG)
+      const twice = mirrorBricks(once, 'x', PART_CATALOG)
+
+      const tb1 = twice.find((b) => b.id === 'b1')!
+      const tb2 = twice.find((b) => b.id === 'b2')!
+
+      expect(tb1.x).toBe(b1.x)
+      expect(tb1.rot).toBe(b1.rot)
+      expect(tb2.x).toBe(b2.x)
+      expect(tb2.rot).toBe(b2.rot)
     })
   })
 })

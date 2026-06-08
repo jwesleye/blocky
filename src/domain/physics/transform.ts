@@ -4,6 +4,51 @@ import { toBrickFootprint, getOccupiedCells } from '../parts/footprint'
 import { groundedIds } from './placement'
 import { BASEPLATE_SIZE_STUDS } from '../grid'
 
+/**
+ * Mirrors a set of bricks across the selection's bounding-box midline.
+ * axis='x' reflects X coordinates; axis='z' reflects Z coordinates.
+ * Returns a new array with the same ids; validity is enforced separately.
+ */
+export function mirrorBricks(
+  selection: Iterable<PlacedBrick>,
+  axis: 'x' | 'z',
+  catalog: PartCatalog,
+): PlacedBrick[] {
+  const bricks = Array.from(selection)
+  if (bricks.length === 0) return []
+
+  let minX = Infinity, maxX = -Infinity
+  let minZ = Infinity, maxZ = -Infinity
+
+  for (const brick of bricks) {
+    const def = catalog[brick.partId]
+    if (!def) continue
+    for (const cell of getOccupiedCells(brick, def)) {
+      if (cell.x < minX) minX = cell.x
+      if (cell.x > maxX) maxX = cell.x
+      if (cell.z < minZ) minZ = cell.z
+      if (cell.z > maxZ) maxZ = cell.z
+    }
+  }
+
+  return bricks.map((brick) => {
+    const def = catalog[brick.partId]
+    if (!def) return brick
+    const W = brick.rot % 2 === 0 ? def.width : def.length
+    const L = brick.rot % 2 === 0 ? def.length : def.width
+
+    if (axis === 'x') {
+      const newX = minX + maxX - (brick.x + W - 1)
+      const newRot = ((4 - brick.rot) % 4) as 0 | 1 | 2 | 3
+      return { ...brick, x: newX, rot: newRot }
+    } else {
+      const newZ = minZ + maxZ - (brick.z + L - 1)
+      const newRot = ((2 - brick.rot + 4) % 4) as 0 | 1 | 2 | 3
+      return { ...brick, z: newZ, rot: newRot }
+    }
+  })
+}
+
 /** Translates a brick by a grid delta. */
 export function translateBrick(
   brick: PlacedBrick,
