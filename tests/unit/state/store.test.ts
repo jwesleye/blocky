@@ -33,7 +33,7 @@ describe('useBuildStore', () => {
   beforeEach(resetStore)
 
   it('canonical store state conforms to the BuildState interface', () => {
-    const _conforms: BuildState = useBuildStore.getState()
+    useBuildStore.getState() satisfies BuildState
     expect(useBuildStore.getState().selection).toBeInstanceOf(Set)
     expect(typeof useBuildStore.getState().bricks).toBe('object')
   })
