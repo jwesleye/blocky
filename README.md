@@ -62,6 +62,17 @@ npm run dev          # http://localhost:5173
 | `npm run test`      | Run unit/integration tests (Vitest)            |
 | `npm run test:e2e`  | Run end-to-end tests (Playwright)              |
 
+## End-to-end testing
+
+Playwright runs a cross-browser matrix across **Chromium**, **Firefox**, and **WebKit**:
+
+```bash
+npx playwright install   # first-time browser download
+npm run test:e2e         # runs all three browser projects locally
+```
+
+**CI scope:** The cross-browser matrix is currently local-only. No GitHub Actions workflow exists yet for this project, so the full browser matrix is validated by contributors before merging rather than in CI. A follow-up milestone will add a headless CI run (see issue #117); the WebGL2 test may require a software-rasteriser flag (`--use-gl=swiftshader`) or `xvfb` on Linux runners.
+
 ## Docker
 
 Development (hot-reloading dev server):
