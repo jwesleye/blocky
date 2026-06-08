@@ -5,7 +5,7 @@ import { subscribeWithSelector } from 'zustand/middleware'
 import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
-import { createBrickId } from '@/state/schema'
+import { createBrickId } from '@/domain/model/ids'
 import {
   buildConnectionGraph,
   translateBrick,

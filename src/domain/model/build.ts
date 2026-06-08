@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { createBrickId } from '@/domain/model/ids'
 import type { PlacedBrick } from './types'
 
 const buildVersionSchema = z.union([z.literal(1), z.literal(2)])
@@ -66,8 +67,8 @@ export function bricksToBuild(
 }
 
 export function buildToBricks(build: Build): PlacedBrick[] {
-  return build.bricks.map((brick, index) => ({
-    id: `brick-${index}-${Math.random().toString(36).substring(2, 11)}`,
+  return build.bricks.map((brick) => ({
+    id: createBrickId(),
     ...brick,
   }))
 }
