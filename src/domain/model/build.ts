@@ -34,7 +34,10 @@ export type Build = z.infer<typeof BuildSchema>
 export const CURRENT_BUILD_VERSION = 1
 export const BUILD_SCHEMA_VERSION = CURRENT_BUILD_VERSION
 
-export function bricksToBuild(bricks: PlacedBrick[], baseplateSize: number): Build {
+export function bricksToBuild(
+  bricks: PlacedBrick[],
+  baseplateSize: number,
+): Build {
   return {
     version: CURRENT_BUILD_VERSION,
     baseplate: { size: baseplateSize },

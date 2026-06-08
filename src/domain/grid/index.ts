@@ -23,7 +23,8 @@ export interface GridPosition extends GridFootprintCell {
   y: number
 }
 
-export const studsToMillimeters = (studs: number): number => studs * STUD_PITCH_MM
+export const studsToMillimeters = (studs: number): number =>
+  studs * STUD_PITCH_MM
 
 export const plateUnitsToMillimeters = (plateUnits: number): number =>
   plateUnits * PLATE_HEIGHT_MM

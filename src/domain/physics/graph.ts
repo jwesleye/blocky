@@ -36,7 +36,11 @@ export function buildConnectionGraph(
     if (!def) continue
     for (const { x, z } of getOccupiedCells(brick, def)) {
       const belowId = topFaceMap.get(`${x},${z},${brick.y}`)
-      if (belowId && belowId !== brick.id && !graph.hasEdge(brick.id, belowId)) {
+      if (
+        belowId &&
+        belowId !== brick.id &&
+        !graph.hasEdge(brick.id, belowId)
+      ) {
         graph.addEdge(brick.id, belowId)
       }
     }

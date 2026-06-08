@@ -18,7 +18,9 @@ export function PersistenceControls() {
   }
 
   return (
-    <div style={{ padding: '1rem', border: '1px solid #ccc', margin: '1rem 0' }}>
+    <div
+      style={{ padding: '1rem', border: '1px solid #ccc', margin: '1rem 0' }}
+    >
       <h3>Persistence Controls</h3>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <button onClick={handleAddSample}>Add Sample Brick</button>
