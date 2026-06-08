@@ -27,7 +27,8 @@ export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
       .map((id) => brickById.get(id))
       .filter((brick): brick is PlacedBrick => Boolean(brick))
 
-    if (component.length === 0 || component.every((brick) => brick.y !== 0)) continue
+    if (component.length === 0 || component.every((brick) => brick.y !== 0))
+      continue
     if (isBalanced(component, PART_CATALOG)) continue
 
     const { shear } = findShearRegion(component)

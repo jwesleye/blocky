@@ -16,7 +16,7 @@ export function PartPicker({ selected, onSelect }: PartPickerProps) {
   const handleKeyDown = (
     e: KeyboardEvent,
     currentIndex: number,
-    groupParts: typeof PARTS_CATALOG
+    groupParts: typeof PARTS_CATALOG,
   ) => {
     let nextIndex: number | null = null
 

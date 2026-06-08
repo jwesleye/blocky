@@ -80,13 +80,13 @@ export const useBuildStore = create<BuildStore>()(
         clearSelection: () => set({ selection: new Set<string>() }),
 
         undo: () => {
-          (useBuildStore as unknown as BuildStoreWithTemporal).temporal
+          ;(useBuildStore as unknown as BuildStoreWithTemporal).temporal
             .getState()
             .undo()
         },
 
         redo: () => {
-          (useBuildStore as unknown as BuildStoreWithTemporal).temporal
+          ;(useBuildStore as unknown as BuildStoreWithTemporal).temporal
             .getState()
             .redo()
         },
@@ -110,7 +110,10 @@ useBuildStore.subscribe(
   (state) => state.bricks,
   (bricks) => {
     useBuildStore.setState({
-      connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
+      connectionGraph: buildConnectionGraph(
+        Object.values(bricks),
+        PART_CATALOG,
+      ),
     })
   },
   { fireImmediately: true },
