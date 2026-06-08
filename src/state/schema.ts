@@ -1,4 +1,5 @@
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { createBrickId } from '@/domain/model/ids'
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { buildConnectionGraph } from '@/domain/physics/graph'
 import { PART_CATALOG } from '@/domain/parts/catalog'
@@ -18,21 +19,8 @@ import type { Build, SerializedBrick } from '@/domain/model/build'
  * load so two clients never collide on a shared build.
  */
 export { buildSchema, BUILD_SCHEMA_VERSION }
+export { createBrickId }
 export type { Build, SerializedBrick }
-
-let idCounter = 0
-
-/** Generates a unique id for a placed brick. */
-export function createBrickId(): string {
-  if (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.randomUUID === 'function'
-  ) {
-    return crypto.randomUUID()
-  }
-  idCounter += 1
-  return `brick-${idCounter}`
-}
 
 /** Serializes the runtime build model to a compact Build JSON string. */
 export function serialize(state: BuildState): string {

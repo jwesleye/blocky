@@ -1,3 +1,4 @@
+import { createBrickId } from '@/domain/model/ids'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { useStore } from '@/state/useStore'
 
@@ -7,7 +8,7 @@ export function PersistenceControls() {
 
   const handleAddSample = () => {
     addBrick({
-      id: crypto.randomUUID(),
+      id: createBrickId(),
       partId: 'brick-2x4',
       color: 'red',
       x: Math.floor(Math.random() * 20),
