@@ -143,7 +143,6 @@ export function recursiveShear(bricks: PlacedBrick[]): {
   let currentBricks = [...bricks]
   const collapsed: PlacedBrick[][] = []
 
-   
   while (true) {
     if (currentBricks.length === 0) break
 
