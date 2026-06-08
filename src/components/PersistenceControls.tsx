@@ -1,13 +1,12 @@
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
-import { useStore } from '@/state/useStore'
+import { useBuildStore } from '@/state/store'
 
 export function PersistenceControls() {
   const { exportToJSON, importFromJSON } = useBuildPersistence()
-  const addBrick = useStore((state) => state.addBrick)
+  const placeBrick = useBuildStore((state) => state.placeBrick)
 
   const handleAddSample = () => {
-    addBrick({
-      id: crypto.randomUUID(),
+    placeBrick({
       partId: 'brick-2x4',
       color: 'red',
       x: Math.floor(Math.random() * 20),
@@ -18,7 +17,9 @@ export function PersistenceControls() {
   }
 
   return (
-    <div style={{ padding: '1rem', border: '1px solid #ccc', margin: '1rem 0' }}>
+    <div
+      style={{ padding: '1rem', border: '1px solid #ccc', margin: '1rem 0' }}
+    >
       <h3>Persistence Controls</h3>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <button onClick={handleAddSample}>Add Sample Brick</button>

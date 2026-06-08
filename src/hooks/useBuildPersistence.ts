@@ -1,11 +1,15 @@
 import { useCallback } from 'react'
-import { bricksToBuild, validateBuild, buildToBricks } from '@/domain/model/build'
+import {
+  bricksToBuild,
+  validateBuild,
+  buildToBricks,
+} from '@/domain/model/build'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
-import { useStore } from '@/state/useStore'
+import { useBuildStore } from '@/state/store'
 
 export function useBuildPersistence() {
-  const bricks = useStore((state) => state.bricks)
-  const setBricks = useStore((state) => state.setBricks)
+  const brickMap = useBuildStore((state) => state.bricks)
+  const bricks = Object.values(brickMap)
 
   const exportToJSON = useCallback(() => {
     const build = bricksToBuild(bricks, BASEPLATE_SIZE_STUDS)
@@ -38,17 +42,25 @@ export function useBuildPersistence() {
           const data = JSON.parse(text)
           const build = validateBuild(data)
           const newBricks = buildToBricks(build)
-          setBricks(newBricks)
+          useBuildStore.setState({
+            bricks: Object.fromEntries(
+              newBricks.map((brick) => [brick.id, brick]),
+            ),
+            selection: new Set<string>(),
+          })
           resolve()
         } catch (err) {
           console.error('Failed to import build:', err)
-          alert('Invalid build file: ' + (err instanceof Error ? err.message : String(err)))
+          alert(
+            'Invalid build file: ' +
+              (err instanceof Error ? err.message : String(err)),
+          )
           resolve()
         }
       }
       input.click()
     })
-  }, [setBricks])
+  }, [])
 
   return { exportToJSON, importFromJSON }
 }
