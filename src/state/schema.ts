@@ -13,7 +13,9 @@ import { PART_CATALOG } from '@/domain/parts/catalog'
  * per-session brick ids are intentionally excluded — ids are regenerated on
  * load so two clients never collide on a shared build.
  */
-export const BUILD_SCHEMA_VERSION = 1
+export const BUILD_SCHEMA_VERSION = 2
+
+const buildVersionSchema = z.union([z.literal(1), z.literal(2)])
 
 const rotationSchema = z.union([
   z.literal(0),
@@ -22,6 +24,11 @@ const rotationSchema = z.union([
   z.literal(3),
 ])
 
+const halfStudOffsetSchema = z.object({
+  x: z.union([z.literal(0), z.literal(1)]),
+  z: z.union([z.literal(0), z.literal(1)]),
+})
+
 const serializedBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
@@ -29,10 +36,11 @@ const serializedBrickSchema = z.object({
   y: z.number().int(),
   z: z.number().int(),
   rot: rotationSchema,
+  offset: halfStudOffsetSchema.optional(),
 })
 
 export const buildSchema = z.object({
-  version: z.literal(BUILD_SCHEMA_VERSION),
+  version: buildVersionSchema,
   baseplate: z.object({ size: z.literal(BASEPLATE_SIZE_STUDS) }),
   bricks: z.array(serializedBrickSchema),
 })
@@ -57,10 +65,19 @@ export function createBrickId(): string {
 /** Serializes the runtime build model to a compact Build JSON string. */
 export function serialize(state: BuildState): string {
   const bricks: SerializedBrick[] = Object.values(state.bricks).map(
-    ({ partId, color, x, y, z, rot }) => ({ partId, color, x, y, z, rot }),
+    ({ partId, color, x, y, z, rot, offset }) => ({
+      partId,
+      color,
+      x,
+      y,
+      z,
+      rot,
+      ...(offset ? { offset } : {}),
+    }),
   )
+  const hasOffset = bricks.some((brick) => brick.offset !== undefined)
   const build: Build = {
-    version: BUILD_SCHEMA_VERSION,
+    version: hasOffset ? BUILD_SCHEMA_VERSION : 1,
     baseplate: { size: BASEPLATE_SIZE_STUDS },
     bricks,
   }

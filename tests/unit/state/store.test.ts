@@ -195,6 +195,61 @@ describe('build schema serialization', () => {
     expect(Object.keys(restored.bricks)).toHaveLength(2)
   })
 
+  it('round-trips half-stud offsets without affecting classic bricks', () => {
+    useBuildStore.setState({
+      bricks: {
+        offset: {
+          id: 'offset',
+          partId: 'brick-1x1',
+          color: 'yellow',
+          x: 1,
+          y: 0,
+          z: 2,
+          rot: 0,
+          offset: { x: 0, z: 1 },
+        } as unknown as PlacedBrick,
+        classic: {
+          id: 'classic',
+          partId: 'plate-1x2',
+          color: 'blue',
+          x: 0,
+          y: 1,
+          z: 0,
+          rot: 2,
+        },
+      },
+    })
+
+    const json = serialize(useBuildStore.getState())
+    const restored = deserialize(json)
+    const restoredBricks = Object.values(restored.bricks).sort((a, b) =>
+      a.partId.localeCompare(b.partId),
+    )
+
+    expect(JSON.parse(json).version).toBe(2)
+    expect(restoredBricks).toEqual([
+      {
+        id: restoredBricks[0].id,
+        partId: 'brick-1x1',
+        color: 'yellow',
+        x: 1,
+        y: 0,
+        z: 2,
+        rot: 0,
+        offset: { x: 0, z: 1 },
+      },
+      {
+        id: restoredBricks[1].id,
+        partId: 'plate-1x2',
+        color: 'blue',
+        x: 0,
+        y: 1,
+        z: 0,
+        rot: 2,
+      },
+    ])
+  })
+
   it('deserialize assigns fresh ids matching the brick payloads', () => {
     const id = useBuildStore.getState().placeBrick(sampleBrick)
     const json = serialize(useBuildStore.getState())
@@ -234,6 +289,59 @@ describe('build schema serialization', () => {
           version: BUILD_SCHEMA_VERSION,
           baseplate: { size: 16 },
           bricks: [],
+        }),
+      ),
+    ).toThrow()
+  })
+
+  it('deserializes an existing v1 payload without offsets', () => {
+    const restored = deserialize(
+      JSON.stringify({
+        version: 1,
+        baseplate: { size: 32 },
+        bricks: [
+          {
+            partId: 'brick-2x4',
+            color: 'red',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+          },
+        ],
+      }),
+    )
+
+    expect(Object.values(restored.bricks)).toEqual([
+      {
+        id: Object.values(restored.bricks)[0].id,
+        partId: 'brick-2x4',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      },
+    ])
+  })
+
+  it('rejects an out-of-range half-stud offset', () => {
+    expect(() =>
+      deserialize(
+        JSON.stringify({
+          version: 2,
+          baseplate: { size: 32 },
+          bricks: [
+            {
+              partId: 'brick-1x1',
+              color: 'red',
+              x: 0,
+              y: 0,
+              z: 0,
+              rot: 0,
+              offset: { x: 0, z: 2 },
+            },
+          ],
         }),
       ),
     ).toThrow()

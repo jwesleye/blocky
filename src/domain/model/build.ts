@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import type { PlacedBrick } from './types'
 
+const buildVersionSchema = z.union([z.literal(1), z.literal(2)])
+
 const rotationSchema = z.union([
   z.literal(0),
   z.literal(1),
@@ -10,8 +12,13 @@ const rotationSchema = z.union([
   z.literal(3),
 ])
 
+const halfStudOffsetSchema = z.object({
+  x: z.union([z.literal(0), z.literal(1)]),
+  z: z.union([z.literal(0), z.literal(1)]),
+})
+
 export const BuildSchema = z.object({
-  version: z.number().int().positive(),
+  version: buildVersionSchema,
   baseplate: z.object({
     size: z.number().int().positive(),
   }),
@@ -23,6 +30,7 @@ export const BuildSchema = z.object({
       y: z.number().int(),
       z: z.number().int(),
       rot: rotationSchema,
+      offset: halfStudOffsetSchema.optional(),
     }),
   ),
 })
@@ -31,23 +39,26 @@ export const buildSchema = BuildSchema
 
 export type Build = z.infer<typeof BuildSchema>
 
-export const CURRENT_BUILD_VERSION = 1
+export const CURRENT_BUILD_VERSION = 2
 export const BUILD_SCHEMA_VERSION = CURRENT_BUILD_VERSION
 
 export function bricksToBuild(
   bricks: PlacedBrick[],
   baseplateSize: number,
 ): Build {
+  const hasOffset = bricks.some((brick) => brick.offset !== undefined)
+
   return {
-    version: CURRENT_BUILD_VERSION,
+    version: hasOffset ? CURRENT_BUILD_VERSION : 1,
     baseplate: { size: baseplateSize },
-    bricks: bricks.map(({ partId, color, x, y, z, rot }) => ({
+    bricks: bricks.map(({ partId, color, x, y, z, rot, offset }) => ({
       partId,
       color,
       x,
       y,
       z,
       rot,
+      ...(offset ? { offset } : {}),
     })),
   }
 }
@@ -64,7 +75,7 @@ export function validateBuild(data: unknown): Build {
 }
 
 export const createEmptyBuild = (): Build => ({
-  version: BUILD_SCHEMA_VERSION,
+  version: 1,
   baseplate: { size: BASEPLATE_SIZE_STUDS },
   bricks: [],
 })

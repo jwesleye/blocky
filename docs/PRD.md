@@ -113,8 +113,10 @@ unlimited (sandbox).
 ### 4.4 The model
 
 A build is a set of **placed bricks**, each: `{ partId, color, position (x,y,z),
-rotation (0–3) }`. Plus a derived **connection graph** and **connected
-components** used by the physics (§5).
+rotation (0–3), offset? }`. `offset` is omitted for classic v1 stud-stacked
+bricks; when present it encodes an allowed non-v1 horizontal half-stud shift in
+X/Z (see §6). Plus a derived **connection graph** and **connected components**
+used by the physics (§5).
 
 ---
 
@@ -178,12 +180,21 @@ the chosen end-state behavior.
 
 ## 6. Building Grammar (scope of "any design")
 
-- **Classic stud-stacking only**, axis-aligned, 90° Y-rotations.
+- **Classic stud-stacking remains the default grammar**: axis-aligned, 90° Y
+  rotations, integer anchor coordinates, and gravity fixed along −Y.
 - Bricks + plates + tiles + slopes give fine vertical detail and smooth
   surfaces — enough for houses, vehicles, towers, statues, and mosaics.
-- **Explicitly out of scope for v1:** SNOT (sideways building), hinges, Technic
-  pins, angled connections, half-stud (jumper) offsets. These are the largest
-  complexity multipliers and are deferred.
+- **First supported non-v1 slice:** half-stud (jumper) offsets.
+  - A brick keeps integer anchor coordinates `x`, `y`, `z`; the offset is a
+    separate optional field, not a fractional coordinate.
+  - The offset is limited to `0 | 1` half-stud units per horizontal axis, so
+    only `+0.5` stud shifts in X and/or Z are representable.
+  - Vertical positioning is unchanged; jumper offsets affect only the X/Z plane.
+  - A build with no offsets remains byte-for-byte compatible with v1 and
+    serializes as `version: 1`; a build with one or more offsets serializes as
+    `version: 2`.
+- **Still out of scope:** SNOT (sideways building), hinges, Technic pins, and
+  angled connections. These remain major future grammar expansions.
 
 ---
 
@@ -331,11 +342,15 @@ Build {
     color: string       // palette id
     x: int, y: int, z: int   // y in plate units
     rot: 0 | 1 | 2 | 3       // 90° steps about Y
+    offset?: { x: 0 | 1, z: 0 | 1 }  // optional +0.5 stud jumper shift per axis
   }>
 }
 ```
 
-Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
+Serialized to compact JSON; `version: 1` remains the classic stud-stacked
+envelope, while `version: 2` adds optional half-stud offsets without changing
+legacy integer anchor semantics. URL-sharing uses a compressed encoding of
+this.
 
 ---
 

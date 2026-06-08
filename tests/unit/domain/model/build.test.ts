@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import {
-  BUILD_SCHEMA_VERSION,
   bricksToBuild,
   buildSchema,
   buildToBricks,
@@ -16,7 +15,7 @@ import type { Build } from '@/domain/model/build'
 import type { PlacedBrick } from '@/domain/model/types'
 
 const sampleBuild: Build = {
-  version: BUILD_SCHEMA_VERSION,
+  version: 1,
   baseplate: { size: BASEPLATE_SIZE_STUDS },
   bricks: [
     { partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
@@ -56,7 +55,7 @@ describe('bricksToBuild / buildToBricks', () => {
 
     const build = bricksToBuild(bricks, 32)
 
-    expect(build.version).toBe(BUILD_SCHEMA_VERSION)
+    expect(build.version).toBe(1)
     expect(build.baseplate.size).toBe(32)
     expect(build.bricks).toEqual([
       {
@@ -68,6 +67,54 @@ describe('bricksToBuild / buildToBricks', () => {
         rot: 0,
       },
     ])
+  })
+
+  it('round-trips half-stud offsets without affecting classic bricks', () => {
+    const bricks = [
+      {
+        id: 'offset',
+        partId: 'brick-1x1',
+        color: 'yellow',
+        x: 2,
+        y: 0,
+        z: 3,
+        rot: 1,
+        offset: { x: 1, z: 0 },
+      },
+      {
+        id: 'classic',
+        partId: 'plate-1x2',
+        color: 'green',
+        x: 0,
+        y: 1,
+        z: 0,
+        rot: 0,
+      },
+    ] as unknown as PlacedBrick[]
+
+    const serializedBuild = bricksToBuild(bricks, 32)
+    const restored = buildToBricks(parseBuild(serializeBuild(serializedBuild)))
+
+    expect(serializedBuild.version).toBe(2)
+    expect(restored).toHaveLength(2)
+    expect(restored[0]).toMatchObject({
+      partId: 'brick-1x1',
+      color: 'yellow',
+      x: 2,
+      y: 0,
+      z: 3,
+      rot: 1,
+      offset: { x: 1, z: 0 },
+    })
+    expect(restored[1]).toMatchObject({
+      partId: 'plate-1x2',
+      color: 'green',
+      x: 0,
+      y: 1,
+      z: 0,
+      rot: 0,
+    })
+    expect(restored[1]).not.toHaveProperty('offset')
   })
 
   it('converts a build to placed bricks with generated ids', () => {
@@ -84,7 +131,7 @@ describe('createEmptyBuild', () => {
   it('produces a valid empty build at the current version', () => {
     const build = createEmptyBuild()
 
-    expect(build.version).toBe(BUILD_SCHEMA_VERSION)
+    expect(build.version).toBe(1)
     expect(build.baseplate.size).toBe(BASEPLATE_SIZE_STUDS)
     expect(build.bricks).toEqual([])
     expect(buildSchema.safeParse(build).success).toBe(true)
@@ -111,13 +158,45 @@ describe('safeParseBuild', () => {
     expect(safeParseBuild(serializeBuild(sampleBuild))).toEqual(sampleBuild)
   })
 
+  it('accepts existing v1 payloads without offsets', () => {
+    const classicBuild = JSON.stringify({
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-2x4',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+      ],
+    })
+
+    expect(safeParseBuild(classicBuild)).toEqual({
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-2x4',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+      ],
+    })
+  })
+
   it('returns null for malformed JSON instead of throwing', () => {
     expect(safeParseBuild('}{')).toBeNull()
   })
 
   it('returns null when a brick has an invalid rotation', () => {
     const bad = JSON.stringify({
-      version: BUILD_SCHEMA_VERSION,
+      version: 1,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
       bricks: [
         {
@@ -136,7 +215,7 @@ describe('safeParseBuild', () => {
 
   it('returns null when a coordinate is not an integer', () => {
     const bad = JSON.stringify({
-      version: BUILD_SCHEMA_VERSION,
+      version: 1,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
       bricks: [
         {
@@ -146,6 +225,26 @@ describe('safeParseBuild', () => {
           y: 0,
           z: 0,
           rot: 0,
+        },
+      ],
+    })
+
+    expect(safeParseBuild(bad)).toBeNull()
+  })
+
+  it('returns null when an offset is out of range', () => {
+    const bad = JSON.stringify({
+      version: 2,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          offset: { x: 2, z: 0 },
         },
       ],
     })
