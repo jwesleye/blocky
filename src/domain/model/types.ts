@@ -1,3 +1,5 @@
+import type Graph from 'graphology'
+
 export interface PlacedBrick {
   id: string
   partId: string
@@ -15,6 +17,7 @@ export interface PlacedBrick {
 export interface BuildState {
   bricks: Record<string, PlacedBrick>
   selection: Set<string>
+  connectionGraph: Graph
 }
 
 export interface BrickBodySnapshot {
