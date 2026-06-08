@@ -62,7 +62,6 @@ export interface BuildActions {
    * `additive` to extend it (e.g. shift-click multi-select).
    */
   selectBrick: (id: string, additive?: boolean) => void
-  /** Clears the entire selection. */
   clearSelection: () => void
   /** Updates the active baseplate side length in studs. */
   setBaseplateSize: (size: number) => void
@@ -75,7 +74,7 @@ export interface BuildActions {
   triggerCollapse: () => void
   /**
    * Clears the active Rapier collapse simulation once its dynamic bodies have
-   * tumbled and faded out. Does not touch the build model — the sheared bricks
+   * tumbled and faded out. Does not touch the build model; the sheared bricks
    * were already removed from `bricks` by {@link triggerCollapse}.
    */
   completeCollapse: () => void
@@ -150,13 +149,15 @@ export const useBuildStore = create<BuildStore>()(
 
           const selectedBricks = Array.from(state.selection)
             .map((id) => state.bricks[id])
-            .filter((b): b is PlacedBrick => !!b)
+            .filter((brick): brick is PlacedBrick => !!brick)
 
           const otherBricks = Object.values(state.bricks).filter(
-            (b) => !state.selection.has(b.id),
+            (brick) => !state.selection.has(brick.id),
           )
 
-          const moved = selectedBricks.map((b) => translateBrick(b, delta))
+          const moved = selectedBricks.map((brick) =>
+            translateBrick(brick, delta),
+          )
 
           if (
             !canPlaceGroup(
@@ -170,8 +171,8 @@ export const useBuildStore = create<BuildStore>()(
           }
 
           const nextBricks = { ...state.bricks }
-          for (const b of moved) {
-            nextBricks[b.id] = b
+          for (const brick of moved) {
+            nextBricks[brick.id] = brick
           }
 
           set({ bricks: nextBricks, lastCollapse: null })
@@ -184,11 +185,11 @@ export const useBuildStore = create<BuildStore>()(
 
           const selectedBricks = Array.from(state.selection)
             .map((id) => state.bricks[id])
-            .filter((b): b is PlacedBrick => !!b)
+            .filter((brick): brick is PlacedBrick => !!brick)
 
-          const clones = selectedBricks.map((b) => {
+          const clones = selectedBricks.map((brick) => {
             const id = createBrickId()
-            return translateBrick({ ...b, id }, delta)
+            return translateBrick({ ...brick, id }, delta)
           })
 
           const allExisting = Object.values(state.bricks)
@@ -206,9 +207,9 @@ export const useBuildStore = create<BuildStore>()(
 
           const nextBricks = { ...state.bricks }
           const nextSelection = new Set<string>()
-          for (const b of clones) {
-            nextBricks[b.id] = b
-            nextSelection.add(b.id)
+          for (const brick of clones) {
+            nextBricks[brick.id] = brick
+            nextSelection.add(brick.id)
           }
 
           set({
@@ -224,11 +225,13 @@ export const useBuildStore = create<BuildStore>()(
           if (state.selection.size === 0) return false
           const selectedBricks = Array.from(state.selection)
             .map((id) => state.bricks[id])
-            .filter((b): b is PlacedBrick => !!b)
+            .filter((brick): brick is PlacedBrick => !!brick)
           const otherBricks = Object.values(state.bricks).filter(
-            (b) => !state.selection.has(b.id),
+            (brick) => !state.selection.has(brick.id),
           )
-          const moved = selectedBricks.map((b) => translateBrick(b, delta))
+          const moved = selectedBricks.map((brick) =>
+            translateBrick(brick, delta),
+          )
           return canPlaceGroup(
             moved,
             otherBricks,
@@ -242,10 +245,10 @@ export const useBuildStore = create<BuildStore>()(
           if (state.selection.size === 0) return false
           const selectedBricks = Array.from(state.selection)
             .map((id) => state.bricks[id])
-            .filter((b): b is PlacedBrick => !!b)
-          const clones = selectedBricks.map((b, i) => {
-            return translateBrick({ ...b, id: `preview-${i}` }, delta)
-          })
+            .filter((brick): brick is PlacedBrick => !!brick)
+          const clones = selectedBricks.map((brick, index) =>
+            translateBrick({ ...brick, id: `preview-${index}` }, delta),
+          )
           const allExisting = Object.values(state.bricks)
           return canPlaceGroup(
             clones,
@@ -324,8 +327,6 @@ export const useBuildStore = create<BuildStore>()(
             const selection = new Set(state.selection)
             for (const id of collapsing) selection.delete(id)
 
-            // Spawn Rapier dynamic bodies for the sheared sub-region only; the
-            // stable remainder stays in `bricks` and is rendered statically.
             const activeCollapse = createCollapseTransaction({
               allBricks,
               collapsingBodies: bricksToBodySnapshots(
@@ -371,15 +372,11 @@ export const useBuildStore = create<BuildStore>()(
   ),
 )
 
-// Automatically derive the connection graph whenever the bricks collection changes.
 useBuildStore.subscribe(
   (state) => state.bricks,
   (bricks) => {
     useBuildStore.setState({
-      connectionGraph: buildConnectionGraph(
-        Object.values(bricks),
-        PART_CATALOG,
-      ),
+      connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
     })
   },
   { fireImmediately: true },
