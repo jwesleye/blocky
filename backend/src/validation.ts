@@ -24,9 +24,10 @@ const serializedBrickSchema = z.object({
   offset: halfStudOffsetSchema.optional(),
 })
 
+// Must match BASEPLATE_SIZE_STUDS = 32 from the frontend contract
 const BuildSchema = z.object({
   version: buildVersionSchema,
-  baseplate: z.object({ size: z.number().int().positive() }),
+  baseplate: z.object({ size: z.literal(32) }),
   bricks: z.array(serializedBrickSchema),
 })
 
