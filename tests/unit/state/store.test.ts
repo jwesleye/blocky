@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import Graph from 'graphology'
 
-import type { PlacedBrick } from '@/domain/model/types'
+import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { BUILD_SCHEMA_VERSION, deserialize, serialize } from '@/state/schema'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
@@ -31,6 +31,12 @@ const resetStore = () => {
 
 describe('useBuildStore', () => {
   beforeEach(resetStore)
+
+  it('canonical store state conforms to the BuildState interface', () => {
+    const _conforms: BuildState = useBuildStore.getState()
+    expect(useBuildStore.getState().selection).toBeInstanceOf(Set)
+    expect(typeof useBuildStore.getState().bricks).toBe('object')
+  })
 
   it('placeBrick adds a brick to the model keyed by a generated id', () => {
     const id = useBuildStore.getState().placeBrick(sampleBrick)
