@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getBrickColor } from '@/domain/model/colors'
+import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { bricksToBuild, buildToBricks } from '@/domain/model/build'
+import { createAutosaver, loadBuild } from '@/domain/persistence'
 import { getPart } from '@/domain/parts/catalog'
 import { ColorPicker } from '@/components/ColorPicker'
 import { PartPicker } from '@/components/PartPicker'
@@ -25,6 +28,36 @@ export function App() {
   const bricks = Object.values(bricksById)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
+  const autosaverRef = useRef(createAutosaver())
+  const [hasHydratedPersistence, setHasHydratedPersistence] = useState(false)
+
+  useEffect(() => {
+    const savedBuild = loadBuild()
+    if (savedBuild) {
+      const restoredBricks = buildToBricks(savedBuild)
+      useBuildStore.setState({
+        bricks: Object.fromEntries(
+          restoredBricks.map((brick) => [brick.id, brick]),
+        ),
+        selection: new Set(),
+        lastCollapse: null,
+      })
+    }
+    setHasHydratedPersistence(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hasHydratedPersistence) return
+    autosaverRef.current.schedule(bricksToBuild(bricks, BASEPLATE_SIZE_STUDS))
+  }, [bricks, hasHydratedPersistence])
+
+  useEffect(() => {
+    const autosaver = autosaverRef.current
+    return () => {
+      autosaver.flush()
+      autosaver.cancel()
+    }
+  }, [])
 
   const currentColor = getBrickColor(colorId)
   const currentPart = getPart(partId)

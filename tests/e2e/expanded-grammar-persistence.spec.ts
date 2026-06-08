@@ -6,8 +6,7 @@ import { test, expect } from '@playwright/test'
  * End-to-end persistence coverage for the expanded grammar (issue #101).
  *
  * The placement UI for half-stud offsets lands in #99, so offsets are injected
- * through the dev-exposed legacy store (`window.__legacyStore`) — the same store
- * the Export/Import JSON buttons in `PersistenceControls` are wired to — and the
+ * through the dev-exposed canonical store (`window.__blockyStore`) and the
  * round-trip is driven through the real buttons (download + file chooser).
  */
 
@@ -21,14 +20,23 @@ interface SerializedBrick {
   offset?: { x: number; z: number }
 }
 
-interface LegacyStore {
+interface StoredBrick extends SerializedBrick {
+  id: string
+}
+
+interface DevStore {
+  setState: (state: {
+    bricks: Record<string, StoredBrick>
+    selection?: Set<string>
+    lastCollapse?: null
+  }) => void
   getState: () => {
-    setBricks: (bricks: SerializedBrick[]) => void
-    bricks: SerializedBrick[]
+    bricks: Record<string, StoredBrick>
   }
 }
 
-type WindowWithStore = { __legacyStore: LegacyStore }
+type WindowWithStore = { __blockyStore: DevStore }
+const AUTOSAVE_STORAGE_KEY = 'blocky.build.autosave.v1'
 
 const offsetBrick: SerializedBrick = {
   partId: 'brick-1x1',
@@ -53,7 +61,7 @@ async function gotoWithStore(page: import('@playwright/test').Page) {
   await page.goto('/')
   await page.waitForFunction(
     () =>
-      (window as unknown as { __legacyStore?: unknown }).__legacyStore !==
+      (window as unknown as { __blockyStore?: unknown }).__blockyStore !==
       undefined,
   )
 }
@@ -62,15 +70,37 @@ async function seedBricks(
   page: import('@playwright/test').Page,
   bricks: SerializedBrick[],
 ) {
-  await page.evaluate((b) => {
-    ;(window as unknown as WindowWithStore).__legacyStore
-      .getState()
-      .setBricks(b)
+  await page.evaluate((seededBricks) => {
+    ;(window as unknown as WindowWithStore).__blockyStore.setState({
+      bricks: Object.fromEntries(
+        seededBricks.map((brick, index) => [
+          `seed-${index}`,
+          { id: `seed-${index}`, ...brick },
+        ]),
+      ),
+      selection: new Set(),
+      lastCollapse: null,
+    })
   }, bricks)
-  // Wait for React to commit the new count, so the export button's handler is
-  // bound to the seeded bricks (exportToJSON closes over the rendered bricks).
   await expect(page.locator('h2:has-text("Build Status") + p')).toHaveText(
     `Bricks in build: ${bricks.length}`,
+  )
+}
+
+async function waitForAutosave(page: import('@playwright/test').Page) {
+  await page.waitForFunction(
+    ([storageKey]) => localStorage.getItem(storageKey) !== null,
+    [AUTOSAVE_STORAGE_KEY],
+  )
+}
+
+async function currentBricks(
+  page: import('@playwright/test').Page,
+): Promise<StoredBrick[]> {
+  return page.evaluate(() =>
+    Object.values(
+      (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
+    ),
   )
 }
 
@@ -114,20 +144,48 @@ test('round-trips a half-stud (v2) build through export and import', async ({
   expect(json.version).toBe(2)
   expect(json.bricks[0].offset).toEqual({ x: 1, z: 0 })
 
-  // Re-opening: clear the store, then import the exported file back.
   await seedBricks(page, [])
   await importBuild(page, exported)
   await page.waitForFunction(
     () =>
-      (window as unknown as WindowWithStore).__legacyStore.getState().bricks
-        .length === 1,
+      Object.keys(
+        (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
+      ).length === 1,
   )
 
-  const restored = await page.evaluate(
-    () =>
-      (window as unknown as WindowWithStore).__legacyStore.getState().bricks,
-  )
+  const restored = await currentBricks(page)
   expect(restored).toHaveLength(1)
+  expect(restored[0]).toMatchObject({
+    partId: 'brick-1x1',
+    color: 'yellow',
+    x: 2,
+    y: 0,
+    z: 3,
+    rot: 1,
+    offset: { x: 1, z: 0 },
+  })
+})
+
+test('restores a half-stud (v2) build from persisted storage after reload', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+  await seedBricks(page, [offsetBrick])
+  await waitForAutosave(page)
+
+  await page.reload()
+  await page.waitForFunction(
+    () =>
+      Object.keys(
+        (window as unknown as WindowWithStore).__blockyStore?.getState().bricks ??
+          {},
+      ).length === 1,
+  )
+  await expect(page.locator('h2:has-text("Build Status") + p')).toHaveText(
+    'Bricks in build: 1',
+  )
+
+  const restored = await currentBricks(page)
   expect(restored[0]).toMatchObject({
     partId: 'brick-1x1',
     color: 'yellow',
@@ -145,21 +203,16 @@ test('rejects malformed JSON on import without crashing or dropping the build', 
   await gotoWithStore(page)
   await seedBricks(page, [offsetBrick])
 
-  // The hook surfaces invalid files via window.alert; dismiss it.
   page.on('dialog', (dialog) => dialog.dismiss())
   await importBuild(page, 'not json {')
 
-  // The alert is async; give the import handler a tick to run, then assert the
-  // build is unchanged (no silent drop, no crash).
   await page.waitForFunction(
     () =>
-      (window as unknown as WindowWithStore).__legacyStore.getState().bricks
-        .length === 1,
+      Object.keys(
+        (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
+      ).length === 1,
   )
-  const bricks = await page.evaluate(
-    () =>
-      (window as unknown as WindowWithStore).__legacyStore.getState().bricks,
-  )
+  const bricks = await currentBricks(page)
   expect(bricks[0]).toMatchObject({ offset: { x: 1, z: 0 } })
 })
 
@@ -181,12 +234,10 @@ test('classic build (no offsets) round-trips as version 1', async ({
   await importBuild(page, exported)
   await page.waitForFunction(
     () =>
-      (window as unknown as WindowWithStore).__legacyStore.getState().bricks
-        .length === 1,
+      Object.keys(
+        (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
+      ).length === 1,
   )
-  const restored = await page.evaluate(
-    () =>
-      (window as unknown as WindowWithStore).__legacyStore.getState().bricks,
-  )
+  const restored = await currentBricks(page)
   expect(restored[0]).not.toHaveProperty('offset')
 })
