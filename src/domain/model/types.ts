@@ -1,5 +1,10 @@
 import type Graph from 'graphology'
 
+export interface HalfStudOffset {
+  x: 0 | 1
+  z: 0 | 1
+}
+
 export interface PlacedBrick {
   id: string
   partId: string
@@ -8,6 +13,7 @@ export interface PlacedBrick {
   y: number
   z: number
   rot: 0 | 1 | 2 | 3
+  offset?: HalfStudOffset
 }
 
 /**
