@@ -5,7 +5,7 @@ import { ColorPicker } from '@/components/ColorPicker'
 import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { useCursorStore } from '@/state/cursor'
-import { useStore } from '@/state/useStore'
+import { useBuildStore } from '@/state/store'
 import '@/styles/pickers.css'
 
 export function App() {
@@ -14,7 +14,8 @@ export function App() {
   const setColor = useCursorStore((s) => s.setColor)
   const setPart = useCursorStore((s) => s.setPart)
 
-  const bricks = useStore((state) => state.bricks)
+  const bricks = useBuildStore((state) => state.bricks)
+  const brickList = Object.values(bricks)
 
   const currentColor = getBrickColor(colorId)
   const currentPart = getPart(partId)
@@ -132,15 +133,17 @@ export function App() {
           <PersistenceControls />
           <div>
             <h2>Build Status</h2>
-            <p>Bricks in build: {bricks.length}</p>
+            <p>Bricks in build: {brickList.length}</p>
             <ul>
-              {bricks.slice(0, 10).map((brick) => (
+              {brickList.slice(0, 10).map((brick) => (
                 <li key={brick.id}>
                   {brick.partId} ({brick.color}) at {brick.x},{brick.y},
                   {brick.z}
                 </li>
               ))}
-              {bricks.length > 10 && <li>... and {bricks.length - 10} more</li>}
+              {brickList.length > 10 && (
+                <li>... and {brickList.length - 10} more</li>
+              )}
             </ul>
           </div>
         </div>
