@@ -1,5 +1,7 @@
 import type { PlacedBrick } from '../model/types'
 import type { PartDef } from './catalog'
+import type { PartCatalog } from './catalog'
+import type { BrickFootprint } from '../physics/placement'
 
 export interface Cell {
   x: number
@@ -20,4 +22,22 @@ export function getOccupiedCells(brick: PlacedBrick, def: PartDef): Cell[] {
     }
   }
   return cells
+}
+
+export function toBrickFootprint(
+  brick: PlacedBrick,
+  catalog: PartCatalog,
+): BrickFootprint {
+  const def = catalog[brick.partId]
+  if (!def) {
+    throw new Error(`unknown partId "${brick.partId}"`)
+  }
+
+  return {
+    id: brick.id,
+    bottomY: brick.y,
+    height: def.height,
+    cells: getOccupiedCells(brick, def),
+    hasTopStuds: def.hasTopStuds,
+  }
 }
