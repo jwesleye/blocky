@@ -31,6 +31,30 @@ const buildWith = (color: string): Build => ({
   bricks: [{ partId: 'brick-1x1', color, x: 0, y: 0, z: 0, rot: 0 }],
 })
 
+/** Classic v1 build (no half-stud offsets) that must keep serializing as v1. */
+const classicV1Build = (): Build => ({
+  version: 1,
+  baseplate: { size: BASEPLATE_SIZE_STUDS },
+  bricks: [{ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 }],
+})
+
+/** Expanded-grammar build carrying a half-stud offset, serialized as v2. */
+const offsetV2Build = (): Build => ({
+  version: 2,
+  baseplate: { size: BASEPLATE_SIZE_STUDS },
+  bricks: [
+    {
+      partId: 'brick-1x1',
+      color: 'yellow',
+      x: 2,
+      y: 0,
+      z: 3,
+      rot: 1,
+      offset: { x: 1, z: 0 },
+    },
+  ],
+})
+
 describe('saveBuild / loadBuild', () => {
   it('round-trips a build (reload restores it)', () => {
     const storage = memoryStorage()
@@ -56,6 +80,41 @@ describe('saveBuild / loadBuild', () => {
       JSON.stringify({ version: 1, bricks: 'nope' }),
     )
     expect(loadBuild(storage)).toBeNull()
+  })
+})
+
+describe('expanded-grammar persistence (issue #101)', () => {
+  it('round-trips a half-stud offset build as version 2 without dropping offsets', () => {
+    const storage = memoryStorage()
+    const build = offsetV2Build()
+    expect(saveBuild(build, storage)).toBe(true)
+
+    const loaded = loadBuild(storage)
+    expect(loaded).toEqual(build)
+    expect(loaded?.version).toBe(2)
+    expect(loaded?.bricks[0].offset).toEqual({ x: 1, z: 0 })
+  })
+
+  it('keeps a classic build (no offsets) serialized as version 1', () => {
+    const storage = memoryStorage()
+    const build = classicV1Build()
+    expect(saveBuild(build, storage)).toBe(true)
+
+    const loaded = loadBuild(storage)
+    expect(loaded).toEqual(build)
+    expect(loaded?.version).toBe(1)
+    expect(loaded?.bricks[0]).not.toHaveProperty('offset')
+  })
+
+  it('autosaver flush() persists an offset build with the offset intact', () => {
+    const storage = memoryStorage()
+    const autosaver = createAutosaver({ storage, delayMs: 0 })
+    autosaver.schedule(offsetV2Build())
+    expect(autosaver.flush()).toBe(true)
+
+    const loaded = loadBuild(storage)
+    expect(loaded).toEqual(offsetV2Build())
+    expect(loaded?.bricks[0].offset).toEqual({ x: 1, z: 0 })
   })
 })
 
