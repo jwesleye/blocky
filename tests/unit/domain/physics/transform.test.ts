@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { PART_CATALOG } from '@/domain/parts/catalog'
-import { translateBrick, findCollisions, canPlaceGroup } from '@/domain/physics/transform'
+import {
+  translateBrick,
+  findCollisions,
+  canPlaceGroup,
+} from '@/domain/physics/transform'
 import type { PlacedBrick } from '@/domain/model/types'
 
 describe('Transform Physics', () => {
@@ -64,7 +68,7 @@ describe('Transform Physics', () => {
       const moved = [{ ...brick1, id: 'm1', x: 5, y: 0, z: 5 }]
       expect(canPlaceGroup(moved, [], PART_CATALOG)).toBe(true)
     })
-    
+
     it('accepts grounded placement on top of others', () => {
       const others = [{ ...brick1, id: 'o1', x: 0, y: 0, z: 0 }]
       const moved = [{ ...brick1, id: 'm1', x: 0, y: 3, z: 0 }]

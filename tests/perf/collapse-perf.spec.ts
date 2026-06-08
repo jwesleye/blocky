@@ -52,7 +52,15 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   const bricks: FixtureBrick[] = [
     { id: 'base', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
     // CoM of this component projects outside the 1×1 support hull → unbalanced
-    { id: 'overhang', partId: 'brick-2x4', color: 'blue', x: 0, y: 3, z: 0, rot: 0 },
+    {
+      id: 'overhang',
+      partId: 'brick-2x4',
+      color: 'blue',
+      x: 0,
+      y: 3,
+      z: 0,
+      rot: 0,
+    },
   ]
   const floatingPartIds = ['brick-2x4', 'brick-1x2', 'plate-2x4', 'brick-2x2']
   for (let i = 2; i < COLLAPSE_BRICK_COUNT; i++) {
@@ -100,28 +108,37 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       }
       type Transaction = {
         phase: string
-        collapsingBodies: ReadonlyArray<{ id: string; settledAtMs: number | null }>
+        collapsingBodies: ReadonlyArray<{
+          id: string
+          settledAtMs: number | null
+        }>
         fadeStartedAtMs: number | null
       }
 
       const selectCollapsingBricks = collapseModule.selectCollapsingBricks as (
         bricks: FixtureBrick[],
       ) => Set<string>
-      const createCollapseTransaction = simModule.createCollapseTransaction as (input: {
-        allBricks: readonly FixtureBrick[]
-        collapsingBodies: readonly CollapseBodyInput[]
-        timings?: { settleDelayMs?: number; fadeDurationMs?: number }
-      }) => Transaction
-      const advanceCollapseTransaction = simModule.advanceCollapseTransaction as (
-        t: Transaction,
-        nowMs: number,
-      ) => Transaction
-      const createCollapseSceneBodies = sceneModule.createCollapseSceneBodies as (
-        t: Transaction,
-        staticBodies: readonly unknown[],
-      ) => unknown[]
+      const createCollapseTransaction =
+        simModule.createCollapseTransaction as (input: {
+          allBricks: readonly FixtureBrick[]
+          collapsingBodies: readonly CollapseBodyInput[]
+          timings?: { settleDelayMs?: number; fadeDurationMs?: number }
+        }) => Transaction
+      const advanceCollapseTransaction =
+        simModule.advanceCollapseTransaction as (
+          t: Transaction,
+          nowMs: number,
+        ) => Transaction
+      const createCollapseSceneBodies =
+        sceneModule.createCollapseSceneBodies as (
+          t: Transaction,
+          staticBodies: readonly unknown[],
+        ) => unknown[]
       const useStore = storeModule.useStore as {
-        getState: () => { bricks: FixtureBrick[]; setBricks: (b: FixtureBrick[]) => void }
+        getState: () => {
+          bricks: FixtureBrick[]
+          setBricks: (b: FixtureBrick[]) => void
+        }
       }
 
       // Load the stress build through the real app state.

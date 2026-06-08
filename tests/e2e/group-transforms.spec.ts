@@ -17,11 +17,17 @@ test('group move and duplicate via store handle', async ({ page }) => {
   await page.goto('/')
 
   // Wait for store to be ready
-  await page.waitForFunction(() => (window as unknown as { __blockyStore: unknown }).__blockyStore !== undefined)
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __blockyStore: unknown }).__blockyStore !==
+      undefined,
+  )
 
   // Place two bricks
   await page.evaluate(() => {
-    const store = (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState()
+    const store = (
+      window as unknown as { __blockyStore: DevStore }
+    ).__blockyStore.getState()
     const id1 = store.placeBrick({
       partId: 'brick-2x4',
       color: 'red',
@@ -45,19 +51,25 @@ test('group move and duplicate via store handle', async ({ page }) => {
 
   // Verify selection
   const selectionSize = await page.evaluate(() => {
-    return (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().selection.size
+    return (
+      window as unknown as { __blockyStore: DevStore }
+    ).__blockyStore.getState().selection.size
   })
   expect(selectionSize).toBe(2)
 
   // Move selection
   const moveSuccess = await page.evaluate(() => {
-    return (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().moveSelection({ dx: 1, dy: 0, dz: 0 })
+    return (window as unknown as { __blockyStore: DevStore }).__blockyStore
+      .getState()
+      .moveSelection({ dx: 1, dy: 0, dz: 0 })
   })
   expect(moveSuccess).toBe(true)
 
   // Check positions
   const positions = await page.evaluate(() => {
-    const bricks = (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks
+    const bricks = (
+      window as unknown as { __blockyStore: DevStore }
+    ).__blockyStore.getState().bricks
     return Object.values(bricks).map((b) => ({ x: b.x, z: b.z }))
   })
   expect(positions).toContainEqual({ x: 1, z: 0 })
@@ -65,39 +77,59 @@ test('group move and duplicate via store handle', async ({ page }) => {
 
   // Duplicate selection
   const duplicateSuccess = await page.evaluate(() => {
-    return (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().duplicateSelection({ dx: 0, dy: 3, dz: 0 })
+    return (window as unknown as { __blockyStore: DevStore }).__blockyStore
+      .getState()
+      .duplicateSelection({ dx: 0, dy: 3, dz: 0 })
   })
   expect(duplicateSuccess).toBe(true)
 
   // Check brick count (should be 4)
   const brickCount = await page.evaluate(() => {
-    return Object.keys((window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks).length
+    return Object.keys(
+      (
+        window as unknown as { __blockyStore: DevStore }
+      ).__blockyStore.getState().bricks,
+    ).length
   })
   expect(brickCount).toBe(4)
 
   // Selection should now be the 2 new clones
   const newSelectionSize = await page.evaluate(() => {
-    return (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().selection.size
+    return (
+      window as unknown as { __blockyStore: DevStore }
+    ).__blockyStore.getState().selection.size
   })
   expect(newSelectionSize).toBe(2)
 
   // Undo duplicate
   await page.evaluate(() => {
-    (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().undo()
+    ;(window as unknown as { __blockyStore: DevStore }).__blockyStore
+      .getState()
+      .undo()
   })
-  
+
   const countAfterUndo = await page.evaluate(() => {
-    return Object.keys((window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks).length
+    return Object.keys(
+      (
+        window as unknown as { __blockyStore: DevStore }
+      ).__blockyStore.getState().bricks,
+    ).length
   })
   expect(countAfterUndo).toBe(2)
 
   // Redo duplicate
   await page.evaluate(() => {
-    (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().redo()
+    ;(window as unknown as { __blockyStore: DevStore }).__blockyStore
+      .getState()
+      .redo()
   })
 
   const countAfterRedo = await page.evaluate(() => {
-    return Object.keys((window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks).length
+    return Object.keys(
+      (
+        window as unknown as { __blockyStore: DevStore }
+      ).__blockyStore.getState().bricks,
+    ).length
   })
   expect(countAfterRedo).toBe(4)
 })

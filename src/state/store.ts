@@ -32,7 +32,11 @@ export interface BuildActions {
    */
   duplicateSelection: (delta: { dx: number; dy: number; dz: number }) => boolean
   /** Returns true if moving the current selection by delta would be valid. */
-  previewMoveSelection: (delta: { dx: number; dy: number; dz: number }) => boolean
+  previewMoveSelection: (delta: {
+    dx: number
+    dy: number
+    dz: number
+  }) => boolean
   /** Returns true if duplicating the current selection at delta would be valid. */
   previewDuplicateSelection: (delta: {
     dx: number

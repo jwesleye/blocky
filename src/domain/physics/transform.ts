@@ -17,7 +17,7 @@ export function translateBrick(
   }
 }
 
-/** 
+/**
  * Detects volumetric collisions across a brick set.
  * Returns a set of ids that share any occupied (x,z,y-plate) cell.
  */
@@ -31,7 +31,7 @@ export function findCollisions(
   for (const brick of bricks) {
     const def = catalog[brick.partId]
     if (!def) continue
-    
+
     const cells = getOccupiedCells(brick, def)
     for (const cell of cells) {
       // A brick occupies cells from y to y + height - 1
@@ -88,7 +88,7 @@ export function canPlaceGroup(
   // 3. Grounding check
   const allFootprints = all.map((b) => toBrickFootprint(b, catalog))
   const grounded = groundedIds(allFootprints)
-  
+
   for (const brick of moved) {
     if (!grounded.has(brick.id)) {
       return false
