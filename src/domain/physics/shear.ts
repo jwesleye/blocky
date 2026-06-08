@@ -84,7 +84,10 @@ function sortByShearPriority(component: PlacedBrick[]): PlacedBrick[] {
   })
 }
 
-export function findShearRegion(component: PlacedBrick[]): ShearRegion {
+export function findShearRegion(
+  component: PlacedBrick[],
+  options: { minimal?: boolean } = {},
+): ShearRegion {
   if (component.length === 0 || isBalanced(component, PART_CATALOG)) {
     return { shear: [], remainder: [...component] }
   }
@@ -100,6 +103,16 @@ export function findShearRegion(component: PlacedBrick[]): ShearRegion {
     )
     if (remainder.length === 0) continue
     if (!isConnected(remainder)) continue
+
+    // If we're in minimal mode, any valid shear that leaves the remainder connected is enough
+    if (options.minimal) {
+      return {
+        shear: candidates.filter((candidate) => shearIds.has(candidate.id)),
+        remainder,
+      }
+    }
+
+    // Otherwise, expand until the remainder is also balanced (Phase 1 behavior)
     if (!isBalanced(remainder, PART_CATALOG)) continue
 
     return {
@@ -111,5 +124,54 @@ export function findShearRegion(component: PlacedBrick[]): ShearRegion {
   return {
     shear: [...candidates],
     remainder: [],
+  }
+}
+
+/**
+ * Recursively shears unstable connected components until the remaining build is stable.
+ *
+ * Termination Guarantee:
+ * Every iteration of the loop either terminates or identifies at least one shear cut
+ * from an unbalanced connected component. Each shear cut removes at least one brick
+ * from the active remainder. Since the number of bricks is finite, the process
+ * must terminate.
+ */
+export function recursiveShear(bricks: PlacedBrick[]): {
+  collapsed: PlacedBrick[][]
+  stable: PlacedBrick[]
+} {
+  let currentBricks = [...bricks]
+  const collapsed: PlacedBrick[][] = []
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (currentBricks.length === 0) break
+
+    const graph = buildConnectionGraph(currentBricks, PART_CATALOG)
+    const components = connectedComponents(graph).map((ids) => {
+      const idSet = new Set(ids)
+      return currentBricks.filter((b) => idSet.has(b.id))
+    })
+
+    const iterationShears: PlacedBrick[] = []
+    const nextBricks: PlacedBrick[] = []
+
+    for (const component of components) {
+      const { shear, remainder } = findShearRegion(component, { minimal: true })
+      if (shear.length > 0) {
+        iterationShears.push(...shear)
+      }
+      nextBricks.push(...remainder)
+    }
+
+    if (iterationShears.length === 0) break
+
+    collapsed.push(iterationShears)
+    currentBricks = nextBricks
+  }
+
+  return {
+    collapsed,
+    stable: currentBricks,
   }
 }
