@@ -7,12 +7,29 @@ export interface PartDef {
   width: number
   length: number
   height: number
+  hasTopStuds: boolean
 }
 
 export type PartCatalog = Record<string, PartDef>
 
-const B = (width: number, length: number): PartDef => ({ width, length, height: 3 })
-const P = (width: number, length: number): PartDef => ({ width, length, height: 1 })
+const B = (width: number, length: number): PartDef => ({
+  width,
+  length,
+  height: 3,
+  hasTopStuds: true,
+})
+const P = (width: number, length: number): PartDef => ({
+  width,
+  length,
+  height: 1,
+  hasTopStuds: true,
+})
+const T = (width: number, length: number): PartDef => ({
+  width,
+  length,
+  height: 1,
+  hasTopStuds: false,
+})
 
 export const PART_CATALOG: PartCatalog = {
   // Bricks (height 3)
@@ -36,10 +53,10 @@ export const PART_CATALOG: PartCatalog = {
   'plate-2x6': P(2, 6),
   'plate-2x8': P(2, 8),
   // Tiles (height 1, smooth top — same footprint as equivalent plate)
-  'tile-1x1': P(1, 1),
-  'tile-1x2': P(1, 2),
-  'tile-2x2': P(2, 2),
-  'tile-2x4': P(2, 4),
+  'tile-1x1': T(1, 1),
+  'tile-1x2': T(1, 2),
+  'tile-2x2': T(2, 2),
+  'tile-2x4': T(2, 4),
   // Slopes (height 3)
   'slope-2x1': B(2, 1),
   'slope-2x2': B(2, 2),

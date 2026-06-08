@@ -7,6 +7,7 @@ export {
   BASEPLATE,
   BASEPLATE_TOP_Y,
   canPlace,
+  canPlaceBrick,
   floatingIds,
   groundedIds,
   isGrounded,

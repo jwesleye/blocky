@@ -13,6 +13,9 @@
  */
 import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
+import type { PlacedBrick } from '../model/types'
+import type { PartCatalog } from '../parts/catalog'
+import { toBrickFootprint } from '../parts/footprint'
 
 /** A single stud cell in the X/Z plane (integer stud coordinates). */
 export interface Cell {
@@ -160,4 +163,13 @@ export function canPlace(
   existing: Iterable<BrickFootprint>,
 ): boolean {
   return groundedIds([...existing, candidate]).has(candidate.id)
+}
+
+export function canPlaceBrick(
+  candidate: PlacedBrick,
+  existing: Iterable<PlacedBrick>,
+  catalog: PartCatalog,
+): boolean {
+  const all = Array.from(existing, (brick) => toBrickFootprint(brick, catalog))
+  return canPlace(toBrickFootprint(candidate, catalog), all)
 }
