@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
+import { buildConnectionGraph } from '@/domain/physics/graph'
+import { PART_CATALOG } from '@/domain/parts/catalog'
 
 /**
  * Build JSON schema and (de)serialization helpers.
@@ -77,5 +79,9 @@ export function deserialize(json: string): BuildState {
     const id = createBrickId()
     bricks[id] = { id, ...brick }
   }
-  return { bricks, selection: new Set<string>() }
+  return {
+    bricks,
+    selection: new Set<string>(),
+    connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
+  }
 }
