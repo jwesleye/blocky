@@ -17,6 +17,17 @@ import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
 import { toBrickFootprint } from '../parts/footprint'
 
+interface PlacementGraph {
+  mergeNode: (id: string) => void
+  mergeEdge: (source: string, target: string) => void
+  hasNode: (id: string) => boolean
+  hasEdge: (source: string, target: string) => boolean
+}
+
+const GraphCtor = Graph as unknown as {
+  new (options?: { type?: string; allowSelfLoops?: boolean }): PlacementGraph
+}
+
 /** A single stud cell in the X/Z plane (integer stud coordinates). */
 export interface Cell {
   readonly x: number
@@ -66,9 +77,11 @@ function faceKey(x: number, z: number, y: number): string {
  *
  * @throws RangeError if any brick has a non-positive height.
  */
-export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
+export function buildConnectionGraph(
+  bricks: Iterable<BrickFootprint>,
+): PlacementGraph {
   const all = [...bricks]
-  const graph = new Graph({ type: 'undirected', allowSelfLoops: false })
+  const graph = new GraphCtor({ type: 'undirected', allowSelfLoops: false })
   graph.mergeNode(BASEPLATE)
 
   // Index bottom (anti-stud) faces by cell + plane so each studded top face
@@ -118,7 +131,7 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
 export function groundedIds(bricks: Iterable<BrickFootprint>): Set<string> {
   const graph = buildConnectionGraph(bricks)
   const grounded = new Set<string>()
-  for (const component of connectedComponents(graph)) {
+  for (const component of connectedComponents(graph as never)) {
     if (!component.includes(BASEPLATE)) continue
     for (const id of component) {
       if (id !== BASEPLATE) grounded.add(id)

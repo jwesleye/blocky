@@ -14,3 +14,16 @@ export const MIN_SAMPLE_FRAMES = 60
 
 /** Number of bricks in the unbalanced collapse stress scenario. */
 export const COLLAPSE_BRICK_COUNT = 300
+
+export const BUNDLE_ENTRY_BUDGET_KIB = 500
+export const BUNDLE_ENTRY_BUDGET_BYTES = BUNDLE_ENTRY_BUDGET_KIB * 1024
+
+export const FIRST_INTERACTION_BUDGET_MS = 3_000
+
+export const PERF_NETWORK_PROFILE = {
+  downloadBytesPerSecond: 1_250_000,
+  uploadBytesPerSecond: 500_000,
+  latencyMs: 40,
+} as const
+
+export const PERF_CPU_THROTTLE_RATE = 4
