@@ -15,8 +15,9 @@ const sampleBrick: Omit<PlacedBrick, 'id'> = {
 }
 
 const resetStore = () => {
-  const temporal = (useBuildStore as unknown as BuildStoreWithTemporal).temporal
-    .getState()
+  const temporal = (
+    useBuildStore as unknown as BuildStoreWithTemporal
+  ).temporal.getState()
   temporal.pause()
   useBuildStore.setState({
     bricks: {},
