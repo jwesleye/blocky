@@ -168,6 +168,101 @@ describe('useBuildStore', () => {
     useBuildStore.getState().selectBrick('still-missing')
     expect(useBuildStore.getState().selection).toEqual(new Set([id]))
   })
+
+  describe('moveSelection', () => {
+    it('shifts selected bricks and preserves selection ids', () => {
+      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      const b = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 4 })
+      const c = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 8 })
+
+      useBuildStore.getState().selectBrick(a)
+      useBuildStore.getState().selectBrick(b, true)
+
+      const success = useBuildStore.getState().moveSelection({ dx: 1, dy: 0, dz: 0 })
+      expect(success).toBe(true)
+
+      const { bricks, selection } = useBuildStore.getState()
+      expect(bricks[a].x).toBe(1)
+      expect(bricks[b].x).toBe(5)
+      expect(bricks[c].x).toBe(8) // Unchanged
+      expect(selection).toEqual(new Set([a, b]))
+    })
+
+    it('rejects invalid moves and leaves state unchanged', () => {
+      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      useBuildStore.getState().selectBrick(a)
+
+      const initialState = useBuildStore.getState().bricks
+      const success = useBuildStore.getState().moveSelection({ dx: 100, dy: 0, dz: 0 }) // Out of bounds
+      
+      expect(success).toBe(false)
+      expect(useBuildStore.getState().bricks).toBe(initialState)
+    })
+
+    it('is captured as a single undoable step', () => {
+      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      useBuildStore.getState().selectBrick(a)
+      
+      useBuildStore.getState().moveSelection({ dx: 1, dy: 0, dz: 0 })
+      expect(useBuildStore.getState().bricks[a].x).toBe(1)
+
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().bricks[a].x).toBe(0)
+
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().bricks[a].x).toBe(1)
+    })
+  })
+
+  describe('duplicateSelection', () => {
+    it('creates clones with fresh ids and selects them', () => {
+      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      useBuildStore.getState().selectBrick(a)
+
+      const success = useBuildStore.getState().duplicateSelection({ dx: 0, dy: 3, dz: 0 })
+      expect(success).toBe(true)
+
+      const { bricks, selection } = useBuildStore.getState()
+      expect(Object.keys(bricks)).toHaveLength(2)
+      expect(selection.size).toBe(1)
+      
+      const cloneId = [...selection][0]
+      expect(cloneId).not.toBe(a)
+      expect(bricks[cloneId]).toEqual({
+        ...sampleBrick,
+        id: cloneId,
+        y: 3,
+      })
+      expect(bricks[a].y).toBe(0) // Original preserved
+    })
+
+    it('rejects invalid duplicates and leaves state unchanged', () => {
+      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      useBuildStore.getState().selectBrick(a)
+
+      const initialState = useBuildStore.getState()
+      const success = useBuildStore.getState().duplicateSelection({ dx: 0, dy: 0, dz: 0 }) // Collision with original
+      
+      expect(success).toBe(false)
+      expect(useBuildStore.getState().bricks).toBe(initialState.bricks)
+      expect(useBuildStore.getState().selection).toBe(initialState.selection)
+    })
+
+    it('is captured as a single undoable step', () => {
+      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      useBuildStore.getState().selectBrick(a)
+      
+      useBuildStore.getState().duplicateSelection({ dx: 0, dy: 3, dz: 0 })
+      expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(2)
+
+      useBuildStore.getState().undo()
+      expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
+      expect(useBuildStore.getState().selection).toEqual(new Set([a]))
+
+      useBuildStore.getState().redo()
+      expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(2)
+    })
+  })
 })
 
 describe('build schema serialization', () => {

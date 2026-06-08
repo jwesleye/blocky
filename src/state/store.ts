@@ -6,7 +6,11 @@ import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { createBrickId } from '@/state/schema'
-import { buildConnectionGraph } from '@/domain/physics/graph'
+import {
+  buildConnectionGraph,
+  translateBrick,
+  canPlaceGroup,
+} from '@/domain/physics'
 import { PART_CATALOG } from '@/domain/parts/catalog'
 
 export interface BuildActions {
@@ -17,6 +21,24 @@ export interface BuildActions {
   placeBrick: (brick: Omit<PlacedBrick, 'id'>) => string
   /** Removes a brick from the model and from the selection. No-op if unknown. */
   deleteBrick: (id: string) => void
+  /**
+   * Translates the current selection by a grid delta. Returns true if the move
+   * is valid and was committed.
+   */
+  moveSelection: (delta: { dx: number; dy: number; dz: number }) => boolean
+  /**
+   * Duplicates the current selection at a grid delta. Returns true if the
+   * duplicate is valid and was committed; sets selection to the new clones.
+   */
+  duplicateSelection: (delta: { dx: number; dy: number; dz: number }) => boolean
+  /** Returns true if moving the current selection by delta would be valid. */
+  previewMoveSelection: (delta: { dx: number; dy: number; dz: number }) => boolean
+  /** Returns true if duplicating the current selection at delta would be valid. */
+  previewDuplicateSelection: (delta: {
+    dx: number
+    dy: number
+    dz: number
+  }) => boolean
   /**
    * Selects a brick. By default this replaces the current selection; pass
    * `additive` to extend it (e.g. shift-click multi-select).
@@ -41,7 +63,7 @@ export interface BuildStoreWithTemporal extends BuildStore {
 export const useBuildStore = create<BuildStore>()(
   subscribeWithSelector(
     temporal(
-      (set) => ({
+      (set, get) => ({
         bricks: {},
         selection: new Set<string>(),
         connectionGraph: new Graph({
@@ -66,6 +88,89 @@ export const useBuildStore = create<BuildStore>()(
             selection.delete(id)
             return { bricks, selection }
           }),
+
+        moveSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+
+          const otherBricks = Object.values(state.bricks).filter(
+            (b) => !state.selection.has(b.id),
+          )
+
+          const moved = selectedBricks.map((b) => translateBrick(b, delta))
+
+          if (!canPlaceGroup(moved, otherBricks, PART_CATALOG)) {
+            return false
+          }
+
+          const nextBricks = { ...state.bricks }
+          for (const b of moved) {
+            nextBricks[b.id] = b
+          }
+
+          set({ bricks: nextBricks })
+          return true
+        },
+
+        duplicateSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+
+          const clones = selectedBricks.map((b) => {
+            const id = createBrickId()
+            return translateBrick({ ...b, id }, delta)
+          })
+
+          const allExisting = Object.values(state.bricks)
+
+          if (!canPlaceGroup(clones, allExisting, PART_CATALOG)) {
+            return false
+          }
+
+          const nextBricks = { ...state.bricks }
+          const nextSelection = new Set<string>()
+          for (const b of clones) {
+            nextBricks[b.id] = b
+            nextSelection.add(b.id)
+          }
+
+          set({ bricks: nextBricks, selection: nextSelection })
+          return true
+        },
+
+        previewMoveSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+          const otherBricks = Object.values(state.bricks).filter(
+            (b) => !state.selection.has(b.id),
+          )
+          const moved = selectedBricks.map((b) => translateBrick(b, delta))
+          return canPlaceGroup(moved, otherBricks, PART_CATALOG)
+        },
+
+        previewDuplicateSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+          const clones = selectedBricks.map((b, i) => {
+            return translateBrick({ ...b, id: `preview-${i}` }, delta)
+          })
+          const allExisting = Object.values(state.bricks)
+          return canPlaceGroup(clones, allExisting, PART_CATALOG)
+        },
 
         selectBrick: (id, additive = false) =>
           set((state) => {

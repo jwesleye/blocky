@@ -10,6 +10,11 @@ export {
 } from './balance'
 export { findShearRegion } from './shear'
 export {
+  translateBrick,
+  findCollisions,
+  canPlaceGroup,
+} from './transform'
+export {
   BASEPLATE,
   BASEPLATE_TOP_Y,
   canPlace,
