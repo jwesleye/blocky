@@ -14,40 +14,57 @@ function percentile(sortedAsc: number[], p: number): number {
   return sortedAsc[Math.max(0, idx)] as number
 }
 
+type FixtureBrick = {
+  id: string
+  partId: string
+  color: string
+  x: number
+  y: number
+  z: number
+  rot: 0 | 1 | 2 | 3
+}
+
 /**
  * @perf Collapse smoothness — frame-stall budget
  *
- * Triggers a collapse on a several-hundred-brick unbalanced build and records
- * frame times during the animation window. Asserts that:
+ * Loads a several-hundred-brick stress build through the real app state, invokes
+ * the actual collapse trigger (selectCollapsingBricks via PART_CATALOG,
+ * buildConnectionGraph, getFloatingBricks, getUnbalancedBricks), then drives the
+ * full collapse animation pipeline (createCollapseTransaction,
+ * advanceCollapseTransaction, createCollapseSceneBodies) while sampling RAF frame
+ * deltas. Asserts:
  *
- *   1. The synchronous collapse computation (selectCollapsingBricks equivalent)
- *      does not exceed LONG_FRAME_THRESHOLD_MS on its own.
- *   2. No single animation frame in the surrounding window exceeds
- *      LONG_FRAME_THRESHOLD_MS.
- *   3. p95 frame time stays ≤ P95_FRAME_BUDGET_MS (~60 fps).
+ *   1. Synchronous collapse computation < LONG_FRAME_THRESHOLD_MS.
+ *   2. No single frame in the animation window exceeds LONG_FRAME_THRESHOLD_MS.
+ *   3. p95 frame time ≤ P95_FRAME_BUDGET_MS (~60 fps).
  *
- * Measurement method: requestAnimationFrame delta sampling. The collapse
- * computation runs synchronously inside the first RAF callback so its cost
- * is visible as an extended first-frame delta. Budget thresholds are defined
- * in ./budgets.ts.
+ * Budget thresholds are defined in ./budgets.ts.
  */
 test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   await page.goto('/')
 
-  // Build a 300-brick unbalanced fixture in the test process.
-  // One grounded anchor at the origin; the rest are positioned with no
-  // stud-level connection to it, so selectCollapsingBricks classifies all
-  // non-anchor bricks as floating/collapsing.
-  const bricks: Array<{ id: string; x: number; y: number; z: number }> = [
-    { id: 'base', x: 0, y: 0, z: 0 },
+  // Stress fixture: two bricks form an unbalanced tower (narrow 1×1 base with a
+  // wide 2×4 overhang) to exercise getUnbalancedBricks → computeSupportFootprint,
+  // computeCoM, isBalanced, and the d3-polygon convex hull path.
+  // The remaining bricks are floating (y=3, far from any y=0 brick) to exercise
+  // buildConnectionGraph + getFloatingBricks BFS with mixed partIds and all four
+  // rotations — covering PART_CATALOG footprint and rotation-aware cell geometry.
+  const bricks: FixtureBrick[] = [
+    { id: 'base', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+    // CoM of this component projects outside the 1×1 support hull → unbalanced
+    { id: 'overhang', partId: 'brick-2x4', color: 'blue', x: 0, y: 3, z: 0, rot: 0 },
   ]
-  for (let i = 1; i < COLLAPSE_BRICK_COUNT; i++) {
+  const floatingPartIds = ['brick-2x4', 'brick-1x2', 'plate-2x4', 'brick-2x2']
+  for (let i = 2; i < COLLAPSE_BRICK_COUNT; i++) {
     bricks.push({
-      id: `u${i}`,
-      // Offset far enough from the base that no stud connection is possible
-      x: (i % 20) + 5,
-      y: 3 + Math.floor(i / 20) * 3,
-      z: (i % 15) * 2,
+      id: `f${i}`,
+      partId: floatingPartIds[i % floatingPartIds.length] as string,
+      color: 'gray',
+      // Offset far from the anchor so no stud connection forms
+      x: 50 + (i % 20) * 5,
+      y: 3,
+      z: Math.floor(i / 20) * 5,
+      rot: (i % 4) as 0 | 1 | 2 | 3,
     })
   }
 
@@ -56,66 +73,65 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       brickData,
       targetFrames,
     }: {
-      brickData: Array<{ id: string; x: number; y: number; z: number }>
+      brickData: FixtureBrick[]
       targetFrames: number
     }) => {
-      /**
-       * Inline collapse graph computation — mirrors the core logic of
-       * selectCollapsingBricks: build an adjacency graph from stud-connection
-       * geometry, then BFS from grounded bricks to find the floating set.
-       * Runs synchronously to represent the main-thread work that would occur
-       * on a real collapse trigger, which is the primary source of frame stalls.
-       */
-      function computeCollapse(
-        items: Array<{ id: string; x: number; y: number; z: number }>,
-      ): number {
-        const adj = new Map<string, string[]>()
-        for (const b of items) adj.set(b.id, [])
+      // Import the real app modules from the Vite dev server.
+      // String variables prevent TypeScript from statically resolving these
+      // dev-server URLs; the imports run in the browser's module cache so
+      // PART_CATALOG, buildConnectionGraph, graphology, and d3-polygon are the
+      // exact same instances the app uses.
+      const collapsePath: string = '/src/domain/physics/collapse.ts'
+      const simPath: string = '/src/domain/physics/collapseSimulation.ts'
+      const scenePath: string = '/src/scene/collapseSceneBodies.ts'
+      const storePath: string = '/src/state/useStore.ts'
 
-        // O(n²) stud-connection check — same algorithmic shape as the real buildConnectionGraph
-        for (let i = 0; i < items.length; i++) {
-          for (let j = i + 1; j < items.length; j++) {
-            const a = items[i] as { id: string; x: number; y: number; z: number }
-            const b = items[j] as { id: string; x: number; y: number; z: number }
-            if (
-              Math.abs(a.y - b.y) === 3 &&
-              Math.abs(a.x - b.x) <= 1 &&
-              Math.abs(a.z - b.z) <= 1
-            ) {
-              ;(adj.get(a.id) as string[]).push(b.id)
-              ;(adj.get(b.id) as string[]).push(a.id)
-            }
-          }
-        }
+      const collapseModule = await import(collapsePath)
+      const simModule = await import(simPath)
+      const sceneModule = await import(scenePath)
+      const storeModule = await import(storePath)
 
-        // BFS from grounded bricks (y === 0) — mirrors getFloatingBricks
-        const visited = new Set<string>()
-        const queue: string[] = []
-        for (const b of items) {
-          if (b.y === 0) {
-            visited.add(b.id)
-            queue.push(b.id)
-          }
-        }
-        let head = 0
-        while (head < queue.length) {
-          const cur = queue[head] as string
-          head++
-          const neighbours = adj.get(cur) as string[]
-          for (const nb of neighbours) {
-            if (!visited.has(nb)) {
-              visited.add(nb)
-              queue.push(nb)
-            }
-          }
-        }
-
-        return items.filter((b) => !visited.has(b.id)).length
+      type CollapseBodyInput = {
+        id: string
+        partId: string
+        color: string
+        position: [number, number, number]
+        size: [number, number, number]
       }
+      type Transaction = {
+        phase: string
+        collapsingBodies: ReadonlyArray<{ id: string; settledAtMs: number | null }>
+        fadeStartedAtMs: number | null
+      }
+
+      const selectCollapsingBricks = collapseModule.selectCollapsingBricks as (
+        bricks: FixtureBrick[],
+      ) => Set<string>
+      const createCollapseTransaction = simModule.createCollapseTransaction as (input: {
+        allBricks: readonly FixtureBrick[]
+        collapsingBodies: readonly CollapseBodyInput[]
+        timings?: { settleDelayMs?: number; fadeDurationMs?: number }
+      }) => Transaction
+      const advanceCollapseTransaction = simModule.advanceCollapseTransaction as (
+        t: Transaction,
+        nowMs: number,
+      ) => Transaction
+      const createCollapseSceneBodies = sceneModule.createCollapseSceneBodies as (
+        t: Transaction,
+        staticBodies: readonly unknown[],
+      ) => unknown[]
+      const useStore = storeModule.useStore as {
+        getState: () => { bricks: FixtureBrick[]; setBricks: (b: FixtureBrick[]) => void }
+      }
+
+      // Load the stress build through the real app state.
+      useStore.getState().setBricks(brickData)
+      const loadedBricks = useStore.getState().bricks
 
       const frameTimes: number[] = []
       let computeMs = 0
       let collapsingCount = 0
+      let transaction: Transaction | null = null
 
       await new Promise<void>((resolve) => {
         let last: number | null = null
@@ -127,12 +143,40 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
           }
 
           if (count === 0) {
-            // First frame: run the collapse computation synchronously.
-            // Any extra latency it introduces is captured in the following
-            // frame delta, exposing potential stalls.
+            // First RAF: invoke the real selectCollapsingBricks — exercises
+            // PART_CATALOG, buildConnectionGraph (stud-connection geometry,
+            // rotation-aware cell footprint), getFloatingBricks (BFS from y=0),
+            // and getUnbalancedBricks (connected components, convex hull, CoM).
+            // Any main-thread stall appears as an extended next-frame delta.
             const t0 = performance.now()
-            collapsingCount = computeCollapse(brickData)
+            const collapsingSet = selectCollapsingBricks(loadedBricks)
             computeMs = performance.now() - t0
+            collapsingCount = collapsingSet.size
+
+            const collapsingBodies: CollapseBodyInput[] = loadedBricks
+              .filter((b) => collapsingSet.has(b.id))
+              .map((b) => ({
+                id: b.id,
+                partId: b.partId,
+                color: b.color,
+                position: [b.x, b.y, b.z] as [number, number, number],
+                size: [2, 3, 4] as [number, number, number],
+              }))
+
+            // Create a real CollapseTransaction through the actual app pipeline.
+            transaction = createCollapseTransaction({
+              allBricks: loadedBricks,
+              collapsingBodies,
+              timings: { settleDelayMs: 0, fadeDurationMs: 100 },
+            })
+          }
+
+          if (count > 0 && transaction !== null) {
+            // Subsequent frames: advance the collapse animation state and rebuild
+            // scene bodies — exercises advanceCollapseTransaction phase logic and
+            // createCollapseSceneBodies (the dynamic body creation pipeline).
+            transaction = advanceCollapseTransaction(transaction, ts)
+            createCollapseSceneBodies(transaction, [])
           }
 
           last = ts
@@ -155,9 +199,10 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
 
   const sorted = [...result.frameTimes].sort((a, b) => a - b)
   const p95 = percentile(sorted, 95)
-  const maxFrame = result.frameTimes.length > 0 ? Math.max(...result.frameTimes) : 0
+  const maxFrame =
+    result.frameTimes.length > 0 ? Math.max(...result.frameTimes) : 0
 
-  // Sanity: collapse was triggered on the expected bricks
+  // Sanity: the real selectCollapsingBricks classified at least one brick
   expect(result.collapsingCount).toBeGreaterThan(0)
 
   // The synchronous collapse computation alone must not block the main thread
