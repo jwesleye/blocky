@@ -36,7 +36,9 @@ export const useBuildStore = create<BuildStore>()(
 
       placeBrick: (brick) => {
         const id = createBrickId()
-        set((state) => ({ bricks: { ...state.bricks, [id]: { id, ...brick } } }))
+        set((state) => ({
+          bricks: { ...state.bricks, [id]: { id, ...brick } },
+        }))
         return id
       },
 
@@ -64,7 +66,9 @@ export const useBuildStore = create<BuildStore>()(
       selectBrick: (id, additive = false) =>
         set((state) => {
           if (!(id in state.bricks)) return state
-          const selection = additive ? new Set(state.selection) : new Set<string>()
+          const selection = additive
+            ? new Set(state.selection)
+            : new Set<string>()
           selection.add(id)
           return { selection }
         }),
