@@ -84,6 +84,7 @@ export const useBuildStore = create<BuildStore>()(
           const id = createBrickId()
           set((state) => ({
             bricks: { ...state.bricks, [id]: { id, ...brick } },
+            lastCollapse: null,
           }))
           return id
         },
@@ -95,7 +96,7 @@ export const useBuildStore = create<BuildStore>()(
             delete bricks[id]
             const selection = new Set(state.selection)
             selection.delete(id)
-            return { bricks, selection }
+            return { bricks, selection, lastCollapse: null }
           }),
 
         moveSelection: (delta) => {
@@ -121,7 +122,7 @@ export const useBuildStore = create<BuildStore>()(
             nextBricks[b.id] = b
           }
 
-          set({ bricks: nextBricks })
+          set({ bricks: nextBricks, lastCollapse: null })
           return true
         },
 
@@ -151,7 +152,7 @@ export const useBuildStore = create<BuildStore>()(
             nextSelection.add(b.id)
           }
 
-          set({ bricks: nextBricks, selection: nextSelection })
+          set({ bricks: nextBricks, selection: nextSelection, lastCollapse: null })
           return true
         },
 
@@ -188,10 +189,11 @@ export const useBuildStore = create<BuildStore>()(
               ? new Set(state.selection)
               : new Set<string>()
             selection.add(id)
-            return { selection }
+            return { selection, lastCollapse: null }
           }),
 
-        clearSelection: () => set({ selection: new Set<string>() }),
+        clearSelection: () =>
+          set({ selection: new Set<string>(), lastCollapse: null }),
 
         triggerCollapse: () =>
           set((state) => {

@@ -367,6 +367,17 @@ describe('useBuildStore', () => {
         label: 'Undo collapse',
       })
     })
+
+    it('clears lastCollapse on a subsequent non-collapse edit', () => {
+      seedCollapseModel()
+      useBuildStore.getState().triggerCollapse()
+      expect(useBuildStore.getState().lastCollapse).not.toBeNull()
+
+      // Any later state-changing action makes the collapse no longer the top
+      // undo entry, so its label must not linger.
+      useBuildStore.getState().placeBrick({ ...sampleBrick, x: 20 })
+      expect(useBuildStore.getState().lastCollapse).toBeNull()
+    })
   })
 })
 
