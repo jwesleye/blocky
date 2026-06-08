@@ -6,6 +6,13 @@ export {
   saveBuild,
 } from './autosave'
 export type { Autosaver, AutosaverOptions, KeyValueStorage } from './autosave'
+export { createGalleryClient } from './galleryClient'
+export type {
+  GalleryClient,
+  GalleryLoadResult,
+  GalleryPublishRequest,
+  GalleryPublishResult,
+} from './galleryClient'
 export {
   SHARED_BUILD_CONTRACT_VERSION,
   SharedBuildGalleryMetadataSchema,
