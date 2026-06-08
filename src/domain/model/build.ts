@@ -17,22 +17,24 @@ const halfStudOffsetSchema = z.object({
   z: z.union([z.literal(0), z.literal(1)]),
 })
 
+export const serializedBrickSchema = z.object({
+  partId: z.string(),
+  color: z.string(),
+  x: z.number().int(),
+  y: z.number().int(),
+  z: z.number().int(),
+  rot: rotationSchema,
+  offset: halfStudOffsetSchema.optional(),
+})
+
+export type SerializedBrick = z.infer<typeof serializedBrickSchema>
+
 export const BuildSchema = z.object({
   version: buildVersionSchema,
   baseplate: z.object({
-    size: z.number().int().positive(),
+    size: z.literal(BASEPLATE_SIZE_STUDS),
   }),
-  bricks: z.array(
-    z.object({
-      partId: z.string(),
-      color: z.string(),
-      x: z.number().int(),
-      y: z.number().int(),
-      z: z.number().int(),
-      rot: rotationSchema,
-      offset: halfStudOffsetSchema.optional(),
-    }),
-  ),
+  bricks: z.array(serializedBrickSchema),
 })
 
 export const buildSchema = BuildSchema
@@ -44,7 +46,7 @@ export const BUILD_SCHEMA_VERSION = CURRENT_BUILD_VERSION
 
 export function bricksToBuild(
   bricks: PlacedBrick[],
-  baseplateSize: number,
+  baseplateSize: typeof BASEPLATE_SIZE_STUDS,
 ): Build {
   const hasOffset = bricks.some((brick) => brick.offset !== undefined)
 
