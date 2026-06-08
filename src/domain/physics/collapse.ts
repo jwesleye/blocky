@@ -2,24 +2,39 @@ import type { PlacedBrick } from '../model/types'
 import { PART_CATALOG } from '../parts/catalog'
 import { buildConnectionGraph } from './graph'
 import { getFloatingBricks } from './grounding'
-import { getUnbalancedBricks } from './balance'
+import { isBalanced } from './balance'
+import { findShearRegion } from './shear'
+import { connectedComponents } from 'graphology-components'
 
 /**
  * Returns the set of brick IDs that should collapse after an edit.
  *
- * Phase 1 MVP collapses:
+ * Collapses:
  *  - Floating bricks: any brick without a path to the baseplate.
- *  - Whole unbalanced components: any connected component whose center-of-mass
- *    projection falls outside the convex hull of its baseplate contact footprint.
- *
- * Smart shear (break only the overhanging sub-region) is deferred to Phase 2.
+ *  - Sheared unstable regions: only the minimal overhanging sub-region of each
+ *    grounded, unbalanced component falls away.
  */
 export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
   if (bricks.length === 0) return new Set()
 
   const graph = buildConnectionGraph(bricks, PART_CATALOG)
   const floating = getFloatingBricks(bricks, graph)
-  const unbalanced = getUnbalancedBricks(bricks, graph, PART_CATALOG)
+  const brickById = new Map(bricks.map((brick) => [brick.id, brick]))
+  const sheared = new Set<string>()
 
-  return new Set([...floating, ...unbalanced])
+  for (const componentIds of connectedComponents(graph)) {
+    const component = componentIds
+      .map((id) => brickById.get(id))
+      .filter((brick): brick is PlacedBrick => Boolean(brick))
+
+    if (component.length === 0 || component.every((brick) => brick.y !== 0)) continue
+    if (isBalanced(component, PART_CATALOG)) continue
+
+    const { shear } = findShearRegion(component)
+    for (const brick of shear) {
+      sheared.add(brick.id)
+    }
+  }
+
+  return new Set([...floating, ...sheared])
 }
