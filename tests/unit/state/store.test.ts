@@ -7,7 +7,7 @@ import {
   deserialize,
   serialize,
 } from '@/state/schema'
-import { useBuildStore } from '@/state/store'
+import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
 const sampleBrick: Omit<PlacedBrick, 'id'> = {
   partId: 'brick-2x4',
@@ -18,12 +18,18 @@ const sampleBrick: Omit<PlacedBrick, 'id'> = {
   rot: 0,
 }
 
-const resetStore = () =>
+const resetStore = () => {
+  const temporal = (useBuildStore as unknown as BuildStoreWithTemporal).temporal
+    .getState()
+  temporal.pause()
   useBuildStore.setState({
     bricks: {},
     selection: new Set<string>(),
     connectionGraph: new Graph({ type: 'undirected', allowSelfLoops: false }),
   })
+  temporal.clear()
+  temporal.resume()
+}
 
 describe('useBuildStore', () => {
   beforeEach(resetStore)
@@ -73,6 +79,29 @@ describe('useBuildStore', () => {
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
     expect(useBuildStore.getState().bricks[id]).toBeDefined()
     expect(useBuildStore.getState().connectionGraph.hasNode(id)).toBe(true)
+  })
+
+  it('undo/redo reverses multiple placeBrick actions in sequence', () => {
+    const first = useBuildStore.getState().placeBrick(sampleBrick)
+    const second = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 4 })
+    const third = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 8 })
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(3)
+
+    useBuildStore.getState().undo()
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(2)
+    expect(useBuildStore.getState().bricks[third]).toBeUndefined()
+    expect(useBuildStore.getState().connectionGraph.order).toBe(2)
+
+    useBuildStore.getState().undo()
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
+    expect(useBuildStore.getState().bricks[first]).toBeDefined()
+    expect(useBuildStore.getState().bricks[second]).toBeUndefined()
+    expect(useBuildStore.getState().connectionGraph.order).toBe(1)
+
+    useBuildStore.getState().redo()
+    useBuildStore.getState().redo()
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(3)
+    expect(useBuildStore.getState().connectionGraph.order).toBe(3)
   })
 
   it('undo/redo reverses and reapplies deleteBrick', () => {

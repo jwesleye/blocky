@@ -95,8 +95,11 @@ export const useBuildStore = create<BuildStore>()(
         limit: 50,
         partialize: (state) => {
           const { bricks, selection } = state
-          return { bricks, selection } as BuildState
+          return { bricks, selection }
         },
+        equality: (pastState, currentState) =>
+          pastState.bricks === currentState.bricks &&
+          pastState.selection === currentState.selection,
       },
     ),
   ),
