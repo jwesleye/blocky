@@ -35,4 +35,14 @@ describe('ColorPicker', () => {
     render(<ColorPicker selected="red" onSelect={() => undefined} />)
     expect(screen.getByRole('radiogroup', { name: 'Brick color' })).toBeInTheDocument()
   })
+
+  it('supports keyboard navigation with arrow keys', () => {
+    const onSelect = vi.fn()
+    render(<ColorPicker selected="red" onSelect={onSelect} />)
+    const redRadio = screen.getByRole('radio', { name: 'Red' })
+    redRadio.focus()
+
+    fireEvent.keyDown(redRadio, { key: 'ArrowRight' })
+    expect(onSelect).toHaveBeenCalledWith('blue')
+  })
 })
