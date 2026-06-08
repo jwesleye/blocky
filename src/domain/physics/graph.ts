@@ -3,15 +3,7 @@ import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
 import { getOccupiedCells } from '../parts/footprint'
 
-export interface ConnectionGraph {
-  addNode: (id: string) => void
-  addEdge: (source: string, target: string) => void
-  hasEdge: (source: string, target: string) => boolean
-  forEachNeighbor: (
-    node: string,
-    callback: (neighbor: string) => void,
-  ) => void
-}
+export type ConnectionGraph = Graph
 
 const GraphCtor = Graph as unknown as {
   new (options?: { type?: string; allowSelfLoops?: boolean }): ConnectionGraph
