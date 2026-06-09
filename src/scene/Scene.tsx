@@ -15,7 +15,9 @@ import {
 } from './sceneConfig'
 
 const CollapseSimulation = lazy(() =>
-  import('./CollapseSimulation').then((m) => ({ default: m.CollapseSimulation })),
+  import('./CollapseSimulation').then((m) => ({
+    default: m.CollapseSimulation,
+  })),
 )
 
 /**

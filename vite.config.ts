@@ -13,7 +13,14 @@ function enforceBundleBudget() {
     name: 'enforce-bundle-budget',
     generateBundle(_options: unknown, bundle: Record<string, unknown>) {
       const entryChunks = Object.values(bundle).filter(
-        (output): output is { type: string; isEntry?: boolean; fileName: string; code: string } =>
+        (
+          output,
+        ): output is {
+          type: string
+          isEntry?: boolean
+          fileName: string
+          code: string
+        } =>
           typeof output === 'object' &&
           output !== null &&
           'type' in output &&

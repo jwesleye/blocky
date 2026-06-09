@@ -138,9 +138,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
         getState: () => {
           bricks: Record<string, FixtureBrick>
         }
-        setState: (state: {
-          bricks: Record<string, FixtureBrick>
-        }) => void
+        setState: (state: { bricks: Record<string, FixtureBrick> }) => void
       }
 
       // Load the stress build through the real app state.

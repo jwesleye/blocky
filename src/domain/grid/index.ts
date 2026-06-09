@@ -15,9 +15,7 @@ export const DEFAULT_BASEPLATE_SIZE = 32
 
 export type BaseplateSize = (typeof SUPPORTED_BASEPLATE_SIZES)[number]
 
-export const isSupportedBaseplateSize = (
-  size: number,
-): size is BaseplateSize =>
+export const isSupportedBaseplateSize = (size: number): size is BaseplateSize =>
   (SUPPORTED_BASEPLATE_SIZES as readonly number[]).includes(size)
 
 export const assertSupportedBaseplateSize = (size: number): void => {
