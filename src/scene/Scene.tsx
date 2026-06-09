@@ -6,15 +6,18 @@ import { brickToBodySnapshot } from '@/domain/physics'
 import { useBuildStore } from '@/state/store'
 import { CollapseSimulation } from './CollapseSimulation'
 import { collapseDebug } from './collapseDebug'
+import { CameraRig } from './CameraRig'
+import { Lighting } from './Lighting'
+import {
+  CAMERA_DEFAULT_POSITION,
+  CAMERA_DEFAULT_TARGET,
+  CAMERA_DEFAULT_FOV,
+  BACKGROUND_COLOR,
+} from './sceneConfig'
 
 /**
  * Renders the live build as static meshes and overlays the Rapier collapse
  * simulation while a collapse is in flight.
- *
- * Each brick is rendered in exactly one place: stable bricks live in the static
- * scene (they were never removed from the store), while sheared bricks live only
- * in the collapse simulation as dynamic bodies. This avoids both teleporting and
- * Z-fighting against a duplicated static copy.
  */
 export function Scene() {
   const bricks = useBuildStore((state) => state.bricks)
@@ -36,16 +39,22 @@ export function Scene() {
   return (
     <Canvas
       shadows
-      camera={{ fov: 50, near: 0.1, far: 1000, position: [30, 25, 30] }}
+      camera={{
+        fov: CAMERA_DEFAULT_FOV,
+        near: 0.1,
+        far: 1000,
+        position: CAMERA_DEFAULT_POSITION,
+      }}
     >
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[20, 40, 15]} intensity={1.1} castShadow />
+      <color attach="background" args={[BACKGROUND_COLOR]} />
+      <Lighting />
+      <CameraRig />
       <OrbitControls
         makeDefault
         enableRotate
         enablePan
         enableZoom
-        target={[0, 0, 0]}
+        target={CAMERA_DEFAULT_TARGET}
       />
       {staticBodies.map((body) => (
         <mesh key={body.id} position={body.position} castShadow receiveShadow>
