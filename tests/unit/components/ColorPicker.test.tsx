@@ -2,19 +2,19 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ColorPicker } from '@/components/ColorPicker'
-import { BRICK_COLORS } from '@/domain/model/colors'
+import { COLOR_PALETTE } from '@/domain/parts/colors'
 
 describe('ColorPicker', () => {
   it('renders a swatch for every palette color', () => {
     render(<ColorPicker selected="red" onSelect={() => undefined} />)
-    for (const color of BRICK_COLORS) {
+    for (const color of COLOR_PALETTE) {
       expect(
-        screen.getByRole('radio', { name: color.name }),
+        screen.getByRole('radio', { name: color.label }),
       ).toBeInTheDocument()
     }
   })
 
-  it('exposes each color name as an accessible label (not color-only)', () => {
+  it('exposes each color label as an accessible name (not color-only)', () => {
     render(<ColorPicker selected="red" onSelect={() => undefined} />)
     expect(
       screen.getByRole('radio', { name: 'Light Gray' }),

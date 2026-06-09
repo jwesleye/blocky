@@ -1,7 +1,7 @@
 import { connectedComponents } from 'graphology-components'
 
 import type { PlacedBrick } from '../model/types'
-import { PART_CATALOG } from '../parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '../parts/catalog'
 import { getOccupiedCells } from '../parts/footprint'
 import { computeCoM, computeSupportFootprint, isBalanced } from './balance'
 import { buildConnectionGraph } from './graph'

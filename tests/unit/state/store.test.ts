@@ -3,7 +3,7 @@ import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { bricksOutsideBaseplate } from '@/domain/physics'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import { BUILD_SCHEMA_VERSION, deserialize, serialize } from '@/state/schema'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 

@@ -1,9 +1,10 @@
 import type { KeyboardEvent } from 'react'
 import {
+  PART_CATALOG,
   PART_TYPE_LABELS,
-  PARTS_CATALOG,
   type PartType,
 } from '@/domain/parts/catalog'
+import type { PartDef } from '@/domain/parts/catalog'
 
 interface PartPickerProps {
   selected: string
@@ -12,11 +13,15 @@ interface PartPickerProps {
 
 const PART_TYPE_ORDER: PartType[] = ['brick', 'plate', 'tile', 'slope', 'round']
 
+const INVENTORY_PARTS = PART_CATALOG.filter(
+  (p): p is PartDef => p.category !== 'baseplate',
+)
+
 export function PartPicker({ selected, onSelect }: PartPickerProps) {
   const handleKeyDown = (
     e: KeyboardEvent,
     currentIndex: number,
-    groupParts: typeof PARTS_CATALOG,
+    groupParts: readonly PartDef[],
   ) => {
     let nextIndex: number | null = null
 
@@ -43,7 +48,7 @@ export function PartPicker({ selected, onSelect }: PartPickerProps) {
   return (
     <div className="part-picker">
       {PART_TYPE_ORDER.map((type) => {
-        const parts = PARTS_CATALOG.filter((p) => p.type === type)
+        const parts = INVENTORY_PARTS.filter((p) => p.category === type)
         const hasSelectedInGroup = parts.some((p) => p.id === selected)
 
         return (
@@ -68,7 +73,7 @@ export function PartPicker({ selected, onSelect }: PartPickerProps) {
                   onClick={() => onSelect(part.id)}
                   onKeyDown={(e) => handleKeyDown(e, index, parts)}
                 >
-                  {part.name}
+                  {part.label}
                 </button>
               ))}
             </div>

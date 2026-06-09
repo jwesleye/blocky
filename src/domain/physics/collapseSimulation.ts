@@ -1,6 +1,6 @@
 import { getBrickColor } from '../model/colors'
 import type { BrickBodySnapshot, PlacedBrick } from '../model/types'
-import { PART_CATALOG, type PartCatalog } from '../parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG, type PartCatalog } from '../parts/catalog'
 
 /**
  * Converts a placed brick into a {@link BrickBodySnapshot} positioned at the

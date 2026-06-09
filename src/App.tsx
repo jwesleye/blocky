@@ -86,7 +86,7 @@ export function App() {
               aria-hidden="true"
             />
             <span style={{ fontSize: 13 }}>
-              {currentColor?.name ?? colorId} · {currentPart?.name ?? partId}
+              {currentColor?.label ?? colorId} · {currentPart?.label ?? partId}
             </span>
           </div>
         </div>
