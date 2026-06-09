@@ -14,6 +14,7 @@ export {
   findCollisions,
   canPlaceGroup,
   bricksOutsideBaseplate,
+  mirrorBricks,
 } from './transform'
 export {
   BASEPLATE,

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
 import { ColorPicker } from '@/components/ColorPicker'
@@ -9,18 +10,30 @@ import { useBuildStore } from '@/state/store'
 import '@/styles/pickers.css'
 
 export function App() {
+  const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
+
   const colorId = useCursorStore((s) => s.colorId)
   const partId = useCursorStore((s) => s.partId)
   const setColor = useCursorStore((s) => s.setColor)
   const setPart = useCursorStore((s) => s.setPart)
 
-  // Select the stable bricks record; deriving the array inside the selector
-  // would return a fresh reference each render and loop useSyncExternalStore.
   const bricksById = useBuildStore((state) => state.bricks)
   const bricks = Object.values(bricksById)
+  const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
+  const selectionSize = useBuildStore((s) => s.selection.size)
 
   const currentColor = getBrickColor(colorId)
   const currentPart = getPart(partId)
+
+  const handleMirror = (axis: 'x' | 'z') => {
+    const ok = mirrorSelection(axis)
+    if (!ok) {
+      setMirrorFeedback(`Cannot mirror along ${axis.toUpperCase()} axis`)
+      setTimeout(() => setMirrorFeedback(null), 3000)
+    } else {
+      setMirrorFeedback(null)
+    }
+  }
 
   return (
     <div
@@ -116,6 +129,48 @@ export function App() {
             Parts
           </div>
           <PartPicker selected={partId} onSelect={setPart} />
+        </div>
+
+        {/* Transform controls */}
+        <div style={{ borderTop: '1px solid #333' }}>
+          <div
+            style={{
+              padding: '8px 8px 0',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#888',
+            }}
+          >
+            Transform
+          </div>
+          <div style={{ padding: '4px 8px 4px', display: 'flex', gap: 4 }}>
+            <button
+              onClick={() => handleMirror('x')}
+              disabled={selectionSize === 0}
+              data-testid="mirror-x"
+              style={{ flex: 1, padding: '4px 0', cursor: 'pointer' }}
+            >
+              Mirror X
+            </button>
+            <button
+              onClick={() => handleMirror('z')}
+              disabled={selectionSize === 0}
+              data-testid="mirror-z"
+              style={{ flex: 1, padding: '4px 0', cursor: 'pointer' }}
+            >
+              Mirror Z
+            </button>
+          </div>
+          {mirrorFeedback && (
+            <div
+              data-testid="mirror-feedback"
+              style={{ padding: '0 8px 6px', fontSize: 11, color: '#f77' }}
+            >
+              {mirrorFeedback}
+            </div>
+          )}
         </div>
       </aside>
 

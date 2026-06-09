@@ -10,6 +10,7 @@ import {
   buildConnectionGraph,
   canPlaceBrick,
   translateBrick,
+  mirrorBricks,
   canPlaceGroup,
   selectCollapsingBricks,
   bricksToBodySnapshots,
@@ -49,6 +50,13 @@ export interface BuildActions {
     dy: number
     dz: number
   }) => boolean
+  /**
+   * Mirrors the current selection across the selection's bounding-box midline.
+   * Returns true if the mirror is valid and was committed.
+   */
+  mirrorSelection: (axis: 'x' | 'z') => boolean
+  /** Returns true if mirroring the current selection would be valid without mutating state. */
+  previewMirrorSelection: (axis: 'x' | 'z') => boolean
   /**
    * Selects a brick. By default this replaces the current selection; pass
    * `additive` to extend it (e.g. shift-click multi-select).
@@ -245,6 +253,46 @@ export const useBuildStore = create<BuildStore>()(
             PART_CATALOG,
             get().baseplateSize,
           )
+        },
+
+        mirrorSelection: (axis) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+
+          const otherBricks = Object.values(state.bricks).filter(
+            (b) => !state.selection.has(b.id),
+          )
+
+          const mirrored = mirrorBricks(selectedBricks, axis, PART_CATALOG)
+
+          if (!canPlaceGroup(mirrored, otherBricks, PART_CATALOG)) {
+            return false
+          }
+
+          const nextBricks = { ...state.bricks }
+          for (const b of mirrored) {
+            nextBricks[b.id] = b
+          }
+
+          set({ bricks: nextBricks, lastCollapse: null })
+          return true
+        },
+
+        previewMirrorSelection: (axis) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+          const otherBricks = Object.values(state.bricks).filter(
+            (b) => !state.selection.has(b.id),
+          )
+          const mirrored = mirrorBricks(selectedBricks, axis, PART_CATALOG)
+          return canPlaceGroup(mirrored, otherBricks, PART_CATALOG)
         },
 
         selectBrick: (id, additive = false) =>

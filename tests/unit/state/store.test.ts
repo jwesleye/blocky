@@ -235,6 +235,73 @@ describe('useBuildStore', () => {
     })
   })
 
+  describe('mirrorSelection', () => {
+    it('commits reflected positions, preserves brick ids, and keeps selection', () => {
+      // Asymmetric group: brick-2x4 at x=0 (W=2) and brick-1x1 at x=5 (W=1)
+      // bounding box X: cells 0,1 and 5 → minX=0, maxX=5
+      // mirror x: a new_x=0+5-(0+2-1)=4, b new_x=0+5-(5+1-1)=0
+      const a = placeBrick({ ...sampleBrick, x: 0 })
+      const b = placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+
+      useBuildStore.getState().selectBrick(a)
+      useBuildStore.getState().selectBrick(b, true)
+
+      const success = useBuildStore.getState().mirrorSelection('x')
+      expect(success).toBe(true)
+
+      const { bricks, selection } = useBuildStore.getState()
+      expect(bricks[a].x).toBe(4)
+      expect(bricks[b].x).toBe(0)
+      expect(selection).toEqual(new Set([a, b]))
+    })
+
+    it('rejects invalid mirrors and leaves state referentially unchanged', () => {
+      // Directly inject bricks bypassing placement validation:
+      // f1 floating at y=3, f2 grounded at y=0.
+      // Mirror x: f1→x=5,y=3 (still floating), f2→x=0,y=0.
+      // canPlaceGroup rejects because the mirrored f1 is floating.
+      const f1Id = 'f1-test'
+      const f2Id = 'f2-test'
+      useBuildStore.setState({
+        bricks: {
+          [f1Id]: { id: f1Id, partId: 'brick-1x1', color: 'red', x: 0, y: 3, z: 0, rot: 0 as const },
+          [f2Id]: { id: f2Id, partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 as const },
+        },
+        selection: new Set([f1Id, f2Id]),
+      })
+
+      const bricksBefore = useBuildStore.getState().bricks
+      const selBefore = useBuildStore.getState().selection
+
+      const success = useBuildStore.getState().mirrorSelection('x')
+      expect(success).toBe(false)
+      expect(useBuildStore.getState().bricks).toBe(bricksBefore)
+      expect(useBuildStore.getState().selection).toBe(selBefore)
+    })
+
+    it('is captured as a single undoable/redoable step', () => {
+      // Two brick-1x1 at x=0 and x=5, mirror swaps them: a→x=5, b→x=0
+      const a = placeBrick({ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 })
+      const b = placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+
+      useBuildStore.getState().selectBrick(a)
+      useBuildStore.getState().selectBrick(b, true)
+
+      const success = useBuildStore.getState().mirrorSelection('x')
+      expect(success).toBe(true)
+      expect(useBuildStore.getState().bricks[a].x).toBe(5)
+      expect(useBuildStore.getState().bricks[b].x).toBe(0)
+
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().bricks[a].x).toBe(0)
+      expect(useBuildStore.getState().bricks[b].x).toBe(5)
+
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().bricks[a].x).toBe(5)
+      expect(useBuildStore.getState().bricks[b].x).toBe(0)
+    })
+  })
+
   describe('duplicateSelection', () => {
     it('creates clones with fresh ids and selects them', () => {
       const a = placeBrick(sampleBrick)
@@ -319,7 +386,7 @@ describe('useBuildStore', () => {
     })
 
     it('moveSelection rejects a move that leaves current baseplateSize', () => {
-      const id = useBuildStore.getState().placeBrick({
+      const id = placeBrick({
         partId: 'brick-1x1',
         color: 'red',
         x: 14,
@@ -338,7 +405,7 @@ describe('useBuildStore', () => {
     })
 
     it('duplicateSelection rejects a duplicate that leaves current baseplateSize', () => {
-      const id = useBuildStore.getState().placeBrick({
+      const id = placeBrick({
         partId: 'brick-1x1',
         color: 'red',
         x: 14,
