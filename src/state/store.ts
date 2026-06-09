@@ -142,7 +142,12 @@ export const useBuildStore = create<BuildStore>()(
           const moved = selectedBricks.map((b) => translateBrick(b, delta))
 
           if (
-            !canPlaceGroup(moved, otherBricks, PART_CATALOG, get().baseplateSize)
+            !canPlaceGroup(
+              moved,
+              otherBricks,
+              PART_CATALOG,
+              get().baseplateSize,
+            )
           ) {
             return false
           }
@@ -172,7 +177,12 @@ export const useBuildStore = create<BuildStore>()(
           const allExisting = Object.values(state.bricks)
 
           if (
-            !canPlaceGroup(clones, allExisting, PART_CATALOG, get().baseplateSize)
+            !canPlaceGroup(
+              clones,
+              allExisting,
+              PART_CATALOG,
+              get().baseplateSize,
+            )
           ) {
             return false
           }
@@ -202,7 +212,12 @@ export const useBuildStore = create<BuildStore>()(
             (b) => !state.selection.has(b.id),
           )
           const moved = selectedBricks.map((b) => translateBrick(b, delta))
-          return canPlaceGroup(moved, otherBricks, PART_CATALOG, get().baseplateSize)
+          return canPlaceGroup(
+            moved,
+            otherBricks,
+            PART_CATALOG,
+            get().baseplateSize,
+          )
         },
 
         previewDuplicateSelection: (delta) => {
@@ -215,7 +230,12 @@ export const useBuildStore = create<BuildStore>()(
             return translateBrick({ ...b, id: `preview-${i}` }, delta)
           })
           const allExisting = Object.values(state.bricks)
-          return canPlaceGroup(clones, allExisting, PART_CATALOG, get().baseplateSize)
+          return canPlaceGroup(
+            clones,
+            allExisting,
+            PART_CATALOG,
+            get().baseplateSize,
+          )
         },
 
         selectBrick: (id, additive = false) =>

@@ -64,8 +64,7 @@ export function bricksOutsideBaseplate(
     const cells = getOccupiedCells(brick, def)
     if (
       cells.some(
-        (cell) =>
-          cell.x < 0 || cell.x >= size || cell.z < 0 || cell.z >= size,
+        (cell) => cell.x < 0 || cell.x >= size || cell.z < 0 || cell.z >= size,
       )
     ) {
       outside.push(brick.id)
