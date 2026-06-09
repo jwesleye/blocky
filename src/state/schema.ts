@@ -1,11 +1,14 @@
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import {
+  BUILD_SCHEMA_VERSION,
+  bricksToBuild,
+  parseBuild,
+  serializeBuild,
+} from '@/domain/model/build'
 import { createBrickId } from '@/domain/model/ids'
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { buildConnectionGraph } from '@/domain/physics/graph'
 import { PART_CATALOG } from '@/domain/parts/catalog'
-
-import { buildSchema, BUILD_SCHEMA_VERSION } from '@/domain/model/build'
-import type { Build, SerializedBrick } from '@/domain/model/build'
 
 /**
  * Build JSON schema and (de)serialization helpers.
@@ -15,30 +18,15 @@ import type { Build, SerializedBrick } from '@/domain/model/build'
  * per-session brick ids are intentionally excluded — ids are regenerated on
  * load so two clients never collide on a shared build.
  */
-export { buildSchema, BUILD_SCHEMA_VERSION }
 export { createBrickId }
-export type { Build, SerializedBrick }
+export { BUILD_SCHEMA_VERSION }
+export type { Build } from '@/domain/model/build'
 
 /** Serializes the runtime build model to a compact Build JSON string. */
 export function serialize(state: BuildState): string {
-  const bricks: SerializedBrick[] = Object.values(state.bricks).map(
-    ({ partId, color, x, y, z, rot, offset }) => ({
-      partId,
-      color,
-      x,
-      y,
-      z,
-      rot,
-      ...(offset ? { offset } : {}),
-    }),
+  return serializeBuild(
+    bricksToBuild(Object.values(state.bricks), BASEPLATE_SIZE_STUDS),
   )
-  const hasOffset = bricks.some((brick) => brick.offset !== undefined)
-  const build: Build = {
-    version: hasOffset ? BUILD_SCHEMA_VERSION : 1,
-    baseplate: { size: BASEPLATE_SIZE_STUDS },
-    bricks,
-  }
-  return JSON.stringify(build)
 }
 
 /**
@@ -47,7 +35,12 @@ export function serialize(state: BuildState): string {
  * generated and the selection starts empty.
  */
 export function deserialize(json: string): BuildState {
-  const parsed = buildSchema.parse(JSON.parse(json))
+  const parsed = parseBuild(json)
+  if (parsed.baseplate.size !== BASEPLATE_SIZE_STUDS) {
+    throw new Error(
+      `Unsupported baseplate size: ${parsed.baseplate.size}. Expected ${BASEPLATE_SIZE_STUDS}.`,
+    )
+  }
   const bricks: Record<string, PlacedBrick> = {}
   for (const brick of parsed.bricks) {
     const id = createBrickId()
