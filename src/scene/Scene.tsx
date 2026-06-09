@@ -1,10 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 
 import { brickToBodySnapshot } from '@/domain/physics'
 import { useBuildStore } from '@/state/store'
-import { CollapseSimulation } from './CollapseSimulation'
 import { collapseDebug } from './collapseDebug'
 import { CameraRig } from './CameraRig'
 import { Lighting } from './Lighting'
@@ -14,6 +13,10 @@ import {
   CAMERA_DEFAULT_FOV,
   BACKGROUND_COLOR,
 } from './sceneConfig'
+
+const CollapseSimulation = lazy(() =>
+  import('./CollapseSimulation').then((m) => ({ default: m.CollapseSimulation })),
+)
 
 /**
  * Renders the live build as static meshes and overlays the Rapier collapse
@@ -63,10 +66,12 @@ export function Scene() {
         </mesh>
       ))}
       {activeCollapse && (
-        <CollapseSimulation
-          transaction={activeCollapse}
-          onComplete={completeCollapse}
-        />
+        <Suspense fallback={null}>
+          <CollapseSimulation
+            transaction={activeCollapse}
+            onComplete={completeCollapse}
+          />
+        </Suspense>
       )}
     </Canvas>
   )

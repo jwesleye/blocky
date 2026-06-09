@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 

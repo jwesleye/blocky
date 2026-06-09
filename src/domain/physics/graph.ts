@@ -3,6 +3,12 @@ import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
 import { getOccupiedCells } from '../parts/footprint'
 
+export type ConnectionGraph = Graph
+
+const GraphCtor = Graph as unknown as {
+  new (options?: { type?: string; allowSelfLoops?: boolean }): ConnectionGraph
+}
+
 /**
  * Builds an undirected connection graph for a set of placed bricks.
  * Two bricks share an edge when a stud face of one aligns with the
@@ -12,8 +18,8 @@ import { getOccupiedCells } from '../parts/footprint'
 export function buildConnectionGraph(
   bricks: PlacedBrick[],
   catalog: PartCatalog,
-): Graph {
-  const graph = new Graph({ type: 'undirected', allowSelfLoops: false })
+): ConnectionGraph {
+  const graph = new GraphCtor({ type: 'undirected', allowSelfLoops: false })
 
   for (const brick of bricks) {
     graph.addNode(brick.id)

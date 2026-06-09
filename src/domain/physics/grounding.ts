@@ -1,5 +1,5 @@
-import type Graph from 'graphology'
 import type { PlacedBrick } from '../model/types'
+import type { ConnectionGraph } from './graph'
 
 /**
  * Returns the IDs of bricks that are NOT connected (transitively) to the
@@ -8,7 +8,7 @@ import type { PlacedBrick } from '../model/types'
  */
 export function getFloatingBricks(
   bricks: PlacedBrick[],
-  graph: Graph,
+  graph: ConnectionGraph,
 ): Set<string> {
   const grounded = new Set<string>()
   const queue: string[] = []
