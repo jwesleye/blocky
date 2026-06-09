@@ -5,13 +5,16 @@ import { ColorPicker } from '@/components/ColorPicker'
 import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { ViewControls } from '@/components/ViewControls'
+import { Gallery } from '@/components/Gallery'
 import { Scene } from '@/scene/Scene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
+import '@/styles/gallery.css'
 import '@/styles/pickers.css'
 
 export function App() {
   const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
+  const [galleryOpen, setGalleryOpen] = useState(false)
 
   const colorId = useCursorStore((s) => s.colorId)
   const partId = useCursorStore((s) => s.partId)
@@ -183,6 +186,16 @@ export function App() {
         </div>
         <div style={{ padding: '1rem' }}>
           <PersistenceControls />
+          <button
+            type="button"
+            className="gallery-toggle"
+            data-testid="gallery-toggle"
+            aria-expanded={galleryOpen}
+            onClick={() => setGalleryOpen((open) => !open)}
+          >
+            Gallery
+          </button>
+          {galleryOpen && <Gallery />}
           <div>
             <h2>Build Status</h2>
             <p>Bricks in build: {bricks.length}</p>
