@@ -1,11 +1,11 @@
-import React from 'react';
+import React from 'react'
 import {
   AMBIENT_INTENSITY,
   DIRECTIONAL_INTENSITY,
   DIRECTIONAL_POSITION,
   HEMISPHERE_INTENSITY,
   SHADOW_BIAS,
-} from './sceneConfig';
+} from './sceneConfig'
 
 export const Lighting: React.FC = () => {
   return (
@@ -25,5 +25,5 @@ export const Lighting: React.FC = () => {
         shadow-camera-bottom={-50}
       />
     </>
-  );
-};
+  )
+}

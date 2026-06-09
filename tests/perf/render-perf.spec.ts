@@ -95,16 +95,12 @@ test('p95 frame time ≤ 17ms with 2 000-brick stress build', async ({
     const store = (
       window as Window & {
         __blockyStore?: {
-          setState: (state: {
-            bricks: Record<string, unknown>
-          }) => void
+          setState: (state: { bricks: Record<string, unknown> }) => void
         }
       }
     ).__blockyStore
     store?.setState({
-      bricks: Object.fromEntries(
-        bricksJson.map((brick) => [brick.id, brick]),
-      ),
+      bricks: Object.fromEntries(bricksJson.map((brick) => [brick.id, brick])),
     })
   }, bricks)
 

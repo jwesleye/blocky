@@ -1,32 +1,36 @@
-import React, { useEffect } from 'react';
-import { useCameraStore } from '@/state/cameraStore';
+import React, { useEffect } from 'react'
+import { useCameraStore } from '@/state/cameraStore'
 
-export const RESET_VIEW_KEY = 'r';
+export const RESET_VIEW_KEY = 'r'
 
 export const ViewControls: React.FC = () => {
-  const resetCamera = useCameraStore((state) => state.resetCamera);
+  const resetCamera = useCameraStore((state) => state.resetCamera)
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Guard: ignore if modifier keys are pressed
       if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
-        return;
+        return
       }
 
       // Guard: ignore if focus is in an input or textarea
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-        return;
+      const target = event.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return
       }
 
       if (event.key === RESET_VIEW_KEY) {
-        resetCamera();
+        resetCamera()
       }
-    };
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [resetCamera]);
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [resetCamera])
 
   return (
     <div
@@ -57,5 +61,5 @@ export const ViewControls: React.FC = () => {
         Reset View
       </button>
     </div>
-  );
-};
+  )
+}

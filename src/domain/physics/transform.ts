@@ -17,8 +17,10 @@ export function mirrorBricks(
   const bricks = Array.from(selection)
   if (bricks.length === 0) return []
 
-  let minX = Infinity, maxX = -Infinity
-  let minZ = Infinity, maxZ = -Infinity
+  let minX = Infinity,
+    maxX = -Infinity
+  let minZ = Infinity,
+    maxZ = -Infinity
 
   for (const brick of bricks) {
     const def = catalog[brick.partId]

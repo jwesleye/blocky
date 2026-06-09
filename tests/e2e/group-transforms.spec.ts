@@ -152,8 +152,22 @@ test('mirror selection via UI controls', async ({ page }) => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
     ).__blockyStore.getState()
-    const id1 = store.placeBrick({ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 })
-    const id2 = store.placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+    const id1 = store.placeBrick({
+      partId: 'brick-2x4',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+    const id2 = store.placeBrick({
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 5,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
     store.selectBrick(id1)
     store.selectBrick(id2, true)
     return [id1, id2]
@@ -208,24 +222,44 @@ test('mirror selection via UI controls', async ({ page }) => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
     ).__blockyStore.getState()
-    const floating = store.placeBrick({ partId: 'brick-1x1', color: 'red', x: 0, y: 3, z: 15, rot: 0 })
-    const grounded = store.placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 15, rot: 0 })
+    const floating = store.placeBrick({
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 3,
+      z: 15,
+      rot: 0,
+    })
+    const grounded = store.placeBrick({
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 5,
+      y: 0,
+      z: 15,
+      rot: 0,
+    })
     store.selectBrick(floating)
     store.selectBrick(grounded, true)
   })
-  const countBefore = await page.evaluate(() =>
-    Object.keys(
-      (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks,
-    ).length,
+  const countBefore = await page.evaluate(
+    () =>
+      Object.keys(
+        (
+          window as unknown as { __blockyStore: DevStore }
+        ).__blockyStore.getState().bricks,
+      ).length,
   )
   // Drive the invalid mirror through the UI button — expects visible rejection feedback
   await page.click('[data-testid="mirror-x"]')
   await expect(page.locator('[data-testid="mirror-feedback"]')).toBeVisible()
   // State must be unchanged
-  const countAfter = await page.evaluate(() =>
-    Object.keys(
-      (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks,
-    ).length,
+  const countAfter = await page.evaluate(
+    () =>
+      Object.keys(
+        (
+          window as unknown as { __blockyStore: DevStore }
+        ).__blockyStore.getState().bricks,
+      ).length,
   )
   expect(countAfter).toBe(countBefore)
 })
