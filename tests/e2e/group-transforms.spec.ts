@@ -136,7 +136,7 @@ test('group move and duplicate via store handle', async ({ page }) => {
   expect(countAfterRedo).toBe(4)
 })
 
-test('mirror selection via store handle', async ({ page }) => {
+test('mirror selection via UI controls', async ({ page }) => {
   await page.goto('/')
 
   await page.waitForFunction(
@@ -159,13 +159,8 @@ test('mirror selection via store handle', async ({ page }) => {
     return [id1, id2]
   })
 
-  // Mirror commits valid result and returns true
-  const mirrorSuccess = await page.evaluate(() => {
-    return (window as unknown as { __blockyStore: DevStore }).__blockyStore
-      .getState()
-      .mirrorSelection('x')
-  })
-  expect(mirrorSuccess).toBe(true)
+  // Drive the mirror through the real editing-UI button
+  await page.click('[data-testid="mirror-x"]')
 
   // Verify reflected positions (asymmetric: id1 moves from 0→4, id2 from 5→0)
   const posAfterMirror = await page.evaluate((ids) => {
@@ -208,8 +203,8 @@ test('mirror selection via store handle', async ({ page }) => {
   expect(posAfterRedo.id2x).toBe(0)
 
   // Invalid mirror: floating + grounded selection where mirror leaves the
-  // floating brick with no support → rejected with state unchanged
-  const invalidResult = await page.evaluate(() => {
+  // floating brick with no support → rejected with user-visible feedback
+  await page.evaluate(() => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
     ).__blockyStore.getState()
@@ -217,11 +212,20 @@ test('mirror selection via store handle', async ({ page }) => {
     const grounded = store.placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 15, rot: 0 })
     store.selectBrick(floating)
     store.selectBrick(grounded, true)
-    const countBefore = Object.keys(store.bricks).length
-    const result = store.mirrorSelection('x')
-    const countAfter = Object.keys(store.bricks).length
-    return { result, unchanged: countBefore === countAfter }
   })
-  expect(invalidResult.result).toBe(false)
-  expect(invalidResult.unchanged).toBe(true)
+  const countBefore = await page.evaluate(() =>
+    Object.keys(
+      (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks,
+    ).length,
+  )
+  // Drive the invalid mirror through the UI button — expects visible rejection feedback
+  await page.click('[data-testid="mirror-x"]')
+  await expect(page.locator('[data-testid="mirror-feedback"]')).toBeVisible()
+  // State must be unchanged
+  const countAfter = await page.evaluate(() =>
+    Object.keys(
+      (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks,
+    ).length,
+  )
+  expect(countAfter).toBe(countBefore)
 })
