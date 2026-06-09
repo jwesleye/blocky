@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { Lighting } from '@/scene/Lighting'
+=======
+import { describe, it, expect } from 'vitest';
+import { render } from '@testing-library/react';
+import { Lighting } from '@/scene/Lighting';
+>>>>>>> 231a395 (feat: place, delete, and rotate interactions (#10))
 
 describe('Lighting', () => {
   it('mounts without throwing', () => {

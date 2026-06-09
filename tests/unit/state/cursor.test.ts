@@ -56,9 +56,9 @@ describe('useCursorStore', () => {
 
   it('updates cursorBrick when part is changed', () => {
     const { setPart } = useCursorStore.getState()
-    setPart('plate-1x1')
+    setPart('brick-1x1')
     const state = useCursorStore.getState()
-    expect(state.partId).toBe('plate-1x1')
-    expect(state.cursorBrick.partId).toBe('plate-1x1')
+    expect(state.partId).toBe('brick-1x1')
+    expect(state.cursorBrick.partId).toBe('brick-1x1')
   })
 })
