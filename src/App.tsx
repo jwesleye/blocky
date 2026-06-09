@@ -10,6 +10,7 @@ import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { ViewControls } from '@/components/ViewControls'
 import { Gallery } from '@/components/Gallery'
+import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { Scene } from '@/scene/Scene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
@@ -25,6 +26,8 @@ export function App() {
   const setColor = useCursorStore((s) => s.setColor)
   const setPart = useCursorStore((s) => s.setPart)
 
+  const bricksById = useBuildStore((state) => state.bricks)
+  const bricks = Object.values(bricksById)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
   const autosaverRef = useRef(createAutosaver())
@@ -60,6 +63,16 @@ export function App() {
 
   const currentColor = getBrickColor(colorId)
   const currentPart = getPart(partId)
+
+  const { loadFromShareUrl } = useBuildPersistence()
+
+  // On initial mount, restore a build encoded in a share link (PRD section 7.3).
+  // Invalid or absent share payloads leave the current build untouched.
+  useEffect(() => {
+    loadFromShareUrl()
+    // Run once on mount; loadFromShareUrl reads window.location directly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleMirror = (axis: 'x' | 'z') => {
     const ok = mirrorSelection(axis)
@@ -119,7 +132,7 @@ export function App() {
               aria-hidden="true"
             />
             <span style={{ fontSize: 13 }}>
-              {currentColor?.label ?? colorId} · {currentPart?.label ?? partId}
+              {currentColor?.label ?? colorId} - {currentPart?.label ?? partId}
             </span>
           </div>
         </div>

@@ -10,6 +10,14 @@ export {
   createFixtureGalleryClient,
   createGalleryClient,
 } from './galleryClient'
+export {
+  SHARE_URL_PARAM,
+  createShareUrl,
+  decodeShareToken,
+  encodeBuildToShareToken,
+  loadBuildFromShareSearch,
+  readShareToken,
+} from './shareUrl'
 export type {
   GalleryBuildSummary,
   GalleryClient,

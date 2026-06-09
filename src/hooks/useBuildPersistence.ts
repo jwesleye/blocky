@@ -4,12 +4,18 @@ import {
   validateBuild,
   buildToBricks,
 } from '@/domain/model/build'
-import { assertSupportedBaseplateSize } from '@/domain/grid'
+import {
+  assertSupportedBaseplateSize,
+} from '@/domain/grid'
 import { createGalleryClient } from '@/domain/persistence/galleryClient'
 import type {
   GalleryPublishRequest,
   GalleryPublishResult,
 } from '@/domain/persistence/galleryClient'
+import {
+  createShareUrl,
+  loadBuildFromShareSearch,
+} from '@/domain/persistence/shareUrl'
 import { useBuildStore } from '@/state/store'
 
 const GALLERY_BASE_URL =
@@ -73,6 +79,25 @@ export function useBuildPersistence() {
     })
   }, [])
 
+  const createShareLink = useCallback((): string => {
+    assertSupportedBaseplateSize(baseplateSize)
+    const build = bricksToBuild(Object.values(bricks), baseplateSize)
+    return createShareUrl(build)
+  }, [bricks, baseplateSize])
+
+  const loadFromShareUrl = useCallback((search?: string): boolean => {
+    const query =
+      search ?? (typeof window !== 'undefined' ? window.location.search : '')
+    const build = loadBuildFromShareSearch(query)
+    if (!build) return false
+    const newBricks = buildToBricks(build)
+    useBuildStore.setState({
+      bricks: Object.fromEntries(newBricks.map((brick) => [brick.id, brick])),
+      baseplateSize: build.baseplate.size,
+    })
+    return true
+  }, [])
+
   const publishToGallery = useCallback(
     async (
       meta: Pick<
@@ -88,5 +113,11 @@ export function useBuildPersistence() {
     [bricks, baseplateSize],
   )
 
-  return { exportToJSON, importFromJSON, publishToGallery }
+  return {
+    exportToJSON,
+    importFromJSON,
+    createShareLink,
+    loadFromShareUrl,
+    publishToGallery,
+  }
 }
