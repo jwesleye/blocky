@@ -9,6 +9,7 @@ import {
 } from '@/domain/persistence/autosave'
 import type { KeyValueStorage } from '@/domain/persistence/autosave'
 import { createGalleryClient } from '@/domain/persistence/galleryClient'
+import { createFixtureGalleryClient } from '@/domain/persistence/galleryClient'
 import { SHARED_BUILD_CONTRACT_VERSION } from '@/domain/persistence/sharedBuildContract'
 import type { SharedBuildPayload } from '@/domain/persistence/sharedBuildContract'
 
@@ -187,6 +188,116 @@ describe('galleryClient.publish', () => {
 
     expect(storage.map.has(AUTOSAVE_STORAGE_KEY)).toBe(true)
     expect(loadBuild(storage)).toEqual(savedBefore)
+  })
+})
+
+describe('galleryClient.list', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('returns summaries for published builds on successful list (200)', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify([makePublishResponse()]), { status: 200 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.list()
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.builds).toEqual([
+        expect.objectContaining({
+          id: 'srv_abc123',
+          title: 'Test Build',
+          author: 'Anonymous',
+          brickCount: 0,
+        }),
+      ])
+    }
+  })
+
+  it('returns validation-error when the list payload is malformed', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify([{ not: 'a build' }]), { status: 200 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.list()
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('validation-error')
+    }
+  })
+
+  it('returns network-error result when list fetch throws', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('Failed to fetch'))
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.list()
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('network-error')
+    }
+  })
+})
+
+describe('fixture gallery client', () => {
+  it('lists fixture-backed published builds with metadata', async () => {
+    const client = createFixtureGalleryClient()
+    const result = await client.list()
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.builds.length).toBeGreaterThan(0)
+      expect(result.builds[0]).toEqual(
+        expect.objectContaining({
+          id: expect.any(String),
+          title: expect.any(String),
+          author: expect.any(String),
+          brickCount: expect.any(Number),
+        }),
+      )
+    }
+  })
+
+  it('loads a fixture build by id', async () => {
+    const client = createFixtureGalleryClient()
+    const listed = await client.list()
+    expect(listed.ok).toBe(true)
+    if (!listed.ok) return
+
+    const loaded = await client.load(listed.builds[0].id)
+
+    expect(loaded.ok).toBe(true)
+    if (loaded.ok) {
+      expect(loaded.payload.buildId).toBe(listed.builds[0].id)
+      expect(loaded.payload.build.bricks).toHaveLength(
+        listed.builds[0].brickCount,
+      )
+    }
+  })
+
+  it('rejects malformed fixture payloads before exposing them', async () => {
+    const malformed = {
+      ...makePublishResponse(),
+      build: { ...makeBuild(), baseplate: { size: 12 } },
+    }
+    const client = createFixtureGalleryClient([malformed])
+
+    const listed = await client.list()
+    const loaded = await client.load('srv_abc123')
+
+    expect(listed.ok).toBe(false)
+    expect(loaded.ok).toBe(false)
+    if (!loaded.ok) {
+      expect(loaded.reason).toBe('validation-error')
+    }
   })
 })
 

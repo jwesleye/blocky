@@ -6,10 +6,15 @@ export {
   saveBuild,
 } from './autosave'
 export type { Autosaver, AutosaverOptions, KeyValueStorage } from './autosave'
-export { createGalleryClient } from './galleryClient'
+export {
+  createFixtureGalleryClient,
+  createGalleryClient,
+} from './galleryClient'
 export type {
+  GalleryBuildSummary,
   GalleryClient,
   GalleryLoadResult,
+  GalleryListResult,
   GalleryPublishRequest,
   GalleryPublishResult,
 } from './galleryClient'
