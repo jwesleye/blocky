@@ -1,4 +1,6 @@
 # Development environment: `docker compose up` for a hot-reloading dev server.
+# The gallery-backend service is optional — the web SPA does not depend on it.
+# Run `docker compose up gallery-backend` separately to start the gallery backend.
 services:
   web:
     build:
@@ -13,4 +15,18 @@ services:
     environment:
       # Helps file watching detect changes across the bind mount.
       - CHOKIDAR_USEPOLLING=true
+      # Set VITE_GALLERY_URL if you also start gallery-backend.
+      # - VITE_GALLERY_URL=http://localhost:4000
     command: npm run dev -- --host
+
+  gallery-backend:
+    build:
+      context: .
+      target: gallery-backend
+    ports:
+      - '4000:4000'
+    environment:
+      - PORT=4000
+    # The web service intentionally has no `depends_on: gallery-backend` so
+    # the SPA starts without the backend. Local-only autosave, JSON
+    # import/export, and URL sharing all work with no backend running.
