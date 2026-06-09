@@ -11,6 +11,9 @@ import {
   translateBrick,
   canPlaceGroup,
   selectCollapsingBricks,
+  bricksToBodySnapshots,
+  createCollapseTransaction,
+  type CollapseTransaction,
 } from '@/domain/physics'
 import { PART_CATALOG } from '@/domain/parts/catalog'
 
@@ -58,13 +61,29 @@ export interface BuildActions {
    * the stored diff. No-op (adds no history entry) when nothing collapses.
    */
   triggerCollapse: () => void
+  /**
+   * Clears the active Rapier collapse simulation once its dynamic bodies have
+   * tumbled and faded out. Does not touch the build model — the sheared bricks
+   * were already removed from `bricks` by {@link triggerCollapse}.
+   */
+  completeCollapse: () => void
   /** Undo the last state-changing action. */
   undo: () => void
   /** Redo the last undone action. */
   redo: () => void
 }
 
-export type BuildStore = BuildState & BuildActions
+/**
+ * Transient simulation slice for the collapse animation. Holds the Rapier
+ * dynamic-body transaction for the most recent {@link BuildActions.triggerCollapse}.
+ * Deliberately kept out of the zundo history (see `partialize`) so it never adds
+ * an undo step and never restores a stale animation on undo/redo.
+ */
+export interface CollapseSlice {
+  activeCollapse: CollapseTransaction | null
+}
+
+export type BuildStore = BuildState & BuildActions & CollapseSlice
 
 export interface BuildStoreWithTemporal extends BuildStore {
   temporal: {
@@ -83,6 +102,7 @@ export const useBuildStore = create<BuildStore>()(
           allowSelfLoops: false,
         }),
         lastCollapse: null,
+        activeCollapse: null,
 
         placeBrick: (brick) => {
           const id = createBrickId()
@@ -205,36 +225,49 @@ export const useBuildStore = create<BuildStore>()(
 
         triggerCollapse: () =>
           set((state) => {
-            const collapsing = selectCollapsingBricks(
-              Object.values(state.bricks),
-            )
+            const allBricks = Object.values(state.bricks)
+            const collapsing = selectCollapsingBricks(allBricks)
             if (collapsing.size === 0) return state
 
             const bricks: Record<string, PlacedBrick> = {}
-            for (const brick of Object.values(state.bricks)) {
+            for (const brick of allBricks) {
               if (!collapsing.has(brick.id)) bricks[brick.id] = brick
             }
 
             const selection = new Set(state.selection)
             for (const id of collapsing) selection.delete(id)
 
+            // Spawn Rapier dynamic bodies for the sheared sub-region only; the
+            // stable remainder stays in `bricks` and is rendered statically.
+            const activeCollapse = createCollapseTransaction({
+              allBricks,
+              collapsingBodies: bricksToBodySnapshots(
+                allBricks.filter((brick) => collapsing.has(brick.id)),
+              ),
+            })
+
             return {
               bricks,
               selection,
               lastCollapse: { count: collapsing.size, label: 'Undo collapse' },
+              activeCollapse,
             }
           }),
+
+        completeCollapse: () => set({ activeCollapse: null }),
 
         undo: () => {
           ;(useBuildStore as unknown as BuildStoreWithTemporal).temporal
             .getState()
             .undo()
+          useBuildStore.setState({ activeCollapse: null })
         },
 
         redo: () => {
           ;(useBuildStore as unknown as BuildStoreWithTemporal).temporal
             .getState()
             .redo()
+          useBuildStore.setState({ activeCollapse: null })
         },
       }),
       {
