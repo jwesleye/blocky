@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import { ViewControls, RESET_VIEW_KEY } from '@/components/ViewControls';
-import React from 'react';
 
 const mockResetCamera = vi.fn();
 

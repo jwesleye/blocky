@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { Lighting } from '@/scene/Lighting';
-import React from 'react';
 
 describe('Lighting', () => {
   it('mounts without throwing', () => {
