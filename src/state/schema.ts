@@ -51,5 +51,6 @@ export function deserialize(json: string): BuildState {
     selection: new Set<string>(),
     connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
     lastCollapse: null,
+    baseplateSize: BASEPLATE_SIZE_STUDS,
   }
 }

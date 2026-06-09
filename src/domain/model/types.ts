@@ -31,6 +31,8 @@ export interface BuildState {
    * the action (e.g. "Undo collapse").
    */
   lastCollapse: { count: number; label: string } | null
+  /** Active baseplate side length in studs; defaults to 32. */
+  baseplateSize: number
 }
 
 export interface BrickBodySnapshot {

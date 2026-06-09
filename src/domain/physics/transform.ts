@@ -2,7 +2,7 @@ import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
 import { toBrickFootprint, getOccupiedCells } from '../parts/footprint'
 import { groundedIds } from './placement'
-import { isWithinBaseplate } from '../grid'
+import { BASEPLATE_SIZE_STUDS } from '../grid'
 
 /** Translates a brick by a grid delta. */
 export function translateBrick(
@@ -51,14 +51,38 @@ export function findCollisions(
   return collisions
 }
 
+/** Returns the ids of bricks whose footprint falls outside a `size`×`size` plate. */
+export function bricksOutsideBaseplate(
+  bricks: Iterable<PlacedBrick>,
+  size: number,
+  catalog: PartCatalog,
+): string[] {
+  const outside: string[] = []
+  for (const brick of bricks) {
+    const def = catalog[brick.partId]
+    if (!def) continue
+    const cells = getOccupiedCells(brick, def)
+    if (
+      cells.some(
+        (cell) =>
+          cell.x < 0 || cell.x >= size || cell.z < 0 || cell.z >= size,
+      )
+    ) {
+      outside.push(brick.id)
+    }
+  }
+  return outside
+}
+
 /**
  * Validity gate for a group placement.
- * No collision + all cells within BASEPLATE_BOUNDS + every brick grounded.
+ * No collision + all cells within baseplateSize bounds + every brick grounded.
  */
 export function canPlaceGroup(
   movedSelection: Iterable<PlacedBrick>,
   otherBricks: Iterable<PlacedBrick>,
   catalog: PartCatalog,
+  baseplateSize: number = BASEPLATE_SIZE_STUDS,
 ): boolean {
   const moved = Array.from(movedSelection)
   const others = Array.from(otherBricks)
@@ -75,7 +99,12 @@ export function canPlaceGroup(
     if (!def) continue
     const cells = getOccupiedCells(brick, def)
     for (const cell of cells) {
-      if (!isWithinBaseplate(cell)) {
+      if (
+        cell.x < 0 ||
+        cell.x >= baseplateSize ||
+        cell.z < 0 ||
+        cell.z >= baseplateSize
+      ) {
         return false
       }
     }
