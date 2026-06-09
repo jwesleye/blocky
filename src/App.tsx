@@ -4,6 +4,7 @@ import { getPart } from '@/domain/parts/catalog'
 import { ColorPicker } from '@/components/ColorPicker'
 import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
+import { ViewControls } from '@/components/ViewControls'
 import { Scene } from '@/scene/Scene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
@@ -178,6 +179,7 @@ export function App() {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <Scene />
+          <ViewControls />
         </div>
         <div style={{ padding: '1rem' }}>
           <PersistenceControls />
