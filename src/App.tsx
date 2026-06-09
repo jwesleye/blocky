@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
+import { BaseplateSizePicker } from '@/components/BaseplateSizePicker'
 import { ColorPicker } from '@/components/ColorPicker'
 import { HUD } from '@/components/HUD'
 import { PartPicker } from '@/components/PartPicker'
@@ -107,6 +108,25 @@ export function App() {
           <ColorPicker selected={colorId} onSelect={setColor} />
         </div>
 
+
+        {/* Baseplate size picker */}
+        <div style={{ borderBottom: '1px solid #333' }}>
+          <div
+            style={{
+              padding: '8px 8px 0',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#888',
+            }}
+          >
+            Baseplate
+          </div>
+          <BaseplateSizePicker />
+        </div>
+
+        {/* Part picker */}
         <div
           style={{
             flex: 1,
