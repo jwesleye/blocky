@@ -16,6 +16,7 @@ import {
   type CollapseTransaction,
 } from '@/domain/physics'
 import { PART_CATALOG } from '@/domain/parts/catalog'
+import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 
 export interface BuildActions {
   /**
@@ -54,6 +55,8 @@ export interface BuildActions {
   selectBrick: (id: string, additive?: boolean) => void
   /** Clears the entire selection. */
   clearSelection: () => void
+  /** Updates the active baseplate side length in studs. */
+  setBaseplateSize: (size: number) => void
   /**
    * Removes every brick that should fall after a smart-shear edit (floating
    * bricks plus sheared unstable sub-regions) in a single zundo history entry,
@@ -102,6 +105,7 @@ export const useBuildStore = create<BuildStore>()(
           allowSelfLoops: false,
         }),
         lastCollapse: null,
+        baseplateSize: BASEPLATE_SIZE_STUDS,
         activeCollapse: null,
 
         placeBrick: (brick) => {
@@ -137,7 +141,9 @@ export const useBuildStore = create<BuildStore>()(
 
           const moved = selectedBricks.map((b) => translateBrick(b, delta))
 
-          if (!canPlaceGroup(moved, otherBricks, PART_CATALOG)) {
+          if (
+            !canPlaceGroup(moved, otherBricks, PART_CATALOG, get().baseplateSize)
+          ) {
             return false
           }
 
@@ -165,7 +171,9 @@ export const useBuildStore = create<BuildStore>()(
 
           const allExisting = Object.values(state.bricks)
 
-          if (!canPlaceGroup(clones, allExisting, PART_CATALOG)) {
+          if (
+            !canPlaceGroup(clones, allExisting, PART_CATALOG, get().baseplateSize)
+          ) {
             return false
           }
 
@@ -194,7 +202,7 @@ export const useBuildStore = create<BuildStore>()(
             (b) => !state.selection.has(b.id),
           )
           const moved = selectedBricks.map((b) => translateBrick(b, delta))
-          return canPlaceGroup(moved, otherBricks, PART_CATALOG)
+          return canPlaceGroup(moved, otherBricks, PART_CATALOG, get().baseplateSize)
         },
 
         previewDuplicateSelection: (delta) => {
@@ -207,7 +215,7 @@ export const useBuildStore = create<BuildStore>()(
             return translateBrick({ ...b, id: `preview-${i}` }, delta)
           })
           const allExisting = Object.values(state.bricks)
-          return canPlaceGroup(clones, allExisting, PART_CATALOG)
+          return canPlaceGroup(clones, allExisting, PART_CATALOG, get().baseplateSize)
         },
 
         selectBrick: (id, additive = false) =>
@@ -222,6 +230,8 @@ export const useBuildStore = create<BuildStore>()(
 
         clearSelection: () =>
           set({ selection: new Set<string>(), lastCollapse: null }),
+
+        setBaseplateSize: (size) => set({ baseplateSize: size }),
 
         triggerCollapse: () =>
           set((state) => {
@@ -273,8 +283,8 @@ export const useBuildStore = create<BuildStore>()(
       {
         limit: 50,
         partialize: (state) => {
-          const { bricks, selection, lastCollapse } = state
-          return { bricks, selection, lastCollapse }
+          const { bricks, selection, lastCollapse, baseplateSize } = state
+          return { bricks, selection, lastCollapse, baseplateSize }
         },
         equality: (pastState, currentState) =>
           pastState.bricks === currentState.bricks &&

@@ -9,7 +9,12 @@ export {
   isBalanced,
 } from './balance'
 export { findShearRegion, recursiveShear } from './shear'
-export { translateBrick, findCollisions, canPlaceGroup } from './transform'
+export {
+  translateBrick,
+  findCollisions,
+  canPlaceGroup,
+  bricksOutsideBaseplate,
+} from './transform'
 export {
   BASEPLATE,
   BASEPLATE_TOP_Y,

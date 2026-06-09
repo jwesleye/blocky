@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
+import { bricksOutsideBaseplate } from '@/domain/physics'
+import { PART_CATALOG } from '@/domain/parts/catalog'
 import { BUILD_SCHEMA_VERSION, deserialize, serialize } from '@/state/schema'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
@@ -24,6 +26,7 @@ const resetStore = () => {
     selection: new Set<string>(),
     connectionGraph: new Graph({ type: 'undirected', allowSelfLoops: false }),
     lastCollapse: null,
+    baseplateSize: 32,
   })
   temporal.clear()
   temporal.resume()
@@ -277,6 +280,71 @@ describe('useBuildStore', () => {
 
       useBuildStore.getState().redo()
       expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(2)
+    })
+  })
+
+  describe('baseplateSize', () => {
+    it('defaults to 32', () => {
+      expect(useBuildStore.getState().baseplateSize).toBe(32)
+    })
+
+    it('setBaseplateSize updates baseplateSize', () => {
+      useBuildStore.getState().setBaseplateSize(48)
+      expect(useBuildStore.getState().baseplateSize).toBe(48)
+    })
+
+    it('a brick valid on a 32-plate is detectable as outside after setBaseplateSize(16)', () => {
+      useBuildStore.getState().placeBrick({
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 20,
+        y: 0,
+        z: 20,
+        rot: 0,
+      })
+      useBuildStore.getState().setBaseplateSize(16)
+      const state = useBuildStore.getState()
+      const outside = bricksOutsideBaseplate(
+        Object.values(state.bricks),
+        state.baseplateSize,
+        PART_CATALOG,
+      )
+      expect(outside).toHaveLength(1)
+    })
+
+    it('moveSelection rejects a move that leaves current baseplateSize', () => {
+      const id = useBuildStore.getState().placeBrick({
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 14,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+      useBuildStore.getState().setBaseplateSize(16)
+      useBuildStore.getState().selectBrick(id)
+      expect(
+        useBuildStore.getState().moveSelection({ dx: 2, dy: 0, dz: 0 }),
+      ).toBe(false)
+      expect(
+        useBuildStore.getState().moveSelection({ dx: -1, dy: 0, dz: 0 }),
+      ).toBe(true)
+    })
+
+    it('duplicateSelection rejects a duplicate that leaves current baseplateSize', () => {
+      const id = useBuildStore.getState().placeBrick({
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 14,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+      useBuildStore.getState().setBaseplateSize(16)
+      useBuildStore.getState().selectBrick(id)
+      expect(
+        useBuildStore.getState().duplicateSelection({ dx: 2, dy: 0, dz: 0 }),
+      ).toBe(false)
     })
   })
 

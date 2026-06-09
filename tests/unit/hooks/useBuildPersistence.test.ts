@@ -17,6 +17,7 @@ const resetStore = () => {
     selection: new Set<string>(),
     connectionGraph: new Graph({ type: 'undirected', allowSelfLoops: false }),
     lastCollapse: null,
+    baseplateSize: 32,
   })
   temporal.clear()
   temporal.resume()

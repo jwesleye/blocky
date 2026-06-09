@@ -4,6 +4,7 @@ import {
   translateBrick,
   findCollisions,
   canPlaceGroup,
+  bricksOutsideBaseplate,
 } from '@/domain/physics/transform'
 import type { PlacedBrick } from '@/domain/model/types'
 
@@ -73,6 +74,44 @@ describe('Transform Physics', () => {
       const others = [{ ...brick1, id: 'o1', x: 0, y: 0, z: 0 }]
       const moved = [{ ...brick1, id: 'm1', x: 0, y: 3, z: 0 }]
       expect(canPlaceGroup(moved, others, PART_CATALOG)).toBe(true)
+    })
+
+    it('rejects placement outside a smaller explicit baseplateSize', () => {
+      // 1x1 at (20,0,20) fits a 32-plate but not a 16-plate
+      const moved = [
+        { ...brick1, id: 'm1', partId: 'brick-1x1', x: 20, y: 0, z: 20 },
+      ]
+      expect(canPlaceGroup(moved, [], PART_CATALOG, 32)).toBe(true)
+      expect(canPlaceGroup(moved, [], PART_CATALOG, 16)).toBe(false)
+    })
+  })
+
+  describe('bricksOutsideBaseplate', () => {
+    it('returns empty array when all bricks fit inside the plate', () => {
+      const b: PlacedBrick = {
+        id: 'b1',
+        partId: 'brick-1x1',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        color: 'red',
+      }
+      expect(bricksOutsideBaseplate([b], 32, PART_CATALOG)).toEqual([])
+    })
+
+    it('reports a brick inside 32-plate as outside when size is 16', () => {
+      const b: PlacedBrick = {
+        id: 'b1',
+        partId: 'brick-1x1',
+        x: 20,
+        y: 0,
+        z: 20,
+        rot: 0,
+        color: 'red',
+      }
+      expect(bricksOutsideBaseplate([b], 32, PART_CATALOG)).toEqual([])
+      expect(bricksOutsideBaseplate([b], 16, PART_CATALOG)).toEqual(['b1'])
     })
   })
 })
