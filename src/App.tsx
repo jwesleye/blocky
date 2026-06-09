@@ -136,9 +136,7 @@ export function App() {
                   {brick.z}
                 </li>
               ))}
-              {bricks.length > 10 && (
-                <li>... and {bricks.length - 10} more</li>
-              )}
+              {bricks.length > 10 && <li>... and {bricks.length - 10} more</li>}
             </ul>
           </div>
         </div>
