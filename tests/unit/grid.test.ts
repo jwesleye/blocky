@@ -7,9 +7,11 @@ import {
   PLATE_HEIGHT_MM,
   STUD_PITCH_MM,
   SUPPORTED_BASEPLATE_SIZES,
+  assertSupportedBaseplateSize,
   boundsForSize,
   bricksToPlateUnits,
   isGridPosition,
+  isSupportedBaseplateSize,
   isWithinBaseplate,
   normalizeRotationY,
   plateUnitsToMillimeters,
@@ -76,5 +78,26 @@ describe('size-aware baseplate bounds', () => {
     expect(isWithinBaseplate({ x: 32, z: 31 })).toBe(false)
     expect(isGridPosition({ x: 12, y: 3, z: 20 })).toBe(true)
     expect(isGridPosition({ x: 32, y: 0, z: 0 })).toBe(false)
+  })
+
+  it('identifies supported and unsupported sizes', () => {
+    for (const size of SUPPORTED_BASEPLATE_SIZES) {
+      expect(isSupportedBaseplateSize(size)).toBe(true)
+    }
+    expect(isSupportedBaseplateSize(0)).toBe(false)
+    expect(isSupportedBaseplateSize(17)).toBe(false)
+    expect(isSupportedBaseplateSize(-16)).toBe(false)
+    expect(isSupportedBaseplateSize(64.5)).toBe(false)
+    expect(isSupportedBaseplateSize(999)).toBe(false)
+  })
+
+  it('rejects unsupported and degenerate sizes at the canonical guard', () => {
+    expect(() => boundsForSize(0)).toThrow(RangeError)
+    expect(() => boundsForSize(17)).toThrow(RangeError)
+    expect(() => boundsForSize(-16)).toThrow(RangeError)
+    expect(() => boundsForSize(999)).toThrow(RangeError)
+    expect(() => assertSupportedBaseplateSize(17)).toThrow(RangeError)
+    expect(() => isWithinBaseplate({ x: 0, z: 0 }, 17)).toThrow(RangeError)
+    expect(() => isGridPosition({ x: 0, y: 0, z: 0 }, 17)).toThrow(RangeError)
   })
 })

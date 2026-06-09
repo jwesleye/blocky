@@ -13,12 +13,30 @@ export const BASEPLATE_BOUNDS = {
 export const SUPPORTED_BASEPLATE_SIZES = [16, 32, 48, 64] as const
 export const DEFAULT_BASEPLATE_SIZE = 32
 
-export const boundsForSize = (size: number) => ({
-  minX: 0,
-  maxX: size - 1,
-  minZ: 0,
-  maxZ: size - 1,
-})
+export type BaseplateSize = (typeof SUPPORTED_BASEPLATE_SIZES)[number]
+
+export const isSupportedBaseplateSize = (
+  size: number,
+): size is BaseplateSize =>
+  (SUPPORTED_BASEPLATE_SIZES as readonly number[]).includes(size)
+
+export const assertSupportedBaseplateSize = (size: number): void => {
+  if (!isSupportedBaseplateSize(size)) {
+    throw new RangeError(
+      `Unsupported baseplate size: ${size}. Supported sizes are ${SUPPORTED_BASEPLATE_SIZES.join(', ')}.`,
+    )
+  }
+}
+
+export const boundsForSize = (size: number) => {
+  assertSupportedBaseplateSize(size)
+  return {
+    minX: 0,
+    maxX: size - 1,
+    minZ: 0,
+    maxZ: size - 1,
+  }
+}
 
 export const GRAVITY_VECTOR = { x: 0, y: -1, z: 0 } as const
 
