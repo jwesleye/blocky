@@ -18,7 +18,7 @@ const halfStudOffsetSchema = z.object({
   z: z.union([z.literal(0), z.literal(1)]),
 })
 
-export const serializedBrickSchema = z.object({
+const buildBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
   x: z.number().int(),
@@ -28,14 +28,14 @@ export const serializedBrickSchema = z.object({
   offset: halfStudOffsetSchema.optional(),
 })
 
-export type SerializedBrick = z.infer<typeof serializedBrickSchema>
+export type SerializedBrick = z.infer<typeof buildBrickSchema>
 
 export const BuildSchema = z.object({
   version: buildVersionSchema,
   baseplate: z.object({
     size: z.literal(BASEPLATE_SIZE_STUDS),
   }),
-  bricks: z.array(serializedBrickSchema),
+  bricks: z.array(buildBrickSchema),
 })
 
 export const buildSchema = BuildSchema
