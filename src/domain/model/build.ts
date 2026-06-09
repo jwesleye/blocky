@@ -1,6 +1,11 @@
 import { z } from 'zod'
 
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import {
+  BASEPLATE_SIZE_STUDS,
+  SUPPORTED_BASEPLATE_SIZES,
+  type BaseplateSize,
+  isSupportedBaseplateSize,
+} from '@/domain/grid'
 import { createBrickId } from '@/domain/model/ids'
 import type { PlacedBrick } from './types'
 
@@ -30,10 +35,15 @@ const buildBrickSchema = z.object({
 
 export type SerializedBrick = z.infer<typeof buildBrickSchema>
 
+const baseplateSizeSchema = z.custom<BaseplateSize>(
+  (size) => typeof size === 'number' && isSupportedBaseplateSize(size),
+  `Supported baseplate sizes are ${SUPPORTED_BASEPLATE_SIZES.join(', ')}`,
+)
+
 export const BuildSchema = z.object({
   version: buildVersionSchema,
   baseplate: z.object({
-    size: z.literal(BASEPLATE_SIZE_STUDS),
+    size: baseplateSizeSchema,
   }),
   bricks: z.array(buildBrickSchema),
 })
@@ -47,7 +57,7 @@ export const BUILD_SCHEMA_VERSION = CURRENT_BUILD_VERSION
 
 export function bricksToBuild(
   bricks: PlacedBrick[],
-  baseplateSize: typeof BASEPLATE_SIZE_STUDS,
+  baseplateSize: BaseplateSize,
 ): Build {
   const hasOffset = bricks.some((brick) => brick.offset !== undefined)
 

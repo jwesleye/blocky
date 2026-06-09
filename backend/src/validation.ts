@@ -24,10 +24,17 @@ const serializedBrickSchema = z.object({
   offset: halfStudOffsetSchema.optional(),
 })
 
-// Must match BASEPLATE_SIZE_STUDS = 32 from the frontend contract
+// Must match SUPPORTED_BASEPLATE_SIZES from the frontend contract.
+const supportedBaseplateSizeSchema = z.union([
+  z.literal(16),
+  z.literal(32),
+  z.literal(48),
+  z.literal(64),
+])
+
 const BuildSchema = z.object({
   version: buildVersionSchema,
-  baseplate: z.object({ size: z.literal(32) }),
+  baseplate: z.object({ size: supportedBaseplateSizeSchema }),
   bricks: z.array(serializedBrickSchema),
 })
 

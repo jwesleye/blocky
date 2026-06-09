@@ -1,4 +1,4 @@
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
 import {
   BUILD_SCHEMA_VERSION,
   bricksToBuild,
@@ -24,8 +24,10 @@ export type { Build } from '@/domain/model/build'
 
 /** Serializes the runtime build model to a compact Build JSON string. */
 export function serialize(state: BuildState): string {
+  const baseplateSize = state.baseplateSize
+  assertSupportedBaseplateSize(baseplateSize)
   return serializeBuild(
-    bricksToBuild(Object.values(state.bricks), BASEPLATE_SIZE_STUDS),
+    bricksToBuild(Object.values(state.bricks), baseplateSize),
   )
 }
 
@@ -36,11 +38,6 @@ export function serialize(state: BuildState): string {
  */
 export function deserialize(json: string): BuildState {
   const parsed = parseBuild(json)
-  if (parsed.baseplate.size !== BASEPLATE_SIZE_STUDS) {
-    throw new Error(
-      `Unsupported baseplate size: ${parsed.baseplate.size}. Expected ${BASEPLATE_SIZE_STUDS}.`,
-    )
-  }
   const bricks: Record<string, PlacedBrick> = {}
   for (const brick of parsed.bricks) {
     const id = createBrickId()
@@ -51,6 +48,6 @@ export function deserialize(json: string): BuildState {
     selection: new Set<string>(),
     connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
     lastCollapse: null,
-    baseplateSize: BASEPLATE_SIZE_STUDS,
+    baseplateSize: parsed.baseplate.size,
   }
 }
