@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import App from './App'
-import { useStore } from './state/useStore'
 import { useBuildStore } from './state/store'
 import './styles/global.css'
 import { collapseDebug } from './scene/collapseDebug'
@@ -17,6 +16,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // can interact with the build state directly.
 if (import.meta.env.DEV) {
   window.__blockyStore = useBuildStore
-  window.__legacyStore = useStore // Keep legacy store for perf tests
   window.__blockyCollapseDebug = collapseDebug
 }

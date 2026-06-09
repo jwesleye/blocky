@@ -16,6 +16,12 @@ const sampleBrick: Omit<PlacedBrick, 'id'> = {
   rot: 0,
 }
 
+const placeBrick = (brick: Omit<PlacedBrick, 'id'> = sampleBrick) => {
+  const id = useBuildStore.getState().placeBrick(brick)
+  expect(id).not.toBeNull()
+  return id!
+}
+
 const resetStore = () => {
   const temporal = (
     useBuildStore as unknown as BuildStoreWithTemporal
@@ -42,15 +48,15 @@ describe('useBuildStore', () => {
   })
 
   it('placeBrick adds a brick to the model keyed by a generated id', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     const { bricks } = useBuildStore.getState()
     expect(Object.keys(bricks)).toEqual([id])
     expect(bricks[id]).toEqual({ id, ...sampleBrick })
   })
 
   it('placeBrick updates the connectionGraph', () => {
-    const a = useBuildStore.getState().placeBrick(sampleBrick)
-    const b = useBuildStore.getState().placeBrick({
+    const a = placeBrick(sampleBrick)
+    const b = placeBrick({
       ...sampleBrick,
       partId: 'brick-1x1',
       y: 3,
@@ -61,8 +67,8 @@ describe('useBuildStore', () => {
   })
 
   it('deleteBrick removes the entry and updates the graph', () => {
-    const a = useBuildStore.getState().placeBrick(sampleBrick)
-    const b = useBuildStore.getState().placeBrick({
+    const a = placeBrick(sampleBrick)
+    const b = placeBrick({
       ...sampleBrick,
       partId: 'brick-1x1',
       y: 3,
@@ -75,7 +81,7 @@ describe('useBuildStore', () => {
   })
 
   it('undo/redo reverses and reapplies placeBrick', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
 
     useBuildStore.getState().undo()
@@ -89,9 +95,9 @@ describe('useBuildStore', () => {
   })
 
   it('undo/redo reverses multiple placeBrick actions in sequence', () => {
-    const first = useBuildStore.getState().placeBrick(sampleBrick)
-    const second = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 4 })
-    const third = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 8 })
+    const first = placeBrick(sampleBrick)
+    const second = placeBrick({ ...sampleBrick, x: 4 })
+    const third = placeBrick({ ...sampleBrick, x: 8 })
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(3)
 
     useBuildStore.getState().undo()
@@ -112,7 +118,7 @@ describe('useBuildStore', () => {
   })
 
   it('undo/redo reverses and reapplies deleteBrick', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     useBuildStore.getState().deleteBrick(id)
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(0)
 
@@ -125,14 +131,14 @@ describe('useBuildStore', () => {
   })
 
   it('placeBrick generates a distinct id for each placement', () => {
-    const a = useBuildStore.getState().placeBrick(sampleBrick)
-    const b = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 4 })
+    const a = placeBrick(sampleBrick)
+    const b = placeBrick({ ...sampleBrick, x: 4 })
     expect(a).not.toEqual(b)
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(2)
   })
 
   it('deleteBrick removes the entry and clears it from the selection', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     useBuildStore.getState().selectBrick(id)
     useBuildStore.getState().deleteBrick(id)
     const state = useBuildStore.getState()
@@ -141,14 +147,14 @@ describe('useBuildStore', () => {
   })
 
   it('deleteBrick is a no-op for an unknown id', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     useBuildStore.getState().deleteBrick('does-not-exist')
     expect(Object.keys(useBuildStore.getState().bricks)).toEqual([id])
   })
 
   it('selectBrick replaces the selection by default', () => {
-    const a = useBuildStore.getState().placeBrick(sampleBrick)
-    const b = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 4 })
+    const a = placeBrick(sampleBrick)
+    const b = placeBrick({ ...sampleBrick, x: 4 })
     useBuildStore.getState().selectBrick(a)
     expect([...useBuildStore.getState().selection]).toEqual([a])
     useBuildStore.getState().selectBrick(b)
@@ -156,22 +162,22 @@ describe('useBuildStore', () => {
   })
 
   it('selectBrick can add to the existing selection (additive)', () => {
-    const a = useBuildStore.getState().placeBrick(sampleBrick)
-    const b = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 4 })
+    const a = placeBrick(sampleBrick)
+    const b = placeBrick({ ...sampleBrick, x: 4 })
     useBuildStore.getState().selectBrick(a)
     useBuildStore.getState().selectBrick(b, true)
     expect(useBuildStore.getState().selection).toEqual(new Set([a, b]))
   })
 
   it('clearSelection empties the selection', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     useBuildStore.getState().selectBrick(id)
     useBuildStore.getState().clearSelection()
     expect(useBuildStore.getState().selection.size).toBe(0)
   })
 
   it('selectBrick is a no-op for an unknown id', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     useBuildStore.getState().selectBrick(id)
     useBuildStore.getState().selectBrick('does-not-exist', true)
     expect(useBuildStore.getState().selection).toEqual(new Set([id]))
@@ -182,9 +188,9 @@ describe('useBuildStore', () => {
 
   describe('moveSelection', () => {
     it('shifts selected bricks and preserves selection ids', () => {
-      const a = useBuildStore.getState().placeBrick(sampleBrick)
-      const b = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 4 })
-      const c = useBuildStore.getState().placeBrick({ ...sampleBrick, x: 8 })
+      const a = placeBrick(sampleBrick)
+      const b = placeBrick({ ...sampleBrick, x: 4 })
+      const c = placeBrick({ ...sampleBrick, x: 8 })
 
       useBuildStore.getState().selectBrick(a)
       useBuildStore.getState().selectBrick(b, true)
@@ -202,7 +208,7 @@ describe('useBuildStore', () => {
     })
 
     it('rejects invalid moves and leaves state unchanged', () => {
-      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      const a = placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
 
       const initialState = useBuildStore.getState().bricks
@@ -215,7 +221,7 @@ describe('useBuildStore', () => {
     })
 
     it('is captured as a single undoable step', () => {
-      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      const a = placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
 
       useBuildStore.getState().moveSelection({ dx: 1, dy: 0, dz: 0 })
@@ -231,7 +237,7 @@ describe('useBuildStore', () => {
 
   describe('duplicateSelection', () => {
     it('creates clones with fresh ids and selects them', () => {
-      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      const a = placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
 
       const success = useBuildStore
@@ -254,7 +260,7 @@ describe('useBuildStore', () => {
     })
 
     it('rejects invalid duplicates and leaves state unchanged', () => {
-      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      const a = placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
 
       const initialState = useBuildStore.getState()
@@ -268,7 +274,7 @@ describe('useBuildStore', () => {
     })
 
     it('is captured as a single undoable step', () => {
-      const a = useBuildStore.getState().placeBrick(sampleBrick)
+      const a = placeBrick(sampleBrick)
       useBuildStore.getState().selectBrick(a)
 
       useBuildStore.getState().duplicateSelection({ dx: 0, dy: 3, dz: 0 })
@@ -348,26 +354,81 @@ describe('useBuildStore', () => {
     })
   })
 
+  describe('grounding validation', () => {
+    it('rejects a floating placement and leaves bricks unchanged', () => {
+      const anchor = placeBrick({ ...sampleBrick, partId: 'brick-1x1' })
+      const initialBricks = useBuildStore.getState().bricks
+
+      const rejected = useBuildStore.getState().placeBrick({
+        ...sampleBrick,
+        partId: 'brick-1x1',
+        x: 5,
+        y: 6,
+        z: 5,
+      })
+
+      expect(rejected).toBeNull()
+      expect(useBuildStore.getState().bricks).toBe(initialBricks)
+      expect(Object.keys(useBuildStore.getState().bricks)).toEqual([anchor])
+    })
+
+    it('rejects a brick resting on a tile top and leaves bricks unchanged', () => {
+      const tile = placeBrick({
+        partId: 'tile-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+      const initialBricks = useBuildStore.getState().bricks
+
+      const rejected = useBuildStore.getState().placeBrick({
+        partId: 'plate-1x1',
+        color: 'red',
+        x: 0,
+        y: 1,
+        z: 0,
+        rot: 0,
+      })
+
+      expect(rejected).toBeNull()
+      expect(useBuildStore.getState().bricks).toBe(initialBricks)
+      expect(Object.keys(useBuildStore.getState().bricks)).toEqual([tile])
+    })
+  })
+
   describe('triggerCollapse', () => {
     // A grounded 2x4 at the origin (stays standing) plus two 1x1 bricks that
     // float high above the baseplate, clear of the 2x4 footprint and of each
     // other (no stud path to the ground → both collapse).
     const seedCollapseModel = () => {
-      const grounded = useBuildStore.getState().placeBrick(sampleBrick)
-      const floatA = useBuildStore.getState().placeBrick({
-        ...sampleBrick,
-        partId: 'brick-1x1',
-        x: 10,
-        y: 3,
-        z: 10,
+      const grounded = placeBrick(sampleBrick)
+      const floatA = 'float-a'
+      const floatB = 'float-b'
+
+      useBuildStore.setState({
+        bricks: {
+          ...useBuildStore.getState().bricks,
+          [floatA]: {
+            id: floatA,
+            ...sampleBrick,
+            partId: 'brick-1x1',
+            x: 10,
+            y: 3,
+            z: 10,
+          },
+          [floatB]: {
+            id: floatB,
+            ...sampleBrick,
+            partId: 'brick-1x1',
+            x: 14,
+            y: 3,
+            z: 10,
+          },
+        },
       })
-      const floatB = useBuildStore.getState().placeBrick({
-        ...sampleBrick,
-        partId: 'brick-1x1',
-        x: 14,
-        y: 3,
-        z: 10,
-      })
+
       return { grounded, floatA, floatB }
     }
 
@@ -421,7 +482,7 @@ describe('useBuildStore', () => {
     })
 
     it('is a no-op (no history entry) when nothing collapses', () => {
-      useBuildStore.getState().placeBrick(sampleBrick)
+      placeBrick(sampleBrick)
       const before = pastStateCount()
       const bricksRef = useBuildStore.getState().bricks
 
@@ -508,7 +569,7 @@ describe('useBuildStore', () => {
 
       // Any later state-changing action makes the collapse no longer the top
       // undo entry, so its label must not linger.
-      useBuildStore.getState().placeBrick({ ...sampleBrick, x: 20 })
+      placeBrick({ ...sampleBrick, x: 20 })
       expect(useBuildStore.getState().lastCollapse).toBeNull()
     })
   })
@@ -518,7 +579,7 @@ describe('build schema serialization', () => {
   beforeEach(resetStore)
 
   it('serialize produces compact Build JSON without selection or ids', () => {
-    useBuildStore.getState().placeBrick(sampleBrick)
+    placeBrick(sampleBrick)
     const json = serialize(useBuildStore.getState())
     const parsed = JSON.parse(json)
     expect(parsed.version).toBe(1)
@@ -527,10 +588,8 @@ describe('build schema serialization', () => {
   })
 
   it('deserialize round-trips a serialized build', () => {
-    useBuildStore.getState().placeBrick(sampleBrick)
-    useBuildStore
-      .getState()
-      .placeBrick({ ...sampleBrick, partId: 'plate-2x2', x: 6 })
+    placeBrick(sampleBrick)
+    placeBrick({ ...sampleBrick, partId: 'plate-2x2', x: 6 })
     const json = serialize(useBuildStore.getState())
     const restored = deserialize(json)
     expect(serialize(restored)).toEqual(json)
@@ -594,7 +653,7 @@ describe('build schema serialization', () => {
   })
 
   it('deserialize assigns fresh ids matching the brick payloads', () => {
-    const id = useBuildStore.getState().placeBrick(sampleBrick)
+    const id = placeBrick(sampleBrick)
     const json = serialize(useBuildStore.getState())
     const restored = deserialize(json)
     const [restoredId] = Object.keys(restored.bricks)

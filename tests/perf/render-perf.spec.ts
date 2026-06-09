@@ -88,18 +88,24 @@ test('p95 frame time ≤ 17ms with 2 000-brick stress build', async ({
 }) => {
   await page.goto('/')
 
-  // Inject stress build into the Zustand store via the dev-mode window handle.
-  // window.__legacyStore is set in src/main.tsx when import.meta.env.DEV is true.
+  // Inject stress build into the canonical Zustand store via the dev-mode
+  // window handle exposed in src/main.tsx when import.meta.env.DEV is true.
   const bricks = generateBricks(2000)
   await page.evaluate((bricksJson) => {
     const store = (
       window as Window & {
-        __legacyStore?: {
-          getState: () => { setBricks: (b: unknown[]) => void }
+        __blockyStore?: {
+          setState: (state: {
+            bricks: Record<string, unknown>
+          }) => void
         }
       }
-    ).__legacyStore
-    store?.getState().setBricks(bricksJson)
+    ).__blockyStore
+    store?.setState({
+      bricks: Object.fromEntries(
+        bricksJson.map((brick) => [brick.id, brick]),
+      ),
+    })
   }, bricks)
 
   // Wait for the DOM to reflect the injected build.
