@@ -39,10 +39,20 @@ describe('validateBuild', () => {
     expect(() => validateBuild(invalidBuild)).toThrow()
   })
 
-  it('rejects a wrong baseplate size', () => {
+  it('rejects an unsupported baseplate size', () => {
     const badBaseplate = {
       version: 1,
-      baseplate: { size: 16 },
+      baseplate: { size: 33 },
+      bricks: [],
+    }
+    expect(() => validateBuild(badBaseplate)).toThrow()
+    expect(safeParseBuild(JSON.stringify(badBaseplate))).toBeNull()
+  })
+
+  it('rejects a zero baseplate size', () => {
+    const badBaseplate = {
+      version: 1,
+      baseplate: { size: 0 },
       bricks: [],
     }
     expect(() => validateBuild(badBaseplate)).toThrow()
@@ -197,6 +207,17 @@ describe('serializeBuild / parseBuild', () => {
   it('round-trips a build through JSON without loss', () => {
     const restored = parseBuild(serializeBuild(sampleBuild))
     expect(restored).toEqual(sampleBuild)
+  })
+
+  it('round-trips a supported larger baseplate size', () => {
+    const largerBaseplateBuild: Build = {
+      ...sampleBuild,
+      baseplate: { size: 48 },
+    }
+
+    const restored = parseBuild(serializeBuild(largerBaseplateBuild))
+
+    expect(restored).toEqual(largerBaseplateBuild)
   })
 
   it('rejects a build that does not match the schema', () => {

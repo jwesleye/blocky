@@ -19,10 +19,18 @@ describe('backend PublishRequestSchema baseplate contract', () => {
     expect(PublishRequestSchema.safeParse(validRequest).success).toBe(true)
   })
 
-  it('rejects a build with a non-contract baseplate size', () => {
+  it('accepts a build with a supported larger baseplate size', () => {
     const request = {
       ...validRequest,
-      build: { ...validRequest.build, baseplate: { size: 16 } },
+      build: { ...validRequest.build, baseplate: { size: 48 } },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(true)
+  })
+
+  it('rejects a build with an unsupported baseplate size', () => {
+    const request = {
+      ...validRequest,
+      build: { ...validRequest.build, baseplate: { size: 33 } },
     }
     expect(PublishRequestSchema.safeParse(request).success).toBe(false)
   })

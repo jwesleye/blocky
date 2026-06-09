@@ -2,7 +2,6 @@ import { act, renderHook } from '@testing-library/react'
 import Graph from 'graphology'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import { bricksToBuild } from '@/domain/model/build'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
@@ -30,6 +29,7 @@ describe('useBuildPersistence', () => {
   })
 
   it('exports the canonical build store as a JSON blob', async () => {
+    useBuildStore.getState().setBaseplateSize(48)
     useBuildStore.getState().placeBrick({
       partId: 'brick-2x4',
       color: 'red',
@@ -82,7 +82,7 @@ describe('useBuildPersistence', () => {
           rot: 0,
         },
       ],
-      BASEPLATE_SIZE_STUDS,
+      48,
     )
     expect(blob.size).toBe(
       new Blob([JSON.stringify(expectedBuild, null, 2)], {
@@ -106,7 +106,7 @@ describe('useBuildPersistence', () => {
           rot: 0,
         },
       ],
-      BASEPLATE_SIZE_STUDS,
+      48,
     )
 
     let handleChange:
@@ -159,5 +159,6 @@ describe('useBuildPersistence', () => {
     await importPromise!
 
     expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(1)
+    expect(useBuildStore.getState().baseplateSize).toBe(48)
   })
 })

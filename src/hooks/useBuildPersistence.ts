@@ -4,7 +4,7 @@ import {
   validateBuild,
   buildToBricks,
 } from '@/domain/model/build'
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
 import { createGalleryClient } from '@/domain/persistence/galleryClient'
 import type {
   GalleryPublishRequest,
@@ -19,9 +19,11 @@ const GALLERY_BASE_URL =
 
 export function useBuildPersistence() {
   const bricks = useBuildStore((state) => state.bricks)
+  const baseplateSize = useBuildStore((state) => state.baseplateSize)
 
   const exportToJSON = useCallback(() => {
-    const build = bricksToBuild(Object.values(bricks), BASEPLATE_SIZE_STUDS)
+    assertSupportedBaseplateSize(baseplateSize)
+    const build = bricksToBuild(Object.values(bricks), baseplateSize)
     const blob = new Blob([JSON.stringify(build, null, 2)], {
       type: 'application/json',
     })
@@ -31,7 +33,7 @@ export function useBuildPersistence() {
     a.download = `build-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
-  }, [bricks])
+  }, [bricks, baseplateSize])
 
   const importFromJSON = useCallback(async () => {
     const input = document.createElement('input')
@@ -55,6 +57,7 @@ export function useBuildPersistence() {
             bricks: Object.fromEntries(
               newBricks.map((brick) => [brick.id, brick]),
             ),
+            baseplateSize: build.baseplate.size,
           })
           resolve()
         } catch (err) {
@@ -77,11 +80,12 @@ export function useBuildPersistence() {
         'title' | 'description' | 'visibility' | 'author'
       >,
     ): Promise<GalleryPublishResult> => {
-      const build = bricksToBuild(Object.values(bricks), BASEPLATE_SIZE_STUDS)
+      assertSupportedBaseplateSize(baseplateSize)
+      const build = bricksToBuild(Object.values(bricks), baseplateSize)
       const client = createGalleryClient(GALLERY_BASE_URL)
       return client.publish({ build, gallery: meta })
     },
-    [bricks],
+    [bricks, baseplateSize],
   )
 
   return { exportToJSON, importFromJSON, publishToGallery }

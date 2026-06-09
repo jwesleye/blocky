@@ -15,12 +15,12 @@ export const DEFAULT_BASEPLATE_SIZE = 32
 
 export type BaseplateSize = (typeof SUPPORTED_BASEPLATE_SIZES)[number]
 
-export const isSupportedBaseplateSize = (
-  size: number,
-): size is BaseplateSize =>
+export const isSupportedBaseplateSize = (size: number): size is BaseplateSize =>
   (SUPPORTED_BASEPLATE_SIZES as readonly number[]).includes(size)
 
-export const assertSupportedBaseplateSize = (size: number): void => {
+export function assertSupportedBaseplateSize(
+  size: number,
+): asserts size is BaseplateSize {
   if (!isSupportedBaseplateSize(size)) {
     throw new RangeError(
       `Unsupported baseplate size: ${size}. Supported sizes are ${SUPPORTED_BASEPLATE_SIZES.join(', ')}.`,

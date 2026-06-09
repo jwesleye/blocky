@@ -241,7 +241,14 @@ describe('useBuildStore', () => {
       // bounding box X: cells 0,1 and 5 → minX=0, maxX=5
       // mirror x: a new_x=0+5-(0+2-1)=4, b new_x=0+5-(5+1-1)=0
       const a = placeBrick({ ...sampleBrick, x: 0 })
-      const b = placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+      const b = placeBrick({
+        partId: 'brick-1x1',
+        color: 'blue',
+        x: 5,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
 
       useBuildStore.getState().selectBrick(a)
       useBuildStore.getState().selectBrick(b, true)
@@ -264,8 +271,24 @@ describe('useBuildStore', () => {
       const f2Id = 'f2-test'
       useBuildStore.setState({
         bricks: {
-          [f1Id]: { id: f1Id, partId: 'brick-1x1', color: 'red', x: 0, y: 3, z: 0, rot: 0 as const },
-          [f2Id]: { id: f2Id, partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 as const },
+          [f1Id]: {
+            id: f1Id,
+            partId: 'brick-1x1',
+            color: 'red',
+            x: 0,
+            y: 3,
+            z: 0,
+            rot: 0 as const,
+          },
+          [f2Id]: {
+            id: f2Id,
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 5,
+            y: 0,
+            z: 0,
+            rot: 0 as const,
+          },
         },
         selection: new Set([f1Id, f2Id]),
       })
@@ -281,8 +304,22 @@ describe('useBuildStore', () => {
 
     it('is captured as a single undoable/redoable step', () => {
       // Two brick-1x1 at x=0 and x=5, mirror swaps them: a→x=5, b→x=0
-      const a = placeBrick({ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 })
-      const b = placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+      const a = placeBrick({
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+      const b = placeBrick({
+        partId: 'brick-1x1',
+        color: 'blue',
+        x: 5,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
 
       useBuildStore.getState().selectBrick(a)
       useBuildStore.getState().selectBrick(b, true)
@@ -664,6 +701,18 @@ describe('build schema serialization', () => {
     expect(Object.keys(restored.bricks)).toHaveLength(2)
   })
 
+  it('preserves the active baseplate size through serialize and deserialize', () => {
+    useBuildStore.getState().setBaseplateSize(48)
+    placeBrick(sampleBrick)
+
+    const json = serialize(useBuildStore.getState())
+    const restored = deserialize(json)
+
+    expect(JSON.parse(json).baseplate).toEqual({ size: 48 })
+    expect(restored.baseplateSize).toBe(48)
+    expect(serialize(restored)).toEqual(json)
+  })
+
   it('round-trips half-stud offsets without affecting classic bricks', () => {
     useBuildStore.setState({
       bricks: {
@@ -756,7 +805,7 @@ describe('build schema serialization', () => {
       deserialize(
         JSON.stringify({
           version: BUILD_SCHEMA_VERSION,
-          baseplate: { size: 16 },
+          baseplate: { size: 33 },
           bricks: [],
         }),
       ),
