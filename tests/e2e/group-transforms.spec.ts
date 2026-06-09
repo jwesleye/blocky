@@ -47,6 +47,9 @@ test('group move and duplicate via store handle', async ({ page }) => {
       z: 0,
       rot: 0,
     })
+    if (id1 === null || id2 === null) {
+      throw new Error('grounded brick placement unexpectedly rejected')
+    }
     // Select both
     store.selectBrick(id1)
     store.selectBrick(id2, true)
@@ -153,22 +156,11 @@ test('mirror selection via UI controls', async ({ page }) => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
     ).__blockyStore.getState()
-    const id1 = store.placeBrick({
-      partId: 'brick-2x4',
-      color: 'red',
-      x: 0,
-      y: 0,
-      z: 0,
-      rot: 0,
-    })
-    const id2 = store.placeBrick({
-      partId: 'brick-1x1',
-      color: 'blue',
-      x: 5,
-      y: 0,
-      z: 0,
-      rot: 0,
-    })
+    const id1 = store.placeBrick({ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 })
+    const id2 = store.placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+    if (id1 === null || id2 === null) {
+      throw new Error('grounded brick placement unexpectedly rejected')
+    }
     store.selectBrick(id1)
     store.selectBrick(id2, true)
     return [id1, id2]
