@@ -8,6 +8,7 @@ import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { createBrickId } from '@/domain/model/ids'
 import {
   buildConnectionGraph,
+  canPlaceBrick,
   translateBrick,
   canPlaceGroup,
   selectCollapsingBricks,
@@ -23,7 +24,7 @@ export interface BuildActions {
    * Adds a brick to the model, assigning it a fresh id which is returned to the
    * caller. The brick is supplied without an id; the store owns id generation.
    */
-  placeBrick: (brick: Omit<PlacedBrick, 'id'>) => string
+  placeBrick: (brick: Omit<PlacedBrick, 'id'>) => string | null
   /** Removes a brick from the model and from the selection. No-op if unknown. */
   deleteBrick: (id: string) => void
   /**
@@ -110,8 +111,16 @@ export const useBuildStore = create<BuildStore>()(
 
         placeBrick: (brick) => {
           const id = createBrickId()
+          const candidate = { id, ...brick }
+
+          if (
+            !canPlaceBrick(candidate, Object.values(get().bricks), PART_CATALOG)
+          ) {
+            return null
+          }
+
           set((state) => ({
-            bricks: { ...state.bricks, [id]: { id, ...brick } },
+            bricks: { ...state.bricks, [id]: candidate },
             lastCollapse: null,
           }))
           return id

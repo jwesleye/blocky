@@ -92,7 +92,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       const collapsePath: string = '/src/domain/physics/collapse.ts'
       const simPath: string = '/src/domain/physics/collapseSimulation.ts'
       const scenePath: string = '/src/scene/collapseSceneBodies.ts'
-      const storePath: string = '/src/state/useStore.ts'
+      const storePath: string = '/src/state/store.ts'
 
       const collapseModule = await import(collapsePath)
       const simModule = await import(simPath)
@@ -134,16 +134,20 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
           t: Transaction,
           staticBodies: readonly unknown[],
         ) => unknown[]
-      const useStore = storeModule.useStore as {
+      const useBuildStore = storeModule.useBuildStore as {
         getState: () => {
-          bricks: FixtureBrick[]
-          setBricks: (b: FixtureBrick[]) => void
+          bricks: Record<string, FixtureBrick>
         }
+        setState: (state: {
+          bricks: Record<string, FixtureBrick>
+        }) => void
       }
 
       // Load the stress build through the real app state.
-      useStore.getState().setBricks(brickData)
-      const loadedBricks = useStore.getState().bricks
+      useBuildStore.setState({
+        bricks: Object.fromEntries(brickData.map((brick) => [brick.id, brick])),
+      })
+      const loadedBricks = Object.values(useBuildStore.getState().bricks)
 
       const frameTimes: number[] = []
       let computeMs = 0
