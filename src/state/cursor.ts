@@ -6,11 +6,13 @@ import { DEFAULT_PART_ID } from '@/domain/parts/catalog'
 export interface CursorBrick {
   partId: string
   colorId: string
+  rot: number
 }
 
 interface CursorState {
   colorId: string
   partId: string
+  rot: number
   /**
    * Complete model for the ghost/preview brick being placed.
    * Derived from the selected scalars but provided as a single object
@@ -19,14 +21,17 @@ interface CursorState {
   cursorBrick: CursorBrick
   setColor: (id: string) => void
   setPart: (id: string) => void
+  rotate: () => void
 }
 
 export const useCursorStore = create<CursorState>()((set) => ({
   colorId: DEFAULT_COLOR_ID,
   partId: DEFAULT_PART_ID,
+  rot: 0,
   cursorBrick: {
     partId: DEFAULT_PART_ID,
     colorId: DEFAULT_COLOR_ID,
+    rot: 0,
   },
   setColor: (id) =>
     set((state) => ({
@@ -38,4 +43,9 @@ export const useCursorStore = create<CursorState>()((set) => ({
       partId: id,
       cursorBrick: { ...state.cursorBrick, partId: id },
     })),
+  rotate: () =>
+    set((state) => {
+      const rot = (state.rot + 1) % 4
+      return { rot, cursorBrick: { ...state.cursorBrick, rot } }
+    }),
 }))
