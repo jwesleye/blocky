@@ -10,6 +10,16 @@ export const BASEPLATE_BOUNDS = {
   maxZ: BASEPLATE_SIZE_STUDS - 1,
 } as const
 
+export const SUPPORTED_BASEPLATE_SIZES = [16, 32, 48, 64] as const
+export const DEFAULT_BASEPLATE_SIZE = 32
+
+export const boundsForSize = (size: number) => ({
+  minX: 0,
+  maxX: size - 1,
+  minZ: 0,
+  maxZ: size - 1,
+})
+
 export const GRAVITY_VECTOR = { x: 0, y: -1, z: 0 } as const
 
 export type RotationY = 0 | 1 | 2 | 3
@@ -37,13 +47,22 @@ export const normalizeRotationY = (rotation: number): RotationY =>
 
 const isInteger = (value: number): boolean => Number.isInteger(value)
 
-export const isWithinBaseplate = ({ x, z }: GridFootprintCell): boolean =>
-  isInteger(x) &&
-  isInteger(z) &&
-  x >= BASEPLATE_BOUNDS.minX &&
-  x <= BASEPLATE_BOUNDS.maxX &&
-  z >= BASEPLATE_BOUNDS.minZ &&
-  z <= BASEPLATE_BOUNDS.maxZ
+export const isWithinBaseplate = (
+  { x, z }: GridFootprintCell,
+  size: number = DEFAULT_BASEPLATE_SIZE,
+): boolean => {
+  const bounds = boundsForSize(size)
+  return (
+    isInteger(x) &&
+    isInteger(z) &&
+    x >= bounds.minX &&
+    x <= bounds.maxX &&
+    z >= bounds.minZ &&
+    z <= bounds.maxZ
+  )
+}
 
-export const isGridPosition = ({ x, y, z }: GridPosition): boolean =>
-  isWithinBaseplate({ x, z }) && isInteger(y) && y >= 0
+export const isGridPosition = (
+  { x, y, z }: GridPosition,
+  size: number = DEFAULT_BASEPLATE_SIZE,
+): boolean => isWithinBaseplate({ x, z }, size) && isInteger(y) && y >= 0
