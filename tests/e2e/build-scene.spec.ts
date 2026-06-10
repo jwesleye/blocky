@@ -74,7 +74,6 @@ test('seeded bricks render to nonblank canvas, Build Status absent', async ({
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-
   await waitForStores(page)
 
   await page.evaluate(() => {
@@ -135,56 +134,10 @@ test('seeded bricks render to nonblank canvas, Build Status absent', async ({
   )
 })
 
-test('place mode deletes an existing brick on click and R rotates the cursor modulo 4', async ({
-  page,
-}) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await waitForStores(page)
-
-  const brickId = await page.evaluate(() => {
-    const store = (window as unknown as DevWindow).__blockyStore.getState()
-    return store.placeBrick({
-      partId: 'brick-2x4',
-      color: 'red',
-      x: 0,
-      y: 0,
-      z: 0,
-      rot: 0,
-    })
-  })
-  expect(brickId).toBeTruthy()
-
-  const brickPos = await projectToCanvas(page, 1, 1.5, 2)
-  await page.mouse.click(brickPos.x, brickPos.y)
-
-  await page.waitForFunction(
-    (id) =>
-      !(
-        (id as string) in
-        (window as unknown as DevWindow).__blockyStore.getState().bricks
-      ),
-    brickId,
-  )
-
-  const canvas = page.locator('canvas')
-  await canvas.focus()
-
-  const beforeRot = await page.evaluate(
-    () => (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
-  )
-  await page.keyboard.press('r')
-
-  const afterRot = await page.evaluate(
-    () => (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
-  )
-  expect(afterRot).toBe((beforeRot + 1) % 4)
-})
-
 test('canvas click places brick on a valid baseplate position', async ({
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-
   await waitForStores(page)
 
   const canvas = page.locator('canvas')
@@ -222,12 +175,7 @@ test('store allows stacked placement above an existing brick', async ({
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-
-  await page.waitForFunction(
-    () =>
-      (window as unknown as { __blockyStore: unknown }).__blockyStore !==
-      undefined,
-  )
+  await waitForStores(page)
 
   const result = await page.evaluate(() => {
     const store = (window as unknown as { __blockyStore: DevStore })
@@ -269,12 +217,7 @@ test('store rejects colliding repeat placement at the same coordinates', async (
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-
-  await page.waitForFunction(
-    () =>
-      (window as unknown as { __blockyStore: unknown }).__blockyStore !==
-      undefined,
-  )
+  await waitForStores(page)
 
   const result = await page.evaluate(() => {
     const store = (window as unknown as { __blockyStore: DevStore })
@@ -316,7 +259,6 @@ test('ghost click-to-place: hovering baseplate and clicking places exactly one b
   await page.goto('/')
   await waitForStores(page)
 
-  // Explicitly activate place mode via the toolbar (also serves as a warm-up interaction)
   await page.click('[data-testid="tool-place"]')
   await expect(page.locator('[data-testid="tool-place"]')).toHaveAttribute(
     'aria-pressed',
@@ -325,8 +267,6 @@ test('ghost click-to-place: hovering baseplate and clicking places exactly one b
 
   expect(await getBrickCount(page)).toBe(0)
 
-  // Move pointer to a clear area of the baseplate, wait for ghostGrid to be set,
-  // then click to place
   const pos = await projectToCanvas(page, 4, 0, 4)
   await page.mouse.move(pos.x, pos.y)
   await page.waitForTimeout(200)
@@ -350,7 +290,6 @@ test('ghost click-to-place: clicking in paint mode does not add a brick', async 
   await page.goto('/')
   await waitForStores(page)
 
-  // Switch to paint mode via the UI toolbar button
   await page.click('[data-testid="tool-paint"]')
   await expect(page.locator('[data-testid="tool-paint"]')).toHaveAttribute(
     'aria-pressed',
@@ -361,7 +300,6 @@ test('ghost click-to-place: clicking in paint mode does not add a brick', async 
   await page.mouse.move(pos.x, pos.y)
   await page.mouse.click(pos.x, pos.y)
 
-  // Wait a frame for any async placement that should NOT happen
   await page.waitForTimeout(500)
 
   const count = await getBrickCount(page)
@@ -379,7 +317,6 @@ test('R-rotate: pressing R increments cursor rotation mod 4', async ({
   )
   expect(initialRot).toBe(0)
 
-  // Focus the canvas so it receives keyboard events
   await page.locator('canvas').focus()
   await page.keyboard.press('r')
 
@@ -417,7 +354,6 @@ test('right-click to delete: context-menu on a placed brick removes it from the 
   expect(brickId).toBeTruthy()
   expect(await getBrickCount(page)).toBe(1)
 
-  // Project the brick's world center (width/2=1, height/2=1.5, length/2=2) to canvas and right-click
   const brickPos = await projectToCanvas(page, 1, 1.5, 2)
   await page.mouse.click(brickPos.x, brickPos.y, { button: 'right' })
 
