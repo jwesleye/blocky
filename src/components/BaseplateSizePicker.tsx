@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { SUPPORTED_BASEPLATE_SIZES } from '@/domain/grid'
 import { bricksOutsideBaseplate } from '@/domain/physics'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import { useBuildStore } from '@/state/store'
 
 /**
@@ -39,7 +39,7 @@ export function BaseplateSizePicker() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const count = SUPPORTED_BASEPLATE_SIZES.length
-    const idx = SUPPORTED_BASEPLATE_SIZES.indexOf(baseplateSize)
+    const idx = SUPPORTED_BASEPLATE_SIZES.findIndex((s) => s === baseplateSize)
     let nextIdx = idx
 
     switch (e.key) {
