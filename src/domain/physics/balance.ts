@@ -9,6 +9,30 @@ export type Point2D = [number, number]
 export type Polygon2D = Point2D[]
 export type Vec3 = { x: number; y: number; z: number }
 
+// Tolerance for boundary containment checks on integer-grid footprints.
+const BOUNDARY_EPS = 1e-9
+
+function isPointOnPolygonBoundary(point: Point2D, polygon: Polygon2D): boolean {
+  const n = polygon.length
+  for (let i = 0; i < n; i++) {
+    const a = polygon[i]
+    const b = polygon[(i + 1) % n]
+    // Cross product of (point - a) and (b - a) is zero iff point is collinear with a and b.
+    const cross = (point[0] - a[0]) * (b[1] - a[1]) - (point[1] - a[1]) * (b[0] - a[0])
+    if (Math.abs(cross) > BOUNDARY_EPS) continue
+    // Confirm the point lies within the segment's bounding box.
+    if (
+      point[0] >= Math.min(a[0], b[0]) - BOUNDARY_EPS &&
+      point[0] <= Math.max(a[0], b[0]) + BOUNDARY_EPS &&
+      point[1] >= Math.min(a[1], b[1]) - BOUNDARY_EPS &&
+      point[1] <= Math.max(a[1], b[1]) + BOUNDARY_EPS
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
 /**
  * Computes the convex-hull support footprint from a connected component's
  * base-contact bricks. Returns empty array if floating.
@@ -108,7 +132,8 @@ export function isBalanced(
   }
 
   const com = computeCoM(component, catalog)
-  return polygonContains(footprint, [com.x, com.z])
+  const projection: Point2D = [com.x, com.z]
+  return polygonContains(footprint, projection) || isPointOnPolygonBoundary(projection, footprint)
 }
 
 /**
