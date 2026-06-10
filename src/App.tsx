@@ -14,7 +14,7 @@ import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
 import { createAutosaver, loadBuild } from '@/domain/persistence'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
-import { Scene } from '@/scene/Scene'
+import { BuildScene } from '@/scene/BuildScene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import { TouchToolbar } from '@/components/TouchToolbar'
@@ -281,7 +281,7 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <Scene />
+          <BuildScene />
           <ViewControls />
           <HUD />
           <TouchToolbar />
