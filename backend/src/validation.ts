@@ -36,6 +36,46 @@ const BuildSchema = z.object({
   version: buildVersionSchema,
   baseplate: z.object({ size: supportedBaseplateSizeSchema }),
   bricks: z.array(serializedBrickSchema),
+}).superRefine((build, ctx) => {
+  const maxCoordinate = build.baseplate.size - 1
+
+  for (const [index, brick] of build.bricks.entries()) {
+    if (brick.x < 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['bricks', index, 'x'],
+        message: 'x must be greater than or equal to 0',
+      })
+    } else if (brick.x > maxCoordinate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['bricks', index, 'x'],
+        message: `x must be less than or equal to ${maxCoordinate}`,
+      })
+    }
+
+    if (brick.y < 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['bricks', index, 'y'],
+        message: 'y must be greater than or equal to 0',
+      })
+    }
+
+    if (brick.z < 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['bricks', index, 'z'],
+        message: 'z must be greater than or equal to 0',
+      })
+    } else if (brick.z > maxCoordinate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['bricks', index, 'z'],
+        message: `z must be less than or equal to ${maxCoordinate}`,
+      })
+    }
+  }
 })
 
 const isoTimestampSchema = z.string().datetime({ offset: true })

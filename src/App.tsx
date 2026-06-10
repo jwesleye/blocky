@@ -52,7 +52,9 @@ export function App() {
 
   useEffect(() => {
     if (!hasHydratedPersistence) return
-    autosaverRef.current.schedule(bricksToBuild(bricks, BASEPLATE_SIZE_STUDS))
+    autosaverRef.current.schedule(
+      bricksToBuild(bricks, BASEPLATE_SIZE_STUDS),
+    )
   }, [bricks, hasHydratedPersistence])
 
   useEffect(() => {

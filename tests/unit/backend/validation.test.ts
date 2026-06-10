@@ -22,9 +22,26 @@ describe('backend PublishRequestSchema baseplate contract', () => {
   it('accepts a build with a supported larger baseplate size', () => {
     const request = {
       ...validRequest,
-      build: { ...validRequest.build, baseplate: { size: 48 } },
+      build: {
+        ...validRequest.build,
+        baseplate: { size: 48 },
+        bricks: [{ partId: 'brick-1x1', color: 'blue', x: 40, y: 0, z: 0, rot: 0 }],
+      },
     }
     expect(PublishRequestSchema.safeParse(request).success).toBe(true)
+  })
+
+  it('rejects a build with brick coordinates outside the baseplate size', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        baseplate: { size: 48 },
+        bricks: [{ partId: 'brick-1x1', color: 'blue', x: 48, y: 0, z: 0, rot: 0 }],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
   })
 
   it('rejects a build with an unsupported baseplate size', () => {
@@ -40,6 +57,18 @@ describe('backend PublishRequestSchema baseplate contract', () => {
       ...validRequest,
       build: { ...validRequest.build, baseplate: { size: 0 } },
     }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects negative y and z coordinates', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        bricks: [{ partId: 'brick-1x1', color: 'blue', x: 0, y: -1, z: -1, rot: 0 }],
+      },
+    }
+
     expect(PublishRequestSchema.safeParse(request).success).toBe(false)
   })
 })

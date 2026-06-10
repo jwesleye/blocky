@@ -4,6 +4,7 @@ import {
   BASEPLATE_SIZE_STUDS,
   SUPPORTED_BASEPLATE_SIZES,
   type BaseplateSize,
+  boundsForSize,
   isSupportedBaseplateSize,
 } from '@/domain/grid'
 import { createBrickId } from '@/domain/model/ids'
@@ -26,9 +27,9 @@ const halfStudOffsetSchema = z.object({
 const buildBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
-  x: z.number().int(),
-  y: z.number().int(),
-  z: z.number().int(),
+  x: z.number().int().min(0),
+  y: z.number().int().min(0),
+  z: z.number().int().min(0),
   rot: rotationSchema,
   offset: halfStudOffsetSchema.optional(),
 })
@@ -40,13 +41,35 @@ const baseplateSizeSchema = z.custom<BaseplateSize>(
   `Supported baseplate sizes are ${SUPPORTED_BASEPLATE_SIZES.join(', ')}`,
 )
 
-export const BuildSchema = z.object({
-  version: buildVersionSchema,
-  baseplate: z.object({
-    size: baseplateSizeSchema,
-  }),
-  bricks: z.array(buildBrickSchema),
-})
+export const BuildSchema = z
+  .object({
+    version: buildVersionSchema,
+    baseplate: z.object({
+      size: baseplateSizeSchema,
+    }),
+    bricks: z.array(buildBrickSchema),
+  })
+  .superRefine((build, ctx) => {
+    const bounds = boundsForSize(build.baseplate.size)
+
+    for (const [index, brick] of build.bricks.entries()) {
+      if (brick.x > bounds.maxX) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'x'],
+          message: `x must be less than or equal to ${bounds.maxX}`,
+        })
+      }
+
+      if (brick.z > bounds.maxZ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'z'],
+          message: `z must be less than or equal to ${bounds.maxZ}`,
+        })
+      }
+    }
+  })
 
 export const buildSchema = BuildSchema
 
