@@ -49,7 +49,9 @@ test('seeded bricks render to nonblank canvas, Build Status absent', async ({
   // Canvas must become nonblank — poll until R3F paints colored geometry
   await page.waitForFunction(
     () => {
-      const canvas = document.querySelector('canvas') as HTMLCanvasElement | null
+      const canvas = document.querySelector(
+        'canvas',
+      ) as HTMLCanvasElement | null
       if (!canvas) return false
 
       // Draw WebGL canvas onto an offscreen 2D canvas to read pixels
@@ -60,7 +62,12 @@ test('seeded bricks render to nonblank canvas, Build Status absent', async ({
       if (!ctx) return false
 
       ctx.drawImage(canvas, 0, 0)
-      const data = ctx.getImageData(0, 0, offscreen.width, offscreen.height).data
+      const data = ctx.getImageData(
+        0,
+        0,
+        offscreen.width,
+        offscreen.height,
+      ).data
 
       // Count distinct colors (sample every 4th pixel for performance)
       const colors = new Set<number>()
