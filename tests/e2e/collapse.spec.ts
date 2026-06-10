@@ -2,10 +2,11 @@ import { test, expect } from '@playwright/test'
 
 interface CollapseDevStore {
   getState: () => {
-    placeBrick: (b: object) => string
+    placeBrick: (b: object) => string | null
     triggerCollapse: () => void
     bricks: Record<string, unknown>
   }
+  setState: (fn: (state: any) => any) => void
 }
 
 interface CollapseDebug {
@@ -28,36 +29,43 @@ test('collapse spawns dynamic bodies and shrinks the build', async ({
 
   // Seed a deterministic unbalanced build: one grounded brick that stays put and
   // two bricks floating far away with no stud path to the baseplate (they fall).
+  // We use setState to bypass the grounding gate for the floating bricks.
   const initialCount = await page.evaluate(() => {
-    const store = () =>
-      (
-        window as unknown as { __blockyStore: CollapseDevStore }
-      ).__blockyStore.getState()
-    store().placeBrick({
-      partId: 'brick-2x4',
-      color: 'red',
-      x: 0,
-      y: 0,
-      z: 0,
-      rot: 0,
-    })
-    store().placeBrick({
-      partId: 'brick-1x1',
-      color: 'blue',
-      x: 10,
-      y: 3,
-      z: 10,
-      rot: 0,
-    })
-    store().placeBrick({
-      partId: 'brick-1x1',
-      color: 'green',
-      x: 14,
-      y: 3,
-      z: 10,
-      rot: 0,
-    })
-    return Object.keys(store().bricks).length
+    const store = (window as unknown as { __blockyStore: CollapseDevStore })
+      .__blockyStore
+    store.setState((state) => ({
+      bricks: {
+        ...state.bricks,
+        'grounded-1': {
+          id: 'grounded-1',
+          partId: 'brick-2x4',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        'float-blue': {
+          id: 'float-blue',
+          partId: 'brick-1x1',
+          color: 'blue',
+          x: 10,
+          y: 3,
+          z: 10,
+          rot: 0,
+        },
+        'float-green': {
+          id: 'float-green',
+          partId: 'brick-1x1',
+          color: 'green',
+          x: 14,
+          y: 3,
+          z: 10,
+          rot: 0,
+        },
+      },
+    }))
+    return Object.keys(store.getState().bricks).length
   })
   expect(initialCount).toBe(3)
 

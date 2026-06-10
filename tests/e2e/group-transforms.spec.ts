@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 interface DevStore {
   getState: () => {
-    placeBrick: (b: object) => string
+    placeBrick: (b: object) => string | null
     selectBrick: (id: string, additive?: boolean) => void
     moveSelection: (delta: object) => boolean
     duplicateSelection: (delta: object) => boolean
@@ -13,6 +13,7 @@ interface DevStore {
     selection: { size: number }
     bricks: Record<string, { x: number; z: number; y: number }>
   }
+  setState: (fn: (state: any) => any) => void
 }
 
 test('group move and duplicate via store handle', async ({ page }) => {
@@ -46,6 +47,9 @@ test('group move and duplicate via store handle', async ({ page }) => {
       z: 0,
       rot: 0,
     })
+    if (id1 === null || id2 === null) {
+      throw new Error('grounded brick placement unexpectedly rejected')
+    }
     // Select both
     store.selectBrick(id1)
     store.selectBrick(id2, true)
@@ -152,22 +156,11 @@ test('mirror selection via UI controls', async ({ page }) => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
     ).__blockyStore.getState()
-    const id1 = store.placeBrick({
-      partId: 'brick-2x4',
-      color: 'red',
-      x: 0,
-      y: 0,
-      z: 0,
-      rot: 0,
-    })
-    const id2 = store.placeBrick({
-      partId: 'brick-1x1',
-      color: 'blue',
-      x: 5,
-      y: 0,
-      z: 0,
-      rot: 0,
-    })
+    const id1 = store.placeBrick({ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 })
+    const id2 = store.placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+    if (id1 === null || id2 === null) {
+      throw new Error('grounded brick placement unexpectedly rejected')
+    }
     store.selectBrick(id1)
     store.selectBrick(id2, true)
     return [id1, id2]
@@ -218,36 +211,43 @@ test('mirror selection via UI controls', async ({ page }) => {
 
   // Invalid mirror: floating + grounded selection where mirror leaves the
   // floating brick with no support → rejected with user-visible feedback
+  // We use setState to inject the floating brick bypassing the grounding gate.
   await page.evaluate(() => {
-    const store = (
-      window as unknown as { __blockyStore: DevStore }
-    ).__blockyStore.getState()
-    const floating = store.placeBrick({
-      partId: 'brick-1x1',
-      color: 'red',
-      x: 0,
-      y: 3,
-      z: 15,
-      rot: 0,
-    })
-    const grounded = store.placeBrick({
-      partId: 'brick-1x1',
-      color: 'blue',
-      x: 5,
-      y: 0,
-      z: 15,
-      rot: 0,
-    })
-    store.selectBrick(floating)
-    store.selectBrick(grounded, true)
+    const store = (window as unknown as { __blockyStore: DevStore })
+      .__blockyStore
+    const floatingId = 'floating-test'
+    const groundedId = 'grounded-test'
+    store.setState((state) => ({
+      bricks: {
+        ...state.bricks,
+        [floatingId]: {
+          id: floatingId,
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 3,
+          z: 15,
+          rot: 0,
+        },
+        [groundedId]: {
+          id: groundedId,
+          partId: 'brick-1x1',
+          color: 'blue',
+          x: 5,
+          y: 0,
+          z: 15,
+          rot: 0,
+        },
+      },
+    }))
+    store.getState().selectBrick(floatingId)
+    store.getState().selectBrick(groundedId, true)
   })
-  const countBefore = await page.evaluate(
-    () =>
-      Object.keys(
-        (
-          window as unknown as { __blockyStore: DevStore }
-        ).__blockyStore.getState().bricks,
-      ).length,
+
+  const countBefore = await page.evaluate(() =>
+    Object.keys(
+      (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks,
+    ).length,
   )
   // Drive the invalid mirror through the UI button — expects visible rejection feedback
   await page.click('[data-testid="mirror-x"]')
