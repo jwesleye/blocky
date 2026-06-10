@@ -3,11 +3,20 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http'
-import { generateBuildId, getBuild, listBuilds, storeBuild } from './store.js'
+import {
+  generateBuildId,
+  getBuild,
+  isBuildDeleted,
+  listDiscoverableBuilds,
+  storeBuild,
+  deleteBuild,
+  addReport,
+} from './store.js'
 import {
   SHARED_BUILD_CONTRACT_VERSION,
   PublishRequestSchema,
 } from './validation.js'
+import { ReportRequestSchema } from './moderation.js'
 import type { SharedBuildPayload } from './validation.js'
 
 const PORT = process.env['PORT'] ? parseInt(process.env['PORT']) : 4000
@@ -17,8 +26,8 @@ function sendJSON(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, x-user-id',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
   })
   res.end(payload)
 }
@@ -32,12 +41,15 @@ async function readBody(req: IncomingMessage): Promise<string> {
   })
 }
 
-const server = createServer(async (req, res) => {
+export async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, x-user-id',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     })
     res.end()
     return
@@ -89,9 +101,14 @@ const server = createServer(async (req, res) => {
     return
   }
 
-  const loadMatch = /^\/builds\/([^/]+)$/.exec(url)
-  if (req.method === 'GET' && loadMatch) {
-    const buildId = decodeURIComponent(loadMatch[1] ?? '')
+  const buildIdMatch = /^\/builds\/([^/]+)$/.exec(url)
+
+  if (req.method === 'GET' && buildIdMatch) {
+    const buildId = decodeURIComponent(buildIdMatch[1] ?? '')
+    if (isBuildDeleted(buildId)) {
+      sendJSON(res, 410, { error: 'Build has been deleted' })
+      return
+    }
     const payload = getBuild(buildId)
     if (!payload) {
       sendJSON(res, 404, { error: 'Build not found' })
@@ -101,16 +118,91 @@ const server = createServer(async (req, res) => {
     return
   }
 
+  if (req.method === 'DELETE' && buildIdMatch) {
+    const buildId = decodeURIComponent(buildIdMatch[1] ?? '')
+    const userId = req.headers['x-user-id']
+    if (!userId || Array.isArray(userId)) {
+      sendJSON(res, 400, { error: 'x-user-id header required' })
+      return
+    }
+    const result = deleteBuild(buildId, userId)
+    if (!result.success) {
+      if (result.reason === 'not-found') {
+        sendJSON(res, 404, { error: 'Build not found' })
+      } else {
+        sendJSON(res, 403, { error: 'Unauthorized' })
+      }
+      return
+    }
+    sendJSON(res, 200, { deleted: true })
+    return
+  }
+
+  const reportsMatch = /^\/builds\/([^/]+)\/reports$/.exec(url)
+  if (req.method === 'POST' && reportsMatch) {
+    const buildId = decodeURIComponent(reportsMatch[1] ?? '')
+
+    if (isBuildDeleted(buildId)) {
+      sendJSON(res, 404, { error: 'Build not found' })
+      return
+    }
+    const payload = getBuild(buildId)
+    if (!payload) {
+      sendJSON(res, 404, { error: 'Build not found' })
+      return
+    }
+
+    let raw: string
+    try {
+      raw = await readBody(req)
+    } catch {
+      sendJSON(res, 400, { error: 'Failed to read request body' })
+      return
+    }
+
+    let data: unknown
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      sendJSON(res, 400, { error: 'Invalid JSON' })
+      return
+    }
+
+    const parsed = ReportRequestSchema.safeParse(data)
+    if (!parsed.success) {
+      sendJSON(res, 422, {
+        error: 'Invalid report request',
+        details: parsed.error.issues,
+      })
+      return
+    }
+
+    const payloadBefore = JSON.stringify(payload)
+    addReport(buildId, parsed.data)
+    const payloadAfter = JSON.stringify(getBuild(buildId))
+    if (payloadBefore !== payloadAfter) {
+      sendJSON(res, 500, { error: 'Internal error: payload mutated' })
+      return
+    }
+
+    sendJSON(res, 201, { reported: true })
+    return
+  }
+
   if (req.method === 'GET' && url === '/builds') {
-    sendJSON(res, 200, { builds: listBuilds() })
+    sendJSON(res, 200, { builds: listDiscoverableBuilds() })
     return
   }
 
   sendJSON(res, 404, { error: 'Not found' })
-})
+}
 
-server.listen(PORT, () => {
-  console.log(`Gallery backend listening on :${PORT}`)
-})
+const server = createServer(handler)
+
+if (!process.env['VITEST']) {
+  server.listen(PORT, () => {
+    console.log(`Gallery backend listening on :${PORT}`)
+  })
+}
 
 export { server }

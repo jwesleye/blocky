@@ -86,14 +86,126 @@ Loading a gallery build reverses that process:
   schema.
 - Storage is server-owned and durable; local autosave remains browser-owned and
   best-effort.
-- Deletion, moderation, and abuse handling are future backend concerns and must
-  operate on the gallery wrapper without changing the `Build` schema.
 
-## Constraints For Follow-on Work
+## Moderation And Abuse Reporting
 
-- Keep all implementation in the JS/TS ecosystem.
-- Do not make the existing production image depend on a backend for local-only
-  flows.
-- Do not fork `BuildSchema`; compose it inside the shared-build contract.
-- Treat backend unavailability as a failure of publishing/loading only, never as
-  corruption of autosave or imported/exported builds.
+Community-submitted builds are subject to abuse reporting. The gallery backend
+accepts report submissions via `POST /builds/:id/reports`.
+
+**Accepted report reasons:** `spam`, `abuse`, `copyright`, `other`.
+
+**Report validation:**
+- The `reason` field is required and must be one of the accepted values.
+- An optional `details` field accepts up to 2000 characters.
+- Invalid report requests (unknown reason, oversized details) receive a `422`
+  response.
+- Reporting an unknown build id returns `404`.
+- Filing a report **never mutates the stored `SharedBuildPayload`**: reports are
+  stored beside the build data in a separate in-memory map, not inside the
+  payload itself.
+
+## Privacy, Ownership, And Deletion
+
+**Authorship and ownership:**
+- Every published build carries an `author` identity on the gallery wrapper:
+  either `anonymous` (with an optional display name) or `authenticated` (with a
+  `userId` and `displayName`).
+- The `userId` of an `authenticated` author is the canonical ownership
+  identifier for deletion authorization.
+
+**Visibility:**
+- Builds may be published as `public` (discoverable in gallery listings) or
+  `unlisted` (loadable by direct id but hidden from listings).
+
+**Deletion authorization:**
+- `DELETE /builds/:id` succeeds only when the `x-user-id` request header
+  matches the build's `gallery.author.userId`.
+- `anonymous`-authored builds cannot be deleted via this endpoint (`403`).
+- A mismatched `userId` returns `403`.
+- An unknown build id returns `404`.
+
+**Deleted-content (tombstone) behavior:**
+- Once deleted, a build is tombstoned: it is removed from listings but its id
+  is retained so the server can distinguish a deleted build from one that never
+  existed.
+- `GET /builds/:id` for a tombstoned build returns `410 Gone`.
+- The `galleryClient.load` method maps a `410` response to a typed `deleted`
+  result, distinct from `not-found` and `network-error`.
+- `GET /builds` (list) excludes tombstoned builds.
+
+## Deployment
+
+### Backend Service
+
+The gallery backend (`backend/src/server.ts`) is a Node.js HTTP server that
+stores published builds in memory. It is a separate service from the static SPA.
+
+Run it locally:
+
+```bash
+node --import tsx/esm backend/src/server.ts
+# or build and run:
+cd backend && node dist/server.js
+```
+
+Default port: `4000` (override with `PORT` env var).
+
+### Storage
+
+The current implementation uses in-memory storage — builds are lost on server
+restart. A production deployment should replace the in-memory maps in
+`backend/src/store.ts` with a durable store (e.g. a database volume or
+object-storage bucket).
+
+### Environment Variables
+
+| Variable         | Where used  | Purpose                                           |
+| ---------------- | ----------- | ------------------------------------------------- |
+| `VITE_GALLERY_URL` | Frontend (Vite build) | Base URL of the gallery backend, e.g. `http://localhost:4000`. Leave unset to run the SPA without a gallery backend. |
+| `PORT`           | Backend     | Port for the gallery HTTP server. Defaults to `4000`. |
+
+### Migration From Static-Only Hosting
+
+The existing production image is a static SPA served by nginx (`Dockerfile`
+`prod` stage). **No changes to the SPA image are required** to add the gallery
+backend:
+
+1. **Keep serving the SPA** from the existing nginx `prod` image. The SPA runs
+   fully without `VITE_GALLERY_URL` — autosave, JSON import/export, and
+   shareable URLs all work with no backend.
+2. **Deploy the gallery backend** as a separate container or process, built from
+   the `backend` stage in the Dockerfile.
+3. **Set `VITE_GALLERY_URL`** at build time when you want the SPA to connect to
+   the gallery backend. If not set, the publish button shows an error on attempt
+   (empty base URL results in a network error).
+4. **Wire `docker-compose.yml`** to include a `gallery-backend` service. The
+   `web` SPA service does **not** depend on `gallery-backend`, so the local dev
+   environment continues to work without the backend service running.
+
+## Operational Failure Paths
+
+Backend unavailability and rejected publishes are non-fatal: they surface an
+error in the UI without touching the current local build.
+
+**Unavailable backend (network error):**
+- If the gallery backend is unreachable, `fetch` throws and `galleryClient`
+  returns `{ ok: false, reason: 'network-error', message: ... }`.
+- `PersistenceControls` shows the error message and keeps `publishStatus` as
+  `'error'`.
+- The local build (autosave, `bricks` in the store) is **not mutated**.
+
+**Rejected publish (422):**
+- If the backend rejects a publish request with `422`, `galleryClient.publish`
+  returns `{ ok: false, reason: 'validation-error', message: 'Publish rejected: validation failed' }`.
+- `PersistenceControls` shows the error without changing the current build.
+
+**Deleted content (410):**
+- If a build that was previously loaded is later deleted, `GET /builds/:id`
+  returns `410`.
+- `galleryClient.load` maps this to `{ ok: false, reason: 'deleted', message: 'Build has been deleted' }`.
+- The gallery UI surfaces a "build deleted" message; the current local build is
+  not overwritten.
+
+**General principle:** treat backend unavailability as a failure of
+publishing/loading only, never as corruption of autosave or
+imported/exported builds.

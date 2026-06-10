@@ -13,10 +13,14 @@ export {
 export type {
   GalleryBuildSummary,
   GalleryClient,
+  GalleryDeleteIdentity,
+  GalleryDeleteResult,
   GalleryLoadResult,
   GalleryListResult,
   GalleryPublishRequest,
   GalleryPublishResult,
+  GalleryReportRequest,
+  GalleryReportResult,
 } from './galleryClient'
 export {
   SHARED_BUILD_CONTRACT_VERSION,

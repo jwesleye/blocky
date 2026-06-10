@@ -55,6 +55,8 @@ const makeClient = (overrides: Partial<GalleryClient> = {}): GalleryClient => ({
     ],
   }),
   load: async () => ({ ok: true, payload: makePayload() }),
+  reportBuild: async () => ({ ok: true }),
+  deleteBuild: async () => ({ ok: true }),
   ...overrides,
 })
 

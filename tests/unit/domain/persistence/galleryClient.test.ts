@@ -147,7 +147,31 @@ describe('galleryClient.publish', () => {
     }
   })
 
-  it('returns server-error result for non-2xx non-401 responses', async () => {
+  it('returns validation-error result when server responds 422', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ error: 'Invalid publish request', details: [] }),
+        { status: 422 },
+      ),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.publish({
+      build: makeBuild(),
+      gallery: {
+        title: 'Test',
+        visibility: 'public',
+        author: { identityMode: 'anonymous' },
+      },
+    })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('validation-error')
+    }
+  })
+
+  it('returns server-error result for non-2xx non-401 non-422 responses', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response('Internal Server Error', { status: 500 }),
     )
@@ -352,6 +376,38 @@ describe('galleryClient.load', () => {
     }
   })
 
+  it('returns deleted result when server responds 410', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'Build has been deleted' }), {
+        status: 410,
+      }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.load('deleted_build')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('deleted')
+    }
+  })
+
+  it('deleted reason is distinct from not-found and network-error', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response('', { status: 410 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.load('deleted_build')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).not.toBe('not-found')
+      expect(result.reason).not.toBe('network-error')
+      expect(result.reason).toBe('deleted')
+    }
+  })
+
   it('returns network-error result when fetch throws', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Failed to fetch'))
 
@@ -375,6 +431,162 @@ describe('galleryClient.load', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.reason).toBe('validation-error')
+    }
+  })
+})
+
+describe('galleryClient.reportBuild', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('returns ok:true on a successful report (201)', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ reported: true }), { status: 201 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.reportBuild('srv_abc123', { reason: 'spam' })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('posts to /builds/:id/reports', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ reported: true }), { status: 201 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    await client.reportBuild('srv_abc123', { reason: 'spam' })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:4000/builds/srv_abc123/reports',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('returns not-found result on 404', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response('Not Found', { status: 404 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.reportBuild('unknown', { reason: 'spam' })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('not-found')
+    }
+  })
+
+  it('returns validation-error result on 422', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'bad reason' }), { status: 422 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.reportBuild('srv_abc123', {
+      reason: 'other',
+      details: 'x',
+    })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('validation-error')
+    }
+  })
+
+  it('returns network-error result when fetch throws', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.reportBuild('srv_abc123', { reason: 'abuse' })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('network-error')
+    }
+  })
+})
+
+describe('galleryClient.deleteBuild', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('returns ok:true on successful deletion (200)', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ deleted: true }), { status: 200 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.deleteBuild('srv_abc123', { userId: 'user1' })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('sends DELETE to /builds/:id with x-user-id header', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ deleted: true }), { status: 200 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    await client.deleteBuild('srv_abc123', { userId: 'user1' })
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:4000/builds/srv_abc123',
+      expect.objectContaining({
+        method: 'DELETE',
+        headers: expect.objectContaining({ 'x-user-id': 'user1' }),
+      }),
+    )
+  })
+
+  it('returns unauthorized result on 403', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response('Forbidden', { status: 403 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.deleteBuild('srv_abc123', {
+      userId: 'wrong_user',
+    })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('unauthorized')
+    }
+  })
+
+  it('returns not-found result on 404', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response('Not Found', { status: 404 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.deleteBuild('unknown', { userId: 'user1' })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('not-found')
+    }
+  })
+
+  it('returns network-error result when fetch throws', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.deleteBuild('srv_abc123', { userId: 'user1' })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('network-error')
     }
   })
 })

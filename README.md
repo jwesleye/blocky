@@ -90,5 +90,57 @@ docker run --rm -p 8080:80 blocky:prod
 # http://localhost:8080
 ```
 
+Gallery backend (separate Node.js service):
+
+```bash
+docker build --target gallery-backend -t blocky:gallery-backend .
+docker run --rm -p 4000:4000 blocky:gallery-backend
+# http://localhost:4000
+```
+
 > Note: the app entry point (`src/main.tsx`) and source modules are added in a
 > later step. The skeleton above is the project scaffold and configuration.
+
+## Gallery Backend (Future Feature)
+
+The community-sharing gallery backend is a separate Node.js HTTP server in
+`backend/`. The static SPA works fully without it — autosave, JSON
+import/export, and shareable URLs are all client-only.
+
+### Running The Backend Locally
+
+```bash
+node --import tsx/esm backend/src/server.ts
+# Listening on :4000
+```
+
+Set `PORT` to override the default port:
+
+```bash
+PORT=5000 node --import tsx/esm backend/src/server.ts
+```
+
+### Connecting The SPA To The Backend
+
+Set `VITE_GALLERY_URL` at Vite build time (or in `.env`):
+
+```
+VITE_GALLERY_URL=http://localhost:4000
+```
+
+Leave it unset to run the SPA without a gallery backend. Publish attempts will
+return a network error but will not affect local autosave or imported builds.
+
+### Storage Durability
+
+The current backend uses in-memory storage — all builds are lost on server
+restart. For production, replace the in-memory maps in `backend/src/store.ts`
+with a durable backend (database or object storage).
+
+### Migrating From Static-Only Hosting
+
+The existing `prod` Docker image (nginx static SPA) does not need to change.
+Deploy the `gallery-backend` Docker image as a separate container, set
+`VITE_GALLERY_URL` at SPA build time, and the two services operate independently.
+See [`docs/design/community-sharing.md`](docs/design/community-sharing.md) for
+the full deployment and migration guide.

@@ -38,6 +38,7 @@ export type GalleryLoadResult =
       ok: false
       reason:
         | 'not-found'
+        | 'deleted'
         | 'network-error'
         | 'validation-error'
         | 'server-error'
@@ -60,10 +61,47 @@ export type GalleryListResult =
       message: string
     }
 
+export interface GalleryReportRequest {
+  reason: 'spam' | 'abuse' | 'copyright' | 'other'
+  details?: string
+}
+
+export type GalleryReportResult =
+  | { ok: true }
+  | {
+      ok: false
+      reason:
+        | 'not-found'
+        | 'validation-error'
+        | 'network-error'
+        | 'server-error'
+      message: string
+    }
+
+export interface GalleryDeleteIdentity {
+  userId: string
+}
+
+export type GalleryDeleteResult =
+  | { ok: true }
+  | {
+      ok: false
+      reason: 'not-found' | 'unauthorized' | 'network-error' | 'server-error'
+      message: string
+    }
+
 export interface GalleryClient {
   list(): Promise<GalleryListResult>
   publish(request: GalleryPublishRequest): Promise<GalleryPublishResult>
   load(buildId: string): Promise<GalleryLoadResult>
+  reportBuild(
+    buildId: string,
+    report: GalleryReportRequest,
+  ): Promise<GalleryReportResult>
+  deleteBuild(
+    buildId: string,
+    identity: GalleryDeleteIdentity,
+  ): Promise<GalleryDeleteResult>
 }
 
 const authorLabel = (author: SharedBuildAuthorIdentity): string => {
@@ -164,6 +202,14 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
         }
       }
 
+      if (response.status === 422) {
+        return {
+          ok: false,
+          reason: 'validation-error',
+          message: 'Publish rejected: validation failed',
+        }
+      }
+
       if (!response.ok) {
         return {
           ok: false,
@@ -211,6 +257,14 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
         return { ok: false, reason: 'not-found', message: 'Build not found' }
       }
 
+      if (response.status === 410) {
+        return {
+          ok: false,
+          reason: 'deleted',
+          message: 'Build has been deleted',
+        }
+      }
+
       if (!response.ok) {
         return {
           ok: false,
@@ -240,6 +294,89 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
       }
 
       return { ok: true, payload }
+    },
+
+    async reportBuild(buildId, report) {
+      let response: Response
+      try {
+        response = await fetch(
+          url(`/builds/${encodeURIComponent(buildId)}/reports`),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(report),
+          },
+        )
+      } catch (err) {
+        return {
+          ok: false,
+          reason: 'network-error',
+          message: err instanceof Error ? err.message : 'Network error',
+        }
+      }
+
+      if (response.status === 404) {
+        return { ok: false, reason: 'not-found', message: 'Build not found' }
+      }
+
+      if (response.status === 422) {
+        return {
+          ok: false,
+          reason: 'validation-error',
+          message: 'Invalid report request',
+        }
+      }
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          reason: 'server-error',
+          message: `Server error: ${response.status}`,
+        }
+      }
+
+      return { ok: true }
+    },
+
+    async deleteBuild(buildId, identity) {
+      let response: Response
+      try {
+        response = await fetch(
+          url(`/builds/${encodeURIComponent(buildId)}`),
+          {
+            method: 'DELETE',
+            headers: { 'x-user-id': identity.userId },
+          },
+        )
+      } catch (err) {
+        return {
+          ok: false,
+          reason: 'network-error',
+          message: err instanceof Error ? err.message : 'Network error',
+        }
+      }
+
+      if (response.status === 404) {
+        return { ok: false, reason: 'not-found', message: 'Build not found' }
+      }
+
+      if (response.status === 403) {
+        return {
+          ok: false,
+          reason: 'unauthorized',
+          message: 'Unauthorized: not the build owner',
+        }
+      }
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          reason: 'server-error',
+          message: `Server error: ${response.status}`,
+        }
+      }
+
+      return { ok: true }
     },
   }
 }
@@ -336,6 +473,22 @@ export function createFixtureGalleryClient(
       }
 
       return { ok: true, payload }
+    },
+
+    async reportBuild() {
+      return {
+        ok: false,
+        reason: 'server-error',
+        message: 'Fixture gallery is read-only',
+      }
+    },
+
+    async deleteBuild() {
+      return {
+        ok: false,
+        reason: 'server-error',
+        message: 'Fixture gallery is read-only',
+      }
     },
   }
 }
