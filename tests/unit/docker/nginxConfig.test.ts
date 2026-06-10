@@ -30,7 +30,9 @@ describe('docker/nginx.conf — security-header drift guard (issue #58)', () => 
   it('keeps immutable asset caching and repeats the security headers in /assets/', () => {
     const assetsBlock = getAssetsBlock(nginxConfig())
 
-    expect(assetsBlock).toContain('add_header Cache-Control "public, immutable";')
+    expect(assetsBlock).toContain(
+      'add_header Cache-Control "public, immutable";',
+    )
 
     for (const header of SECURITY_HEADERS) {
       expect(assetsBlock).toContain(header)
