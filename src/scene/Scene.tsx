@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import { Vector3, type PerspectiveCamera } from 'three'
 
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
@@ -93,13 +94,29 @@ function Baseplate({
 }
 
 function ThreeDevExpose() {
-  const { camera } = useThree()
+  const { camera, gl } = useThree()
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      window.__blockyCamera = camera
+      window.__blockyCamera = camera as PerspectiveCamera
+      window.__blockyProjectToCanvas = (worldX, worldY, worldZ) => {
+        const point = new Vector3(worldX, worldY, worldZ).project(
+          camera as PerspectiveCamera,
+        )
+        const rect = gl.domElement.getBoundingClientRect()
+        return {
+          x: rect.left + ((point.x + 1) / 2) * rect.width,
+          y: rect.top + ((-point.y + 1) / 2) * rect.height,
+        }
+      }
     }
-  }, [camera])
+
+    return () => {
+      if (import.meta.env.DEV) {
+        delete window.__blockyProjectToCanvas
+      }
+    }
+  }, [camera, gl])
 
   return null
 }

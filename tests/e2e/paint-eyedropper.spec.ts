@@ -21,9 +21,15 @@ interface DevCursorStore {
   }
 }
 
-interface PerspectiveCamera {
-  projectionMatrix: { elements: number[] }
-  matrixWorldInverse: { elements: number[] }
+interface DevWindow {
+  __blockyStore: DevBuildStore
+  __blockyCursorStore: DevCursorStore
+  __blockyCamera: unknown
+  __blockyProjectToCanvas: (
+    worldX: number,
+    worldY: number,
+    worldZ: number,
+  ) => { x: number; y: number }
 }
 
 async function projectToCanvas(
@@ -34,29 +40,7 @@ async function projectToCanvas(
 ): Promise<{ x: number; y: number }> {
   return page.evaluate(
     ([wx, wy, wz]) => {
-      const cam = (window as unknown as { __blockyCamera: PerspectiveCamera }).__blockyCamera
-      const canvas = document.querySelector('canvas')!
-      const rect = canvas.getBoundingClientRect()
-
-      const pe = cam.projectionMatrix.elements
-      const ve = cam.matrixWorldInverse.elements
-
-      const vx = ve[0] * wx + ve[4] * wy + ve[8] * wz + ve[12]
-      const vy = ve[1] * wx + ve[5] * wy + ve[9] * wz + ve[13]
-      const vz = ve[2] * wx + ve[6] * wy + ve[10] * wz + ve[14]
-      const vw = ve[3] * wx + ve[7] * wy + ve[11] * wz + ve[15]
-
-      const cx = pe[0] * vx + pe[4] * vy + pe[8] * vz + pe[12] * vw
-      const cy = pe[1] * vx + pe[5] * vy + pe[9] * vz + pe[13] * vw
-      const cw = pe[3] * vx + pe[7] * vy + pe[11] * vz + pe[15] * vw
-
-      const ndcX = cx / cw
-      const ndcY = cy / cw
-
-      return {
-        x: rect.left + ((ndcX + 1) / 2) * rect.width,
-        y: rect.top + ((-ndcY + 1) / 2) * rect.height,
-      }
+      return (window as unknown as DevWindow).__blockyProjectToCanvas(wx, wy, wz)
     },
     [worldX, worldY, worldZ] as [number, number, number],
   )
@@ -65,9 +49,10 @@ async function projectToCanvas(
 async function waitForStores(page: import('@playwright/test').Page) {
   await page.waitForFunction(
     () =>
-      (window as unknown as { __blockyStore: unknown }).__blockyStore !== undefined &&
-      (window as unknown as { __blockyCursorStore: unknown }).__blockyCursorStore !== undefined &&
-      (window as unknown as { __blockyCamera: unknown }).__blockyCamera !== undefined,
+      (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
+      (window as unknown as Partial<DevWindow>).__blockyCursorStore !== undefined &&
+      (window as unknown as Partial<DevWindow>).__blockyCamera !== undefined &&
+      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !== undefined,
   )
 }
 
@@ -204,6 +189,7 @@ test('switching back to place mode allows normal placement after eyedropper', as
   expect(activeTool).toBe('place')
 
   const placePos = await projectToCanvas(page, 4, 0, 0)
+  await page.mouse.move(placePos.x, placePos.y)
   await page.mouse.click(placePos.x, placePos.y)
 
   await page.waitForFunction(
