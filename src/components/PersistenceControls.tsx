@@ -3,13 +3,14 @@ import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { useBuildStore } from '@/state/store'
 
 export function PersistenceControls() {
-  const { exportToJSON, importFromJSON, publishToGallery } =
+  const { exportToJSON, importFromJSON, createShareLink, publishToGallery } =
     useBuildPersistence()
   const placeBrick = useBuildStore((state) => state.placeBrick)
   const [publishStatus, setPublishStatus] = useState<
     'idle' | 'publishing' | 'success' | 'error'
   >('idle')
   const [publishMessage, setPublishMessage] = useState('')
+  const [shareUrl, setShareUrl] = useState('')
 
   const handleAddSample = () => {
     placeBrick({
@@ -20,6 +21,13 @@ export function PersistenceControls() {
       z: Math.floor(Math.random() * 20),
       rot: 0,
     })
+  }
+
+  const handleShare = () => {
+    const url = createShareLink()
+    setShareUrl(url)
+    // Best-effort copy to clipboard; the link is also shown for manual copy.
+    void navigator.clipboard?.writeText?.(url).catch(() => {})
   }
 
   const handlePublish = async () => {
@@ -53,6 +61,7 @@ export function PersistenceControls() {
         <button onClick={handleAddSample}>Add Sample Brick</button>
         <button onClick={exportToJSON}>Export JSON</button>
         <button onClick={importFromJSON}>Import JSON</button>
+        <button onClick={handleShare}>Share Link</button>
         <button
           onClick={handlePublish}
           disabled={publishStatus === 'publishing'}
@@ -62,6 +71,16 @@ export function PersistenceControls() {
             : 'Publish to Gallery'}
         </button>
       </div>
+      {shareUrl && (
+        <input
+          readOnly
+          data-testid="share-url"
+          aria-label="Shareable build link"
+          value={shareUrl}
+          onFocus={(e) => e.currentTarget.select()}
+          style={{ marginTop: '0.5rem', width: '100%' }}
+        />
+      )}
       {publishMessage && (
         <p
           style={{

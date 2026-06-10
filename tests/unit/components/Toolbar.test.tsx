@@ -47,7 +47,7 @@ describe('HUD Components', () => {
 
   it('updates brick count', () => {
     render(<BrickCount />)
-    expect(screen.getByText('Bricks: 0')).toBeInTheDocument()
+    expect(screen.getByText('Bricks in build: 0')).toBeInTheDocument()
 
     act(() => {
       useBuildStore.getState().placeBrick({
@@ -60,6 +60,6 @@ describe('HUD Components', () => {
       })
     })
 
-    expect(screen.getByText('Bricks: 1')).toBeInTheDocument()
+    expect(screen.getByText('Bricks in build: 1')).toBeInTheDocument()
   })
 })

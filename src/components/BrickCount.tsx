@@ -6,7 +6,7 @@ export const BrickCount: React.FC = () => {
 
   return (
     <div className="brick-count" aria-live="polite">
-      Bricks: {brickCount}
+      Bricks in build: {brickCount}
     </div>
   )
 }
