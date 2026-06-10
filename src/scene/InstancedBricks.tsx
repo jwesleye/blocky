@@ -68,9 +68,7 @@ export function InstancedBricks({
                 position={instance.position}
                 rotation={[0, instance.rotationY, 0]}
                 onPointerMove={(event) => onInstancePointerMove?.(brick, event)}
-                onContextMenu={(event) =>
-                  onInstanceContextMenu?.(brick, event)
-                }
+                onContextMenu={(event) => onInstanceContextMenu?.(brick, event)}
               />
             )
           })}

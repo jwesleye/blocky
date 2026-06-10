@@ -39,8 +39,9 @@ describe('groupBricksForInstancing', () => {
       'brick-2x4::blue',
       'brick-2x4::red',
     ])
-    expect(buckets.find((bucket) => bucket.key === 'brick-2x4::red')?.instances)
-      .toHaveLength(2)
+    expect(
+      buckets.find((bucket) => bucket.key === 'brick-2x4::red')?.instances,
+    ).toHaveLength(2)
     expect(
       buckets.find((bucket) => bucket.key === 'brick-2x4::blue')?.instances,
     ).toHaveLength(1)

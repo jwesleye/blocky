@@ -11,7 +11,9 @@ describe('Performance Budgets consistency', () => {
     expect(fs.existsSync(docPath)).toBe(true)
   })
 
-  const docContent = fs.existsSync(docPath) ? fs.readFileSync(docPath, 'utf8') : ''
+  const docContent = fs.existsSync(docPath)
+    ? fs.readFileSync(docPath, 'utf8')
+    : ''
 
   it('matches render p95 budget', () => {
     expect(docContent).toContain(`${budgets.P95_FRAME_BUDGET_MS}ms`)
