@@ -100,4 +100,30 @@ describe('buildConnectionGraph', () => {
     const graph = buildConnectionGraph([bottomBrick, topBrick], PART_CATALOG)
     expect(graph.hasEdge('bottom', 'top')).toBe(true)
   })
+
+  it('does not create an edge from a smooth tile top (hasTopStuds=false)', () => {
+    // tile-1x1 has hasTopStuds=false; plate-1x1 rests at y=1 directly on the tile.
+    // No coupling should exist because tiles have no top studs.
+    const tile: PlacedBrick = {
+      id: 'tile',
+      partId: 'tile-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+    const top: PlacedBrick = {
+      id: 'top',
+      partId: 'plate-1x1',
+      color: 'blue',
+      x: 0,
+      y: 1,
+      z: 0,
+      rot: 0,
+    }
+
+    const graph = buildConnectionGraph([tile, top], PART_CATALOG)
+    expect(graph.hasEdge('tile', 'top')).toBe(false)
+  })
 })

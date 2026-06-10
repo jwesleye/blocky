@@ -138,4 +138,16 @@ describe('selectCollapsingBricks', () => {
     ]
     expect(selectCollapsingBricks(bricks)).toEqual(new Set())
   })
+
+  it('treats a brick resting only on a tile (hasTopStuds=false) as floating', () => {
+    // tile at y=0 is grounded but has no top studs — the plate above cannot couple
+    // through it, so the plate has no path to the baseplate and must collapse.
+    const bricks = [
+      brick('base', 'tile-1x1', 0, 0, 0),
+      brick('top', 'plate-1x1', 0, 1, 0),
+    ]
+    const result = selectCollapsingBricks(bricks)
+    expect(result).toContain('top')
+    expect(result).not.toContain('base')
+  })
 })

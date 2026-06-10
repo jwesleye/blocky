@@ -1,7 +1,8 @@
 import type { PlacedBrick } from '../model/types'
 import { CATALOG_BY_ID as PART_CATALOG } from '../parts/catalog'
+import { toBrickFootprint } from '../parts/footprint'
 import { buildConnectionGraph } from './graph'
-import { getFloatingBricks } from './grounding'
+import { floatingIds } from './placement'
 import { isBalanced } from './balance'
 import { findShearRegion } from './shear'
 import { connectedComponents } from 'graphology-components'
@@ -17,8 +18,15 @@ import { connectedComponents } from 'graphology-components'
 export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
   if (bricks.length === 0) return new Set()
 
+  // Use the shared footprint-based grounding helper so tile coupling (hasTopStuds)
+  // is evaluated by the same rule as the placement path.
+  const floating = floatingIds(
+    bricks.map((b) => toBrickFootprint(b, PART_CATALOG)),
+  )
+
+  // Brick-only graph (no BASEPLATE node) for shear connected-component analysis
+  // so physically disconnected grounded components are evaluated independently.
   const graph = buildConnectionGraph(bricks, PART_CATALOG)
-  const floating = getFloatingBricks(bricks, graph)
   const brickById = new Map(bricks.map((brick) => [brick.id, brick]))
   const sheared = new Set<string>()
 
