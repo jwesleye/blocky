@@ -5,8 +5,13 @@ import { OrbitControls } from '@react-three/drei'
 import { useBuildStore } from '@/state/store'
 import { useCursorStore } from '@/state/cursor'
 import { getBrickColor } from '@/domain/model/colors'
-import { BASEPLATE_SIZE_STUDS, STUD_PITCH_MM, PLATE_HEIGHT_MM, type GridPosition } from '@/domain/grid'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import {
+  BASEPLATE_SIZE_STUDS,
+  STUD_PITCH_MM,
+  PLATE_HEIGHT_MM,
+  type GridPosition,
+} from '@/domain/grid'
+import { CATALOG_BY_ID } from '@/domain/parts/catalog'
 import { isPlacementValid } from '@/domain/physics/placement'
 import { brickToSceneTransform } from './brickTransform'
 import { snapHitToGridCell } from './raycastSnap'
@@ -106,7 +111,7 @@ export function Scene() {
     e.stopPropagation()
     if (candidate) {
       const existing = Object.values(useBuildStore.getState().bricks)
-      const isValid = isPlacementValid(candidate, existing, PART_CATALOG)
+      const isValid = isPlacementValid(candidate, existing, CATALOG_BY_ID)
 
       if (isValid) {
         placeBrick({
@@ -149,13 +154,23 @@ export function Scene() {
         enableZoom
         target={CAMERA_DEFAULT_TARGET}
       />
-      
-      <group onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} onClick={handlePlace}>
+
+      <group
+        onPointerMove={handlePointerMove}
+        onPointerOut={handlePointerOut}
+        onClick={handlePlace}
+      >
         <mesh
           receiveShadow
-          position={[baseplateLength / 2, -baseplateThickness / 2, baseplateLength / 2]}
+          position={[
+            baseplateLength / 2,
+            -baseplateThickness / 2,
+            baseplateLength / 2,
+          ]}
         >
-          <boxGeometry args={[baseplateLength, baseplateThickness, baseplateLength]} />
+          <boxGeometry
+            args={[baseplateLength, baseplateThickness, baseplateLength]}
+          />
           <meshStandardMaterial color="#4caf50" />
         </mesh>
         {staticBodies.map((body) => (

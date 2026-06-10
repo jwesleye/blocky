@@ -23,7 +23,14 @@ test.describe('gallery publish failure paths', () => {
       const store = (
         window as unknown as { __blockyStore: BlockyStore }
       ).__blockyStore.getState()
-      store.placeBrick({ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 })
+      store.placeBrick({
+        partId: 'brick-2x4',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
     })
 
     const initialCount = await page.evaluate(() => {
@@ -79,7 +86,14 @@ test.describe('gallery publish failure paths', () => {
       const store = (
         window as unknown as { __blockyStore: BlockyStore }
       ).__blockyStore.getState()
-      store.placeBrick({ partId: 'brick-2x4', color: 'blue', x: 2, y: 0, z: 2, rot: 0 })
+      store.placeBrick({
+        partId: 'brick-2x4',
+        color: 'blue',
+        x: 2,
+        y: 0,
+        z: 2,
+        rot: 0,
+      })
     })
 
     const initialCount = await page.evaluate(() => {

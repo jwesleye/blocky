@@ -177,8 +177,8 @@ test('restores a half-stud (v2) build from persisted storage after reload', asyn
   await page.waitForFunction(
     () =>
       Object.keys(
-        (window as unknown as WindowWithStore).__blockyStore?.getState().bricks ??
-          {},
+        (window as unknown as WindowWithStore).__blockyStore?.getState()
+          .bricks ?? {},
       ).length === 1,
   )
   await expect(page.locator('h2:has-text("Build Status") + p')).toHaveText(

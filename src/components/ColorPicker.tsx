@@ -13,7 +13,8 @@ export function ColorPicker({ selected, onSelect }: ColorPickerProps) {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       nextIndex = (currentIndex + 1) % COLOR_PALETTE.length
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      nextIndex = (currentIndex - 1 + COLOR_PALETTE.length) % COLOR_PALETTE.length
+      nextIndex =
+        (currentIndex - 1 + COLOR_PALETTE.length) % COLOR_PALETTE.length
     } else if (e.key === 'Home') {
       nextIndex = 0
     } else if (e.key === 'End') {

@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create, type StoreApi } from 'zustand'
 import { temporal } from 'zundo'
 import type { TemporalState } from 'zundo'
 import { subscribeWithSelector } from 'zustand/middleware'
@@ -97,9 +97,7 @@ export interface CollapseSlice {
 export type BuildStore = BuildState & BuildActions & CollapseSlice
 
 export interface BuildStoreWithTemporal extends BuildStore {
-  temporal: {
-    getState: () => TemporalState<Partial<BuildState>>
-  }
+  temporal: StoreApi<TemporalState<Partial<BuildState>>>
 }
 
 export const useBuildStore = create<BuildStore>()(
@@ -376,7 +374,10 @@ useBuildStore.subscribe(
   (state) => state.bricks,
   (bricks) => {
     useBuildStore.setState({
-      connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
+      connectionGraph: buildConnectionGraph(
+        Object.values(bricks),
+        PART_CATALOG,
+      ),
     })
   },
   { fireImmediately: true },

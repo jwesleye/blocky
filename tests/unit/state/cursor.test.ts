@@ -9,7 +9,11 @@ describe('useCursorStore', () => {
       colorId: DEFAULT_COLOR_ID,
       partId: DEFAULT_PART_ID,
       rot: 0,
-      cursorBrick: { partId: DEFAULT_PART_ID, colorId: DEFAULT_COLOR_ID, rot: 0 },
+      cursorBrick: {
+        partId: DEFAULT_PART_ID,
+        colorId: DEFAULT_COLOR_ID,
+        rot: 0,
+      },
     })
   })
 

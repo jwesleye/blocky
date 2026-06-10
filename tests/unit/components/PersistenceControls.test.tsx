@@ -58,7 +58,9 @@ describe('PersistenceControls — publish failure paths', () => {
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Publish to Gallery' }))
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Publish to Gallery' }),
+      )
     })
 
     expect(
@@ -75,7 +77,9 @@ describe('PersistenceControls — publish failure paths', () => {
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Publish to Gallery' }))
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Publish to Gallery' }),
+      )
     })
 
     expect(

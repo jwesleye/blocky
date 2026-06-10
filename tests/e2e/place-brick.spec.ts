@@ -19,8 +19,22 @@ test.describe('place-brick', () => {
     // Place two bricks
     await page.evaluate(() => {
       const store = window.__blockyStore!.getState()
-      store.placeBrick({ partId: 'brick-2x4', color: 'red', x: 5, y: 0, z: 5, rot: 0 })
-      store.placeBrick({ partId: 'brick-2x2', color: 'blue', x: 5, y: 3, z: 5, rot: 1 })
+      store.placeBrick({
+        partId: 'brick-2x4',
+        color: 'red',
+        x: 5,
+        y: 0,
+        z: 5,
+        rot: 0,
+      })
+      store.placeBrick({
+        partId: 'brick-2x2',
+        color: 'blue',
+        x: 5,
+        y: 3,
+        z: 5,
+        rot: 1,
+      })
     })
 
     // Assert the store has 2 bricks

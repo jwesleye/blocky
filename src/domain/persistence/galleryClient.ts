@@ -341,13 +341,10 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
     async deleteBuild(buildId, identity) {
       let response: Response
       try {
-        response = await fetch(
-          url(`/builds/${encodeURIComponent(buildId)}`),
-          {
-            method: 'DELETE',
-            headers: { 'x-user-id': identity.userId },
-          },
-        )
+        response = await fetch(url(`/builds/${encodeURIComponent(buildId)}`), {
+          method: 'DELETE',
+          headers: { 'x-user-id': identity.userId },
+        })
       } catch (err) {
         return {
           ok: false,

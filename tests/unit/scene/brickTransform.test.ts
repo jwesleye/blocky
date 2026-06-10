@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { brickToSceneTransform } from '../../../src/scene/brickTransform'
-import { PART_CATALOG } from '../../../src/domain/parts/catalog'
+import { CATALOG_BY_ID } from '../../../src/domain/parts/catalog'
 import { STUD_PITCH_MM, PLATE_HEIGHT_MM } from '../../../src/domain/grid'
 import type { PlacedBrick } from '../../../src/domain/model/types'
 
@@ -15,7 +15,7 @@ describe('brickToSceneTransform', () => {
       z: 0,
       rot: 0,
     }
-    const transform = brickToSceneTransform(brick, PART_CATALOG)
+    const transform = brickToSceneTransform(brick, CATALOG_BY_ID)
 
     expect(transform.size).toEqual([
       2 * STUD_PITCH_MM,
@@ -39,7 +39,7 @@ describe('brickToSceneTransform', () => {
       z: 0,
       rot: 1,
     }
-    const transform = brickToSceneTransform(brick, PART_CATALOG)
+    const transform = brickToSceneTransform(brick, CATALOG_BY_ID)
 
     expect(transform.size).toEqual([
       4 * STUD_PITCH_MM,
@@ -58,9 +58,11 @@ describe('brickToSceneTransform', () => {
       z: 0,
       rot: 0,
     }
-    const transform = brickToSceneTransform(brick, PART_CATALOG)
+    const transform = brickToSceneTransform(brick, CATALOG_BY_ID)
 
-    expect(transform.position[1]).toBe(3 * PLATE_HEIGHT_MM + 1.5 * PLATE_HEIGHT_MM)
+    expect(transform.position[1]).toBe(
+      3 * PLATE_HEIGHT_MM + 1.5 * PLATE_HEIGHT_MM,
+    )
   })
 
   it('applies half-stud offset', () => {
@@ -74,7 +76,7 @@ describe('brickToSceneTransform', () => {
       rot: 0,
       offset: { x: 1, z: 1 },
     }
-    const transform = brickToSceneTransform(brick, PART_CATALOG)
+    const transform = brickToSceneTransform(brick, CATALOG_BY_ID)
 
     expect(transform.position[0]).toBe(1 * STUD_PITCH_MM + 0.5 * STUD_PITCH_MM)
     expect(transform.position[2]).toBe(2 * STUD_PITCH_MM + 0.5 * STUD_PITCH_MM)

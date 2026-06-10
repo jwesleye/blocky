@@ -1,8 +1,7 @@
 import React from 'react'
-import {
-  type BuildStoreWithTemporal,
-  useBuildStore,
-} from '../state/store'
+import { type BuildStoreWithTemporal, useBuildStore } from '../state/store'
+import type { BuildState } from '@/domain/model/types'
+import type { TemporalState } from 'zundo'
 import { RotateCcw, Undo2, Redo2, Share2, Camera } from 'lucide-react'
 import { useStore as useZustandSubscribe } from 'zustand'
 
@@ -13,11 +12,11 @@ export const Toolbar: React.FC = () => {
 
   const pastStatesLength = useZustandSubscribe(
     temporal,
-    (state) => state.pastStates.length,
+    (state: TemporalState<Partial<BuildState>>) => state.pastStates.length,
   )
   const futureStatesLength = useZustandSubscribe(
     temporal,
-    (state) => state.futureStates.length,
+    (state: TemporalState<Partial<BuildState>>) => state.futureStates.length,
   )
 
   return (

@@ -2,17 +2,18 @@ import { createServer } from 'node:http'
 import type { Server } from 'node:http'
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { handler } from '../../../backend/src/server'
-import { clearStore, storeBuild, generateBuildId } from '../../../backend/src/store'
+import {
+  clearStore,
+  storeBuild,
+  generateBuildId,
+} from '../../../backend/src/store'
 import { SHARED_BUILD_CONTRACT_VERSION } from '../../../backend/src/validation'
 import type { SharedBuildPayload } from '../../../backend/src/validation'
 
 let srv: Server
 let port: number
 
-function req(
-  path: string,
-  options: RequestInit = {},
-): Promise<Response> {
+function req(path: string, options: RequestInit = {}): Promise<Response> {
   return fetch(`http://127.0.0.1:${port}${path}`, options)
 }
 
@@ -102,7 +103,7 @@ describe('POST /builds — publish', () => {
       body: JSON.stringify({ build: validBuild, gallery: validGallery }),
     })
     expect(res.status).toBe(201)
-    const body = await res.json() as SharedBuildPayload
+    const body = (await res.json()) as SharedBuildPayload
     expect(body.buildId).toBeTruthy()
     expect(body.gallery.title).toBe('Test Build')
   })
@@ -136,7 +137,7 @@ describe('GET /builds/:id — load', () => {
 
     const res = await req(`/builds/${payload.buildId}`)
     expect(res.status).toBe(200)
-    const body = await res.json() as SharedBuildPayload
+    const body = (await res.json()) as SharedBuildPayload
     expect(body.buildId).toBe(payload.buildId)
   })
 
@@ -172,7 +173,7 @@ describe('GET /builds — list', () => {
     })
 
     const res = await req('/builds')
-    const body = await res.json() as { builds: SharedBuildPayload[] }
+    const body = (await res.json()) as { builds: SharedBuildPayload[] }
     const ids = body.builds.map((b) => b.buildId)
     expect(ids).toContain(kept.buildId)
     expect(ids).not.toContain(toDelete.buildId)
@@ -185,14 +186,14 @@ describe('GET /builds — list', () => {
     storeBuild(unlisted)
 
     const listRes = await req('/builds')
-    const body = await listRes.json() as { builds: SharedBuildPayload[] }
+    const body = (await listRes.json()) as { builds: SharedBuildPayload[] }
     const ids = body.builds.map((b) => b.buildId)
     expect(ids).toContain(publicBuild.buildId)
     expect(ids).not.toContain(unlisted.buildId)
 
     const directRes = await req(`/builds/${unlisted.buildId}`)
     expect(directRes.status).toBe(200)
-    const fetched = await directRes.json() as SharedBuildPayload
+    const fetched = (await directRes.json()) as SharedBuildPayload
     expect(fetched.buildId).toBe(unlisted.buildId)
   })
 })
@@ -308,7 +309,7 @@ describe('POST /builds/:id/reports — report', () => {
     })
 
     const getRes = await req(`/builds/${payload.buildId}`)
-    const fetched = await getRes.json() as unknown
+    const fetched = (await getRes.json()) as unknown
     expect(JSON.stringify(fetched)).toBe(payloadBefore)
   })
 })

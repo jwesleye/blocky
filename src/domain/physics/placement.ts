@@ -15,7 +15,8 @@ import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
 import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
-import { toBrickFootprint, getOccupiedCells } from '../parts/footprint'
+import { toBrickFootprint } from '../parts/footprint'
+import { findCollisions } from './transform'
 
 interface PlacementGraph {
   mergeNode: (id: string) => void
@@ -200,23 +201,6 @@ export function isPlacementValid(
   if (!canPlaceBrick(candidate, existing, catalog)) {
     return false
   }
-  
-  const findCollisions = (bricks: PlacedBrick[]) => {
-    const occupancy = new Map<string, string>()
-    for (const brick of bricks) {
-      const def = catalog[brick.partId]
-      if (!def) continue
-      
-      for (const cell of getOccupiedCells(brick, def)) {
-        for (let dy = 0; dy < def.height; dy++) {
-          const key = `${cell.x}|${cell.z}|${brick.y + dy}`
-          if (occupancy.has(key)) return true
-          occupancy.set(key, brick.id)
-        }
-      }
-    }
-    return false
-  }
 
-  return !findCollisions([candidate, ...existing])
+  return findCollisions([candidate, ...existing], catalog).size === 0
 }

@@ -1,5 +1,5 @@
 import type { PlacedBrick } from '@/domain/model/types'
-import { PART_CATALOG, type PartCatalog } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID, type PartCatalog } from '@/domain/parts/catalog'
 import { STUD_PITCH_MM, PLATE_HEIGHT_MM } from '@/domain/grid'
 
 export interface SceneTransform {
@@ -9,7 +9,7 @@ export interface SceneTransform {
 
 export function brickToSceneTransform(
   brick: PlacedBrick,
-  catalog: PartCatalog = PART_CATALOG,
+  catalog: PartCatalog = CATALOG_BY_ID,
 ): SceneTransform {
   const def = catalog[brick.partId]
   if (!def) {
@@ -19,7 +19,7 @@ export function brickToSceneTransform(
   // Rotations 1 and 3 (90° / 270°) swap the footprint's width and length.
   const [widthStuds, lengthStuds] =
     brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
-  
+
   const heightPlates = def.height
 
   const width = widthStuds * STUD_PITCH_MM

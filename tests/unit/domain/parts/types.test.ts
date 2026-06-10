@@ -20,7 +20,7 @@ describe('partDefSchema', () => {
 
   it('rejects an object with missing required field (id)', () => {
     const missing = Object.fromEntries(
-      Object.entries(validPartDef).filter(([key]) => key !== 'id')
+      Object.entries(validPartDef).filter(([key]) => key !== 'id'),
     )
     const result = partDefSchema.safeParse(missing)
     expect(result.success).toBe(false)
@@ -32,7 +32,10 @@ describe('partDefSchema', () => {
   })
 
   it('rejects an object with an invalid category value', () => {
-    const result = partDefSchema.safeParse({ ...validPartDef, category: 'blob' })
+    const result = partDefSchema.safeParse({
+      ...validPartDef,
+      category: 'blob',
+    })
     expect(result.success).toBe(false)
   })
 
