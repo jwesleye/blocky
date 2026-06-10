@@ -12,7 +12,7 @@ import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
 import { createAutosaver, loadBuild } from '@/domain/persistence'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
-import { BuildScene } from '@/scene/BuildScene'
+import { Scene } from '@/scene/Scene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import '@/styles/gallery.css'
@@ -238,7 +238,7 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <BuildScene />
+          <Scene />
           <ViewControls />
           <HUD />
         </div>

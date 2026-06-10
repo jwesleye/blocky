@@ -102,6 +102,47 @@ export interface BuildStoreWithTemporal extends BuildStore {
   temporal: StoreApi<TemporalState<Partial<BuildState>>>
 }
 
+function applyCollapse(
+  allBricks: PlacedBrick[],
+  selection: Set<string>,
+  stableBricks: Record<string, PlacedBrick> | null = null,
+): Pick<
+  BuildStore,
+  'bricks' | 'selection' | 'lastCollapse' | 'activeCollapse'
+> {
+  const collapsing = selectCollapsingBricks(allBricks)
+  if (collapsing.size === 0) {
+    return {
+      bricks:
+        stableBricks ??
+        Object.fromEntries(allBricks.map((brick) => [brick.id, brick])),
+      selection,
+      lastCollapse: null,
+      activeCollapse: null,
+    }
+  }
+
+  const bricks: Record<string, PlacedBrick> = {}
+  for (const brick of allBricks) {
+    if (!collapsing.has(brick.id)) bricks[brick.id] = brick
+  }
+
+  const nextSelection = new Set(selection)
+  for (const id of collapsing) nextSelection.delete(id)
+
+  return {
+    bricks,
+    selection: nextSelection,
+    lastCollapse: { count: collapsing.size, label: 'Undo collapse' },
+    activeCollapse: createCollapseTransaction({
+      allBricks,
+      collapsingBodies: bricksToBodySnapshots(
+        allBricks.filter((brick) => collapsing.has(brick.id)),
+      ),
+    }),
+  }
+}
+
 export const useBuildStore = create<BuildStore>()(
   subscribeWithSelector(
     temporal(
@@ -131,21 +172,24 @@ export const useBuildStore = create<BuildStore>()(
             return null
           }
 
-          set((state) => ({
-            bricks: { ...state.bricks, [id]: candidate },
-            lastCollapse: null,
-          }))
+          set((state) =>
+            applyCollapse(
+              [...Object.values(state.bricks), candidate],
+              state.selection,
+            ),
+          )
           return id
         },
 
         deleteBrick: (id) =>
           set((state) => {
             if (!(id in state.bricks)) return state
-            const bricks = { ...state.bricks }
-            delete bricks[id]
             const selection = new Set(state.selection)
             selection.delete(id)
-            return { bricks, selection, lastCollapse: null }
+            const bricks = Object.values(state.bricks).filter(
+              (brick) => brick.id !== id,
+            )
+            return applyCollapse(bricks, selection)
           }),
 
         moveSelection: (delta) => {
@@ -329,30 +373,18 @@ export const useBuildStore = create<BuildStore>()(
         triggerCollapse: () =>
           set((state) => {
             const allBricks = Object.values(state.bricks)
-            const collapsing = selectCollapsingBricks(allBricks)
-            if (collapsing.size === 0) return state
-
-            const bricks: Record<string, PlacedBrick> = {}
-            for (const brick of allBricks) {
-              if (!collapsing.has(brick.id)) bricks[brick.id] = brick
-            }
-
-            const selection = new Set(state.selection)
-            for (const id of collapsing) selection.delete(id)
-
-            const activeCollapse = createCollapseTransaction({
+            const nextState = applyCollapse(
               allBricks,
-              collapsingBodies: bricksToBodySnapshots(
-                allBricks.filter((brick) => collapsing.has(brick.id)),
-              ),
-            })
-
-            return {
-              bricks,
-              selection,
-              lastCollapse: { count: collapsing.size, label: 'Undo collapse' },
-              activeCollapse,
+              state.selection,
+              state.bricks,
+            )
+            if (
+              nextState.bricks === state.bricks &&
+              nextState.selection === state.selection
+            ) {
+              return state
             }
+            return nextState
           }),
 
         completeCollapse: () => set({ activeCollapse: null }),
