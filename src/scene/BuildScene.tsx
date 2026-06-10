@@ -1,10 +1,15 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useBuildStore } from '@/state/store'
 import { BrickMesh } from './BrickMesh'
-import { CollapseSimulation } from './CollapseSimulation'
 import { collapseDebug } from './collapseDebug'
+
+const CollapseSimulation = lazy(() =>
+  import('./CollapseSimulation').then((m) => ({
+    default: m.CollapseSimulation,
+  })),
+)
 
 export function BuildScene() {
   const bricksMap = useBuildStore((s) => s.bricks)
@@ -37,10 +42,12 @@ export function BuildScene() {
         <BrickMesh key={brick.id} brick={brick} />
       ))}
       {activeCollapse && (
-        <CollapseSimulation
-          transaction={activeCollapse}
-          onComplete={completeCollapse}
-        />
+        <Suspense fallback={null}>
+          <CollapseSimulation
+            transaction={activeCollapse}
+            onComplete={completeCollapse}
+          />
+        </Suspense>
       )}
     </Canvas>
   )
