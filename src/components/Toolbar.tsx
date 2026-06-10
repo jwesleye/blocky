@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { type BuildStoreWithTemporal, useBuildStore } from '../state/store'
+import { useCursorStore } from '../state/cursor'
 import {
   Camera,
   FilePlus2,
@@ -8,6 +9,7 @@ import {
   Share2,
   Trash2,
   Undo2,
+  ArrowRightToLine,
 } from 'lucide-react'
 import { KeyboardHelp } from '@/components/KeyboardHelp'
 
@@ -27,6 +29,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const undo = useBuildStore((state) => state.undo)
   const redo = useBuildStore((state) => state.redo)
   const temporal = (useBuildStore as unknown as BuildStoreWithTemporal).temporal
+  const toggleOffset = useCursorStore((state) => state.toggleOffset)
+  const isOffset = useCursorStore((state) => state.offset !== undefined)
   const [, setRefresh] = useState(0)
 
   useEffect(() => {
@@ -50,6 +54,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       <button type="button" aria-label="Rotate" onClick={onRotate}>
         <RotateCcw size={20} />
+      </button>
+      <button
+        type="button"
+        aria-label="Toggle Half-Stud Offset"
+        data-testid="toggle-half-stud"
+        onClick={toggleOffset}
+        className={isOffset ? 'active' : ''}
+      >
+        <ArrowRightToLine size={20} />
       </button>
       <button
         type="button"

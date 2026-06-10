@@ -5,7 +5,7 @@ import { OrbitControls } from '@react-three/drei'
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
 import { getBrickColor } from '@/domain/model/colors'
-import type { PlacedBrick } from '@/domain/model/types'
+import type { PlacedBrick, HalfStudOffset } from '@/domain/model/types'
 import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import { isValidPlacement } from '@/domain/physics/validity'
 import { useCursorStore } from '@/state/cursor'
@@ -86,20 +86,22 @@ function GhostBrickMesh({
   valid,
   partId,
   rot,
+  offset,
 }: {
   grid: GridCoord
   valid: boolean
   partId: string
   rot: 0 | 1 | 2 | 3
+  offset?: HalfStudOffset
 }) {
   const part = PART_CATALOG[partId]
   if (!part) return null
 
   const [width, depth] = rotatedDimensions(part, rot)
   const position: [number, number, number] = [
-    grid.x + width / 2,
+    grid.x + width / 2 + (offset?.x ?? 0) * 0.5,
     grid.y + part.height / 2,
-    grid.z + depth / 2,
+    grid.z + depth / 2 + (offset?.z ?? 0) * 0.5,
   ]
 
   return (
@@ -157,6 +159,7 @@ export function Scene() {
   const partId = useCursorStore((state) => state.partId)
   const colorId = useCursorStore((state) => state.colorId)
   const rot = useCursorStore((state) => state.rot)
+  const offset = useCursorStore((state) => state.offset)
   const rotate = useCursorStore((state) => state.rotate)
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
 
@@ -177,9 +180,10 @@ export function Scene() {
       y: ghostGrid.y,
       z: ghostGrid.z,
       rot,
+      offset,
     }
     return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
-  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot])
+  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot, offset])
 
   const handlePlace = () => {
     if (!ghostGrid || !ghostValid) return
@@ -190,6 +194,7 @@ export function Scene() {
       y: ghostGrid.y,
       z: ghostGrid.z,
       rot,
+      offset,
     })
   }
 
@@ -230,6 +235,7 @@ export function Scene() {
           valid={ghostValid}
           partId={partId}
           rot={rot}
+          offset={offset}
         />
       )}
       {activeCollapse && (
