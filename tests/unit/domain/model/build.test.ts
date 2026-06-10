@@ -340,6 +340,18 @@ describe('safeParseBuild', () => {
     expect(safeParseBuild(bad)).toBeNull()
   })
 
+  it('accepts x coordinates that fit within a larger supported baseplate', () => {
+    const largerBaseplate = JSON.stringify({
+      version: 1,
+      baseplate: { size: 48 },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 40, y: 0, z: 0, rot: 0 },
+      ],
+    })
+
+    expect(safeParseBuild(largerBaseplate)).not.toBeNull()
+  })
+
   it('returns null when z is negative', () => {
     const bad = JSON.stringify({
       version: 1,
@@ -382,5 +394,17 @@ describe('safeParseBuild', () => {
 
     expect(safeParseBuild(atMinEdge)).not.toBeNull()
     expect(safeParseBuild(atMaxEdge)).not.toBeNull()
+  })
+
+  it('returns null when x exceeds a larger baseplate size', () => {
+    const bad = JSON.stringify({
+      version: 1,
+      baseplate: { size: 48 },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 48, y: 0, z: 0, rot: 0 },
+      ],
+    })
+
+    expect(safeParseBuild(bad)).toBeNull()
   })
 })
