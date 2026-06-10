@@ -55,6 +55,32 @@ describe('Balance primitives', () => {
       const footprint = computeSupportFootprint(bricks, PART_CATALOG)
       expect(footprint).toEqual([])
     })
+
+    it('uses the rotated world footprint for a 90° rectangular brick', () => {
+      // brick-1x2 is width 1 (X) x length 2 (Z) at rot 0. With rot: 1 (90° CW)
+      // the world footprint flips to 2 (X) x 1 (Z): cells (4,7) and (5,7).
+      const bricks: PlacedBrick[] = [
+        {
+          id: '1',
+          partId: 'brick-1x2',
+          color: 'red',
+          x: 4,
+          y: 0,
+          z: 7,
+          rot: 1,
+        },
+      ]
+      const footprint = computeSupportFootprint(bricks, PART_CATALOG)
+      // Rotated footprint spans X [4, 6], Z [7, 8] — a 2x1 rectangle, not 1x2.
+      expect(sortPoints(footprint)).toEqual(
+        sortPoints([
+          [4, 7],
+          [6, 7],
+          [6, 8],
+          [4, 8],
+        ]),
+      )
+    })
   })
 
   describe('computeCoM', () => {
@@ -85,6 +111,23 @@ describe('Balance primitives', () => {
       // Brick 2 CoM: x=1, y=4.5, z=1. Mass = 12
       // Combined CoM: x=1, y=3, z=1
       expect(com).toEqual({ x: 1, y: 3, z: 1 })
+    })
+
+    it('uses the rotated occupied cells for a 90° rectangular brick', () => {
+      const bricks: PlacedBrick[] = [
+        {
+          id: '1',
+          partId: 'brick-1x2',
+          color: 'red',
+          x: 4,
+          y: 0,
+          z: 7,
+          rot: 1,
+        },
+      ]
+      const com = computeCoM(bricks, PART_CATALOG)
+      // Rotated cells (4,7) and (5,7): X-center 5, Z-center 7.5, Y-center 1.5.
+      expect(com).toEqual({ x: 5, y: 1.5, z: 7.5 })
     })
   })
 
@@ -171,6 +214,22 @@ describe('Balance primitives', () => {
       // Support footprint: X in [0,2]
       // CoM X=4 is outside [0,2]. Unbalanced!
       expect(isBalanced(bricks, PART_CATALOG)).toBe(false)
+    })
+
+    it('rotated rectangular brick is balanced over its rotated footprint', () => {
+      const bricks: PlacedBrick[] = [
+        {
+          id: '1',
+          partId: 'brick-1x2',
+          color: 'red',
+          x: 4,
+          y: 0,
+          z: 7,
+          rot: 1,
+        },
+      ]
+      // CoM (5, 7.5) projects inside the rotated support footprint X [4,6], Z [7,8].
+      expect(isBalanced(bricks, PART_CATALOG)).toBe(true)
     })
 
     it('returns true for empty array', () => {
