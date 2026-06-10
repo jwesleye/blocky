@@ -137,7 +137,6 @@ export function Scene() {
   const colorId = useCursorStore((state) => state.colorId)
   const rot = useCursorStore((state) => state.rot)
   const offset = useCursorStore((state) => state.offset)
-  const rotate = useCursorStore((state) => state.rotate)
   const editingTool = useCursorStore((state) => state.editingTool)
   const sampleBrick = useCursorStore((state) => state.sampleBrick)
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
@@ -179,6 +178,11 @@ export function Scene() {
   }
 
   const handleBrickClick = (brickId: string) => {
+    if (editingTool === 'place') {
+      deleteBrick(brickId)
+      return
+    }
+
     if (editingTool === 'paint') {
       recolorBrick(brickId, colorId)
       return
@@ -202,9 +206,6 @@ export function Scene() {
       gl={{ preserveDrawingBuffer: true }}
       onClick={handlePlace}
       onPointerLeave={() => setGhostGrid(null)}
-      onKeyDown={(event) => {
-        if (event.key === 'r' || event.key === 'R') rotate()
-      }}
       tabIndex={0}
       style={{ outline: 'none' }}
     >
@@ -237,7 +238,7 @@ export function Scene() {
         getColor={(color) => getBrickColor(color)?.hex ?? color}
         onInstanceClick={(brick, event) => {
           event.stopPropagation()
-          if (editingTool !== 'place' && brick.id) {
+          if (brick.id) {
             handleBrickClick(brick.id)
           }
         }}
