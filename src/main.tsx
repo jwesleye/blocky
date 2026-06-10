@@ -2,14 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 
 import App from './App'
-<<<<<<< HEAD
-=======
-import { useBuildStore } from './state/store'
-import { useCursorStore } from './state/cursor'
->>>>>>> 231a395 (feat: place, delete, and rotate interactions (#10))
 import './styles/global.css'
 import { collapseDebug } from './scene/collapseDebug'
 import { useBuildStore } from '@/state/store'
+import { useCursorStore } from '@/state/cursor'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

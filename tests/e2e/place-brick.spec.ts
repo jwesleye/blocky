@@ -2,6 +2,15 @@ import { test, expect } from '@playwright/test'
 
 test.describe('place-brick', () => {
   test('renders bricks placed via the store', async ({ page }) => {
+    // Ensure no severe console errors
+    const errors: string[] = []
+    page.on('pageerror', (err) => errors.push(err.message))
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        errors.push(msg.text())
+      }
+    })
+
     await page.goto('/')
 
     // Wait for the store handle to be available
@@ -25,14 +34,6 @@ test.describe('place-brick', () => {
     await expect(canvas).toBeVisible()
 
     // Ensure no severe console errors
-    const errors: string[] = []
-    page.on('pageerror', (err) => errors.push(err.message))
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        errors.push(msg.text())
-      }
-    })
-
     expect(errors).toHaveLength(0)
   })
 })

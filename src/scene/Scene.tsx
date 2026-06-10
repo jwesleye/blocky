@@ -7,8 +7,7 @@ import { useCursorStore } from '@/state/cursor'
 import { getBrickColor } from '@/domain/model/colors'
 import { BASEPLATE_SIZE_STUDS, STUD_PITCH_MM, PLATE_HEIGHT_MM, type GridPosition } from '@/domain/grid'
 import { PART_CATALOG } from '@/domain/parts/catalog'
-import { canPlaceBrick } from '@/domain/physics/placement'
-import { findCollisions } from '@/domain/physics/transform'
+import { isPlacementValid } from '@/domain/physics/placement'
 import { brickToSceneTransform } from './brickTransform'
 import { snapHitToGridCell } from './raycastSnap'
 import { GhostBrick } from './GhostBrick'
@@ -107,9 +106,7 @@ export function Scene() {
     e.stopPropagation()
     if (candidate) {
       const existing = Object.values(useBuildStore.getState().bricks)
-      const isValid =
-        canPlaceBrick(candidate, existing, PART_CATALOG) &&
-        findCollisions([candidate, ...existing], PART_CATALOG).size === 0
+      const isValid = isPlacementValid(candidate, existing, PART_CATALOG)
 
       if (isValid) {
         placeBrick({

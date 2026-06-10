@@ -15,7 +15,7 @@ import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
 import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
-import { toBrickFootprint } from '../parts/footprint'
+import { toBrickFootprint, getOccupiedCells } from '../parts/footprint'
 
 interface PlacementGraph {
   mergeNode: (id: string) => void
@@ -185,4 +185,38 @@ export function canPlaceBrick(
 ): boolean {
   const all = Array.from(existing, (brick) => toBrickFootprint(brick, catalog))
   return canPlace(toBrickFootprint(candidate, catalog), all)
+}
+
+/**
+ * Validates a single brick placement against existing bricks:
+ * 1. Must be grounded (rests on baseplate or connected to grounded brick).
+ * 2. Must not collide with existing bricks.
+ */
+export function isPlacementValid(
+  candidate: PlacedBrick,
+  existing: PlacedBrick[],
+  catalog: PartCatalog,
+): boolean {
+  if (!canPlaceBrick(candidate, existing, catalog)) {
+    return false
+  }
+  
+  const findCollisions = (bricks: PlacedBrick[]) => {
+    const occupancy = new Map<string, string>()
+    for (const brick of bricks) {
+      const def = catalog[brick.partId]
+      if (!def) continue
+      
+      for (const cell of getOccupiedCells(brick, def)) {
+        for (let dy = 0; dy < def.height; dy++) {
+          const key = `${cell.x}|${cell.z}|${brick.y + dy}`
+          if (occupancy.has(key)) return true
+          occupancy.set(key, brick.id)
+        }
+      }
+    }
+    return false
+  }
+
+  return !findCollisions([candidate, ...existing])
 }

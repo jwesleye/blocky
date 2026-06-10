@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { brickToSceneTransform } from './brickTransform'
 import { PART_CATALOG } from '@/domain/parts/catalog'
-import { canPlaceBrick } from '@/domain/physics/placement'
-import { findCollisions } from '@/domain/physics/transform'
+import { isPlacementValid } from '@/domain/physics/placement'
 import { useBuildStore } from '@/state/store'
 import type { PlacedBrick } from '@/domain/model/types'
 
@@ -15,15 +14,7 @@ export function GhostBrick({ candidate }: GhostBrickProps) {
 
   const isValid = useMemo(() => {
     if (!candidate) return false
-    const existing = Object.values(bricks)
-    if (!canPlaceBrick(candidate, existing, PART_CATALOG)) {
-      return false
-    }
-    const all = [candidate, ...existing]
-    if (findCollisions(all, PART_CATALOG).size > 0) {
-      return false
-    }
-    return true
+    return isPlacementValid(candidate, Object.values(bricks), PART_CATALOG)
   }, [candidate, bricks])
 
   if (!candidate) return null

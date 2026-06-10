@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import { ViewControls, RESET_VIEW_KEY } from '@/components/ViewControls'
-=======
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
-import { ViewControls, RESET_VIEW_KEY } from '@/components/ViewControls';
->>>>>>> 231a395 (feat: place, delete, and rotate interactions (#10))
 
 const mockResetCamera = vi.fn()
 
