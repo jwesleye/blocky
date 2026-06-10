@@ -17,6 +17,12 @@
 
 import { test, expect } from '@playwright/test'
 
+import {
+  BUDGET_DOC_URL,
+  MIN_SAMPLE_FRAMES as SAMPLE_FRAMES,
+  P95_FRAME_BUDGET_MS as P95_BUDGET_MS,
+} from './budgets'
+
 // Mirror of constants from src/domain/grid — inlined so this file needs no
 // node built-ins and remains within tsconfig.app.json's browser type context.
 const BASEPLATE_SIZE_STUDS = 32
@@ -31,9 +37,6 @@ const COLORS = [
   'orange',
   'gray',
 ] as const
-
-const SAMPLE_FRAMES = 60
-const P95_BUDGET_MS = 17
 
 interface SerializedBrick {
   partId: string
@@ -105,7 +108,7 @@ test('p95 frame time ≤ 17ms with 2 000-brick stress build', async ({
   }, bricks)
 
   // Wait for the DOM to reflect the injected build.
-  await expect(page.getByText(/bricks in build/i)).toBeVisible()
+  await expect(page.locator('.brick-count')).toBeVisible({ timeout: 15000 })
 
   // Simulate orbit/pan-style pointer drag across the viewport so that when a
   // 3-D canvas is present the GPU render path is exercised on every frame.
@@ -154,5 +157,8 @@ test('p95 frame time ≤ 17ms with 2 000-brick stress build', async ({
   const p95 = sorted[p95Index]!
 
   // Assert the 60 fps budget: p95 frame time must be ≤ 17ms.
-  expect(p95).toBeLessThanOrEqual(P95_BUDGET_MS)
+  expect(
+    p95,
+    `p95 frame time ${p95.toFixed(1)}ms exceeds the ${P95_BUDGET_MS}ms render budget. See ${BUDGET_DOC_URL} for details.`,
+  ).toBeLessThanOrEqual(P95_BUDGET_MS)
 })
