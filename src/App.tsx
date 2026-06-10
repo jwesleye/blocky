@@ -31,7 +31,6 @@ export function App() {
   const bricks = Object.values(bricksById)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
-  const bricks = useBuildStore((s) => s.bricks)
   const autosaverRef = useRef(createAutosaver())
   const [hasHydratedPersistence, setHasHydratedPersistence] = useState(false)
 
@@ -53,7 +52,7 @@ export function App() {
   useEffect(() => {
     if (!hasHydratedPersistence) return
     autosaverRef.current.schedule(
-      bricksToBuild(Object.values(bricks), BASEPLATE_SIZE_STUDS),
+      bricksToBuild(bricks, BASEPLATE_SIZE_STUDS),
     )
   }, [bricks, hasHydratedPersistence])
 

@@ -14,7 +14,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vitest/globals"],
 
     /* Linting */
     "strict": true,
@@ -22,6 +21,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+
+    /* Global type augmentations */
+    "types": ["vite/client", "vitest/globals"],
 
     /* Path aliases */
     "baseUrl": ".",

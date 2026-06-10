@@ -1,17 +1,23 @@
-import { useEffect, lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 
-import { brickToBodySnapshot } from '@/domain/physics'
+import type { GridCoord } from '@/domain/grid'
+import { STUD, rotatedDimensions } from '@/domain/grid'
+import { getBrickColor } from '@/domain/model/colors'
+import type { PlacedBrick } from '@/domain/model/types'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
+import { isValidPlacement } from '@/domain/physics/validity'
+import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
-import { collapseDebug } from './collapseDebug'
 import { CameraRig } from './CameraRig'
+import { collapseDebug } from './collapseDebug'
 import { Lighting } from './Lighting'
 import {
+  BACKGROUND_COLOR,
+  CAMERA_DEFAULT_FOV,
   CAMERA_DEFAULT_POSITION,
   CAMERA_DEFAULT_TARGET,
-  CAMERA_DEFAULT_FOV,
-  BACKGROUND_COLOR,
 } from './sceneConfig'
 
 const CollapseSimulation = lazy(() =>
@@ -20,26 +26,172 @@ const CollapseSimulation = lazy(() =>
   })),
 )
 
+function BrickMesh({
+  brick,
+  onSurface,
+}: {
+  brick: PlacedBrick
+  onSurface: (pos: GridCoord) => void
+}) {
+  const part = PART_CATALOG[brick.partId]
+  const deleteBrick = useBuildStore((state) => state.deleteBrick)
+  if (!part) return null
+
+  const [width, depth] = rotatedDimensions(part, brick.rot)
+  const color = getBrickColor(brick.color)?.hex ?? brick.color
+  const position: [number, number, number] = [
+    brick.x + width / 2,
+    brick.y + part.height / 2,
+    brick.z + depth / 2,
+  ]
+
+  return (
+    <mesh
+      position={position}
+      castShadow
+      receiveShadow
+      onPointerMove={(event) => {
+        event.stopPropagation()
+        const normal = event.face?.normal
+        if ((normal?.y ?? 0) > 0.9) {
+          onSurface({
+            x: Math.round(event.point.x / STUD),
+            y: brick.y + part.height,
+            z: Math.round(event.point.z / STUD),
+          })
+          return
+        }
+
+        const offsetX = event.point.x + (normal?.x ?? 0) * STUD * 0.5
+        const offsetZ = event.point.z + (normal?.z ?? 0) * STUD * 0.5
+        onSurface({
+          x: Math.round(offsetX / STUD),
+          y: brick.y,
+          z: Math.round(offsetZ / STUD),
+        })
+      }}
+      onContextMenu={(event) => {
+        event.stopPropagation()
+        deleteBrick(brick.id)
+      }}
+    >
+      <boxGeometry args={[width, part.height, depth]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  )
+}
+
+function GhostBrickMesh({
+  grid,
+  valid,
+  partId,
+  rot,
+}: {
+  grid: GridCoord
+  valid: boolean
+  partId: string
+  rot: 0 | 1 | 2 | 3
+}) {
+  const part = PART_CATALOG[partId]
+  if (!part) return null
+
+  const [width, depth] = rotatedDimensions(part, rot)
+  const position: [number, number, number] = [
+    grid.x + width / 2,
+    grid.y + part.height / 2,
+    grid.z + depth / 2,
+  ]
+
+  return (
+    <mesh position={position} raycast={() => null}>
+      <boxGeometry args={[width * 0.97, part.height * 0.97, depth * 0.97]} />
+      <meshStandardMaterial
+        color={valid ? '#00ee55' : '#ff3333'}
+        transparent
+        opacity={0.45}
+        depthWrite={false}
+      />
+    </mesh>
+  )
+}
+
+function Baseplate({
+  size,
+  onPointerMove,
+}: {
+  size: number
+  onPointerMove: (pos: GridCoord) => void
+}) {
+  const sceneSize = size * STUD
+
+  return (
+    <mesh
+      position={[sceneSize / 2, 0, sceneSize / 2]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      receiveShadow
+      onPointerMove={(event) => {
+        event.stopPropagation()
+        onPointerMove({
+          x: Math.round(event.point.x / STUD),
+          y: 0,
+          z: Math.round(event.point.z / STUD),
+        })
+      }}
+    >
+      <planeGeometry args={[sceneSize, sceneSize]} />
+      <meshStandardMaterial color="#5a7a5a" />
+    </mesh>
+  )
+}
+
 /**
- * Renders the live build as static meshes and overlays the Rapier collapse
- * simulation while a collapse is in flight.
+ * Renders the live build as static meshes, overlays the ghost placement cursor,
+ * and runs the Rapier collapse simulation while a collapse is in flight.
  */
 export function Scene() {
   const bricks = useBuildStore((state) => state.bricks)
+  const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const activeCollapse = useBuildStore((state) => state.activeCollapse)
   const completeCollapse = useBuildStore((state) => state.completeCollapse)
+  const placeBrick = useBuildStore((state) => state.placeBrick)
+  const partId = useCursorStore((state) => state.partId)
+  const colorId = useCursorStore((state) => state.colorId)
+  const rot = useCursorStore((state) => state.rot)
+  const rotate = useCursorStore((state) => state.rotate)
+  const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
 
-  // Keep the dev-only debug counter in sync so the e2e smoke test can observe a
-  // dynamic body during the animation (WebGL bodies are not DOM-queryable).
   useEffect(() => {
     collapseDebug.dynamicBodyCount = activeCollapse
       ? activeCollapse.collapsingBodies.length
       : 0
   }, [activeCollapse])
 
-  const staticBodies = Object.values(bricks).map((brick) =>
-    brickToBodySnapshot(brick),
-  )
+  const placedBricks = useMemo(() => Object.values(bricks), [bricks])
+  const ghostValid = useMemo(() => {
+    if (!ghostGrid) return false
+    const ghost: PlacedBrick = {
+      id: '__ghost__',
+      partId,
+      color: colorId,
+      x: ghostGrid.x,
+      y: ghostGrid.y,
+      z: ghostGrid.z,
+      rot,
+    }
+    return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
+  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot])
+
+  const handlePlace = () => {
+    if (!ghostGrid || !ghostValid) return
+    placeBrick({
+      partId,
+      color: colorId,
+      x: ghostGrid.x,
+      y: ghostGrid.y,
+      z: ghostGrid.z,
+      rot,
+    })
+  }
 
   return (
     <Canvas
@@ -50,6 +202,13 @@ export function Scene() {
         far: 1000,
         position: CAMERA_DEFAULT_POSITION,
       }}
+      onClick={handlePlace}
+      onPointerLeave={() => setGhostGrid(null)}
+      onKeyDown={(event) => {
+        if (event.key === 'r' || event.key === 'R') rotate()
+      }}
+      tabIndex={0}
+      style={{ outline: 'none' }}
     >
       <color attach="background" args={[BACKGROUND_COLOR]} />
       <Lighting />
@@ -61,12 +220,18 @@ export function Scene() {
         enableZoom
         target={CAMERA_DEFAULT_TARGET}
       />
-      {staticBodies.map((body) => (
-        <mesh key={body.id} position={body.position} castShadow receiveShadow>
-          <boxGeometry args={body.size} />
-          <meshStandardMaterial color={body.color} />
-        </mesh>
+      <Baseplate size={baseplateSize} onPointerMove={setGhostGrid} />
+      {placedBricks.map((brick) => (
+        <BrickMesh key={brick.id} brick={brick} onSurface={setGhostGrid} />
       ))}
+      {ghostGrid && (
+        <GhostBrickMesh
+          grid={ghostGrid}
+          valid={ghostValid}
+          partId={partId}
+          rot={rot}
+        />
+      )}
       {activeCollapse && (
         <Suspense fallback={null}>
           <CollapseSimulation
