@@ -330,8 +330,6 @@ export function isValidPartId(id: string): boolean {
   return PART_CATALOG.some((p) => p.id === id)
 }
 
-export function getPartsByCategory(
-  category: PartCategory,
-): readonly PartDef[] {
+export function getPartsByCategory(category: PartCategory): readonly PartDef[] {
   return PART_CATALOG.filter((p) => p.category === category)
 }

@@ -376,7 +376,10 @@ useBuildStore.subscribe(
   (state) => state.bricks,
   (bricks) => {
     useBuildStore.setState({
-      connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
+      connectionGraph: buildConnectionGraph(
+        Object.values(bricks),
+        PART_CATALOG,
+      ),
     })
   },
   { fireImmediately: true },

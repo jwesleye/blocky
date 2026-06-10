@@ -393,9 +393,7 @@ describe('galleryClient.load', () => {
   })
 
   it('deleted reason is distinct from not-found and network-error', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response('', { status: 410 }),
-    )
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('', { status: 410 }))
 
     const client = createGalleryClient('http://localhost:4000')
     const result = await client.load('deleted_build')

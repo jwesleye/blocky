@@ -1,24 +1,24 @@
-import React from 'react'
-import {
-  type BuildStoreWithTemporal,
-  useBuildStore,
-} from '../state/store'
+import { useEffect, useState } from 'react'
+import { type BuildStoreWithTemporal, useBuildStore } from '../state/store'
 import { RotateCcw, Undo2, Redo2, Share2, Camera } from 'lucide-react'
-import { useStore as useZustandSubscribe } from 'zustand'
 
 export const Toolbar: React.FC = () => {
   const undo = useBuildStore((state) => state.undo)
   const redo = useBuildStore((state) => state.redo)
   const temporal = (useBuildStore as unknown as BuildStoreWithTemporal).temporal
+  const [, setRefresh] = useState(0)
 
-  const pastStatesLength = useZustandSubscribe(
-    temporal,
-    (state) => state.pastStates.length,
-  )
-  const futureStatesLength = useZustandSubscribe(
-    temporal,
-    (state) => state.futureStates.length,
-  )
+  useEffect(() => {
+    const temporalState = temporal.getState()
+    const unsubscribe = (temporalState as any).subscribe?.(() => {
+      setRefresh((v) => v + 1)
+    })
+    return () => unsubscribe?.()
+  }, [temporal])
+
+  const temporalState = temporal.getState()
+  const pastStatesLength = temporalState.pastStates.length
+  const futureStatesLength = temporalState.futureStates.length
 
   return (
     <div className="toolbar" role="toolbar" aria-label="Main Toolbar">

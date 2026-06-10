@@ -39,7 +39,9 @@ describe('COLOR_PALETTE', () => {
 
   it('every entry has a non-empty label', () => {
     for (const color of COLOR_PALETTE) {
-      expect(color.label.length, `${color.id} has empty label`).toBeGreaterThan(0)
+      expect(color.label.length, `${color.id} has empty label`).toBeGreaterThan(
+        0,
+      )
     }
   })
 
@@ -67,12 +69,20 @@ describe('colorDefSchema', () => {
   })
 
   it('rejects a hex value that is not 6 characters', () => {
-    const result = colorDefSchema.safeParse({ id: 'red', label: 'Red', hex: '#C42' })
+    const result = colorDefSchema.safeParse({
+      id: 'red',
+      label: 'Red',
+      hex: '#C42',
+    })
     expect(result.success).toBe(false)
   })
 
   it('rejects a hex value without the # prefix', () => {
-    const result = colorDefSchema.safeParse({ id: 'red', label: 'Red', hex: 'C4282B' })
+    const result = colorDefSchema.safeParse({
+      id: 'red',
+      label: 'Red',
+      hex: 'C4282B',
+    })
     expect(result.success).toBe(false)
   })
 })

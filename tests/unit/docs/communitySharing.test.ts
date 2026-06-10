@@ -6,9 +6,10 @@ const DOC_PATH = join(process.cwd(), 'docs/design/community-sharing.md')
 
 describe('docs/design/community-sharing.md — community sharing hardening guard', () => {
   it('exists', () => {
-    expect(existsSync(DOC_PATH), 'docs/design/community-sharing.md not found').toBe(
-      true,
-    )
+    expect(
+      existsSync(DOC_PATH),
+      'docs/design/community-sharing.md not found',
+    ).toBe(true)
   })
 
   describe('moderation and reporting', () => {

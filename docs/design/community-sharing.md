@@ -95,6 +95,7 @@ accepts report submissions via `POST /builds/:id/reports`.
 **Accepted report reasons:** `spam`, `abuse`, `copyright`, `other`.
 
 **Report validation:**
+
 - The `reason` field is required and must be one of the accepted values.
 - An optional `details` field accepts up to 2000 characters.
 - Invalid report requests (unknown reason, oversized details) receive a `422`
@@ -107,6 +108,7 @@ accepts report submissions via `POST /builds/:id/reports`.
 ## Privacy, Ownership, And Deletion
 
 **Authorship and ownership:**
+
 - Every published build carries an `author` identity on the gallery wrapper:
   either `anonymous` (with an optional display name) or `authenticated` (with a
   `userId` and `displayName`).
@@ -114,10 +116,12 @@ accepts report submissions via `POST /builds/:id/reports`.
   identifier for deletion authorization.
 
 **Visibility:**
+
 - Builds may be published as `public` (discoverable in gallery listings) or
   `unlisted` (loadable by direct id but hidden from listings).
 
 **Deletion authorization:**
+
 - `DELETE /builds/:id` succeeds only when the `x-user-id` request header
   matches the build's `gallery.author.userId`.
 - `anonymous`-authored builds cannot be deleted via this endpoint (`403`).
@@ -125,6 +129,7 @@ accepts report submissions via `POST /builds/:id/reports`.
 - An unknown build id returns `404`.
 
 **Deleted-content (tombstone) behavior:**
+
 - Once deleted, a build is tombstoned: it is removed from listings but its id
   is retained so the server can distinguish a deleted build from one that never
   existed.
@@ -159,10 +164,10 @@ object-storage bucket).
 
 ### Environment Variables
 
-| Variable         | Where used  | Purpose                                           |
-| ---------------- | ----------- | ------------------------------------------------- |
+| Variable           | Where used            | Purpose                                                                                                              |
+| ------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `VITE_GALLERY_URL` | Frontend (Vite build) | Base URL of the gallery backend, e.g. `http://localhost:4000`. Leave unset to run the SPA without a gallery backend. |
-| `PORT`           | Backend     | Port for the gallery HTTP server. Defaults to `4000`. |
+| `PORT`             | Backend               | Port for the gallery HTTP server. Defaults to `4000`.                                                                |
 
 ### Migration From Static-Only Hosting
 
@@ -188,6 +193,7 @@ Backend unavailability and rejected publishes are non-fatal: they surface an
 error in the UI without touching the current local build.
 
 **Unavailable backend (network error):**
+
 - If the gallery backend is unreachable, `fetch` throws and `galleryClient`
   returns `{ ok: false, reason: 'network-error', message: ... }`.
 - `PersistenceControls` shows the error message and keeps `publishStatus` as
@@ -195,11 +201,13 @@ error in the UI without touching the current local build.
 - The local build (autosave, `bricks` in the store) is **not mutated**.
 
 **Rejected publish (422):**
+
 - If the backend rejects a publish request with `422`, `galleryClient.publish`
   returns `{ ok: false, reason: 'validation-error', message: 'Publish rejected: validation failed' }`.
 - `PersistenceControls` shows the error without changing the current build.
 
 **Deleted content (410):**
+
 - If a build that was previously loaded is later deleted, `GET /builds/:id`
   returns `410`.
 - `galleryClient.load` maps this to `{ ok: false, reason: 'deleted', message: 'Build has been deleted' }`.
