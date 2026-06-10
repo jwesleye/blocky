@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react'
+import type { TemporalState } from 'zundo'
+
+import type { BuildState } from '@/domain/model/types'
 import { type BuildStoreWithTemporal, useBuildStore } from '../state/store'
 import {
   Camera,
@@ -18,6 +21,10 @@ interface ToolbarProps {
   onResetView?: () => void
 }
 
+type ToolbarTemporalState = TemporalState<Partial<BuildState>> & {
+  subscribe?: (listener: () => void) => () => void
+}
+
 export const Toolbar: React.FC<ToolbarProps> = ({
   onNew = () => undefined,
   onClear = () => undefined,
@@ -30,7 +37,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const [, setRefresh] = useState(0)
 
   useEffect(() => {
-    const unsubscribe = temporal.subscribe(() => {
+    const temporalState = temporal.getState() as ToolbarTemporalState
+    const unsubscribe = temporalState.subscribe?.(() => {
       setRefresh((v) => v + 1)
     })
     return () => unsubscribe?.()

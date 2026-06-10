@@ -12,6 +12,7 @@ import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import { CameraRig } from './CameraRig'
 import { collapseDebug } from './collapseDebug'
+import { InstancedBricks } from './InstancedBricks'
 import { Lighting } from './Lighting'
 import {
   BACKGROUND_COLOR,
@@ -25,61 +26,6 @@ const CollapseSimulation = lazy(() =>
     default: m.CollapseSimulation,
   })),
 )
-
-function BrickMesh({
-  brick,
-  onSurface,
-}: {
-  brick: PlacedBrick
-  onSurface: (pos: GridCoord) => void
-}) {
-  const part = PART_CATALOG[brick.partId]
-  const deleteBrick = useBuildStore((state) => state.deleteBrick)
-  if (!part) return null
-
-  const [width, depth] = rotatedDimensions(part, brick.rot)
-  const color = getBrickColor(brick.color)?.hex ?? brick.color
-  const position: [number, number, number] = [
-    brick.x + width / 2,
-    brick.y + part.height / 2,
-    brick.z + depth / 2,
-  ]
-
-  return (
-    <mesh
-      position={position}
-      castShadow
-      receiveShadow
-      onPointerMove={(event) => {
-        event.stopPropagation()
-        const normal = event.face?.normal
-        if ((normal?.y ?? 0) > 0.9) {
-          onSurface({
-            x: Math.round(event.point.x / STUD),
-            y: brick.y + part.height,
-            z: Math.round(event.point.z / STUD),
-          })
-          return
-        }
-
-        const offsetX = event.point.x + (normal?.x ?? 0) * STUD * 0.5
-        const offsetZ = event.point.z + (normal?.z ?? 0) * STUD * 0.5
-        onSurface({
-          x: Math.round(offsetX / STUD),
-          y: brick.y,
-          z: Math.round(offsetZ / STUD),
-        })
-      }}
-      onContextMenu={(event) => {
-        event.stopPropagation()
-        deleteBrick(brick.id)
-      }}
-    >
-      <boxGeometry args={[width, part.height, depth]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
-  )
-}
 
 function GhostBrickMesh({
   grid,
@@ -154,6 +100,7 @@ export function Scene() {
   const activeCollapse = useBuildStore((state) => state.activeCollapse)
   const completeCollapse = useBuildStore((state) => state.completeCollapse)
   const placeBrick = useBuildStore((state) => state.placeBrick)
+  const deleteBrick = useBuildStore((state) => state.deleteBrick)
   const partId = useCursorStore((state) => state.partId)
   const colorId = useCursorStore((state) => state.colorId)
   const rot = useCursorStore((state) => state.rot)
@@ -221,9 +168,51 @@ export function Scene() {
         target={CAMERA_DEFAULT_TARGET}
       />
       <Baseplate size={baseplateSize} onPointerMove={setGhostGrid} />
-      {placedBricks.map((brick) => (
-        <BrickMesh key={brick.id} brick={brick} onSurface={setGhostGrid} />
-      ))}
+      <InstancedBricks
+        bricks={placedBricks}
+        getDims={(partId) => {
+          const part = PART_CATALOG[partId]
+          if (!part) {
+            throw new Error(`unknown partId "${partId}"`)
+          }
+
+          return {
+            w: part.width,
+            d: part.length,
+            h: part.height,
+          }
+        }}
+        getColor={(color) => getBrickColor(color)?.hex ?? color}
+        onInstancePointerMove={(brick, event) => {
+          event.stopPropagation()
+          const part = PART_CATALOG[brick.partId]
+          if (!part) return
+
+          const normal = event.face?.normal
+          if ((normal?.y ?? 0) > 0.9) {
+            setGhostGrid({
+              x: Math.round(event.point.x / STUD),
+              y: brick.y + part.height,
+              z: Math.round(event.point.z / STUD),
+            })
+            return
+          }
+
+          const offsetX = event.point.x + (normal?.x ?? 0) * STUD * 0.5
+          const offsetZ = event.point.z + (normal?.z ?? 0) * STUD * 0.5
+          setGhostGrid({
+            x: Math.round(offsetX / STUD),
+            y: brick.y,
+            z: Math.round(offsetZ / STUD),
+          })
+        }}
+        onInstanceContextMenu={(brick, event) => {
+          event.stopPropagation()
+          if (brick.id) {
+            deleteBrick(brick.id)
+          }
+        }}
+      />
       {ghostGrid && (
         <GhostBrickMesh
           grid={ghostGrid}
