@@ -164,4 +164,26 @@ describe('BaseplateSizePicker', () => {
       SUPPORTED_BASEPLATE_SIZES[SUPPORTED_BASEPLATE_SIZES.length - 1],
     )
   })
+
+  it('keeps focus on the selected radio when a destructive keyboard shrink is cancelled', () => {
+    seedStore({ baseplateSize: 32, bricks: [outsideOnShrinkBrick] })
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<BaseplateSizePicker />)
+
+    const group = screen.getByRole('radiogroup')
+    const btn32 = screen.getByRole('radio', { name: '32 × 32' })
+    btn32.focus()
+
+    // ArrowUp tries 16×16 but user cancels — focus must not move
+    fireEvent.keyDown(group, { key: 'ArrowUp' })
+
+    expect(document.activeElement).toBe(btn32)
+    expect(useBuildStore.getState().baseplateSize).toBe(32)
+
+    // Second ArrowUp should still target 16×16 (derived from baseplateSize=32), not wrap
+    fireEvent.keyDown(group, { key: 'ArrowUp' })
+
+    expect(document.activeElement).toBe(btn32)
+    expect(useBuildStore.getState().baseplateSize).toBe(32)
+  })
 })

@@ -16,8 +16,8 @@ export function BaseplateSizePicker() {
   const setBaseplateSize = useBuildStore((s) => s.setBaseplateSize)
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
 
-  const handleSelect = (nextSize: number) => {
-    if (nextSize === baseplateSize) return
+  const handleSelect = (nextSize: number): boolean => {
+    if (nextSize === baseplateSize) return false
 
     if (nextSize < baseplateSize) {
       const outside = bricksOutsideBaseplate(
@@ -30,11 +30,12 @@ export function BaseplateSizePicker() {
         const ok = window.confirm(
           `Shrinking to ${nextSize} × ${nextSize} leaves ${outside.length} ${noun} outside the smaller baseplate. Continue?`,
         )
-        if (!ok) return
+        if (!ok) return false
       }
     }
 
     setBaseplateSize(nextSize)
+    return true
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -66,8 +67,10 @@ export function BaseplateSizePicker() {
     }
 
     if (nextIdx !== idx) {
-      handleSelect(SUPPORTED_BASEPLATE_SIZES[nextIdx])
-      btnRefs.current[nextIdx]?.focus()
+      const accepted = handleSelect(SUPPORTED_BASEPLATE_SIZES[nextIdx])
+      if (accepted) {
+        btnRefs.current[nextIdx]?.focus()
+      }
     }
   }
 
