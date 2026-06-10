@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BaseplateSizePicker } from '@/components/BaseplateSizePicker'
 import { ColorPicker } from '@/components/ColorPicker'
+import { EditingToolbar } from '@/components/EditingToolbar'
 import { Gallery } from '@/components/Gallery'
 import { HUD } from '@/components/HUD'
 import { PartPicker } from '@/components/PartPicker'
@@ -27,6 +28,8 @@ export function App() {
   const partId = useCursorStore((s) => s.partId)
   const setColor = useCursorStore((s) => s.setColor)
   const setPart = useCursorStore((s) => s.setPart)
+  const editingTool = useCursorStore((s) => s.editingTool)
+  const setEditingTool = useCursorStore((s) => s.setEditingTool)
 
   const bricksById = useBuildStore((state) => state.bricks)
   const bricks = Object.values(bricksById)
@@ -192,6 +195,24 @@ export function App() {
             Parts
           </div>
           <PartPicker selected={partId} onSelect={setPart} />
+        </div>
+
+        <div style={{ borderTop: '1px solid #333' }}>
+          <div
+            style={{
+              padding: '8px 8px 0',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#888',
+            }}
+          >
+            Mode
+          </div>
+          <div style={{ padding: '4px 8px 4px' }}>
+            <EditingToolbar activeTool={editingTool} onToolChange={setEditingTool} />
+          </div>
         </div>
 
         <div style={{ borderTop: '1px solid #333' }}>

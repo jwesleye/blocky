@@ -5,6 +5,7 @@ import App from './App'
 import './styles/global.css'
 import { collapseDebug } from './scene/collapseDebug'
 import { useBuildStore } from '@/state/store'
+import { useCursorStore } from '@/state/cursor'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -16,5 +17,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // can interact with the build state directly.
 if (import.meta.env.DEV) {
   window.__blockyStore = useBuildStore
+  window.__blockyCursorStore = useCursorStore
   window.__blockyCollapseDebug = collapseDebug
 }

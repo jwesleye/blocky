@@ -4,6 +4,8 @@ import { DEFAULT_COLOR_ID } from '@/domain/model/colors'
 import { DEFAULT_PART_ID } from '@/domain/parts/catalog'
 import type { HalfStudOffset } from '@/domain/model/types'
 
+export type EditingTool = 'place' | 'paint' | 'eyedropper'
+
 export interface CursorBrick {
   partId: string
   colorId: string
@@ -23,11 +25,15 @@ interface CursorState {
    * for the placement and physics layers to consume.
    */
   cursorBrick: CursorBrick
+  editingTool: EditingTool
   setColor: (id: string) => void
   setPart: (id: string) => void
   rotate: () => void
   rotateCursor: () => void
   toggleOffset: () => void
+  setEditingTool: (tool: EditingTool) => void
+  /** Copies a placed brick's partId and color into the cursor without mutating the build. */
+  sampleBrick: (brick: { partId: string; color: string }) => void
 }
 
 const nextRotation = (rot: 0 | 1 | 2 | 3) => (rot * 90) as 0 | 90 | 180 | 270
@@ -44,6 +50,7 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
     rot: 0,
     offset: undefined,
   },
+  editingTool: 'place',
   setColor: (id) =>
     set((state) => ({
       colorId: id,
@@ -72,4 +79,15 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
         cursorBrick: { ...state.cursorBrick, offset: newOffset },
       }
     }),
+  setEditingTool: (tool) => set({ editingTool: tool }),
+  sampleBrick: (brick) =>
+    set((state) => ({
+      partId: brick.partId,
+      colorId: brick.color,
+      cursorBrick: {
+        ...state.cursorBrick,
+        partId: brick.partId,
+        colorId: brick.color,
+      },
+    })),
 }))

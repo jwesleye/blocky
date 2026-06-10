@@ -404,6 +404,41 @@ describe('useBuildStore', () => {
     })
   })
 
+  describe('recolorBrick', () => {
+    it('changes only the color field and preserves all other fields', () => {
+      const id = placeBrick(sampleBrick)
+      useBuildStore.getState().recolorBrick(id, 'blue')
+      const brick = useBuildStore.getState().bricks[id]
+      expect(brick.color).toBe('blue')
+      expect(brick.id).toBe(id)
+      expect(brick.partId).toBe(sampleBrick.partId)
+      expect(brick.x).toBe(sampleBrick.x)
+      expect(brick.y).toBe(sampleBrick.y)
+      expect(brick.z).toBe(sampleBrick.z)
+      expect(brick.rot).toBe(sampleBrick.rot)
+    })
+
+    it('is a no-op for an unknown id', () => {
+      const id = placeBrick(sampleBrick)
+      const bricksBefore = useBuildStore.getState().bricks
+      useBuildStore.getState().recolorBrick('unknown-id', 'blue')
+      expect(useBuildStore.getState().bricks).toBe(bricksBefore)
+      expect(useBuildStore.getState().bricks[id].color).toBe(sampleBrick.color)
+    })
+
+    it('undo/redo round-trips the color change', () => {
+      const id = placeBrick({ ...sampleBrick, color: 'red' })
+      useBuildStore.getState().recolorBrick(id, 'blue')
+      expect(useBuildStore.getState().bricks[id].color).toBe('blue')
+
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().bricks[id].color).toBe('red')
+
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().bricks[id].color).toBe('blue')
+    })
+  })
+
   describe('baseplateSize', () => {
     it('defaults to 32', () => {
       expect(useBuildStore.getState().baseplateSize).toBe(32)

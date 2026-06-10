@@ -28,6 +28,8 @@ export interface BuildActions {
   placeBrick: (brick: Omit<PlacedBrick, 'id'>) => string | null
   /** Removes a brick from the model and from the selection. No-op if unknown. */
   deleteBrick: (id: string) => void
+  /** Recolors an existing brick in place without changing any other field. No-op for unknown ids. */
+  recolorBrick: (id: string, color: string) => void
   /**
    * Translates the current selection by a grid delta. Returns true if the move
    * is valid and was committed.
@@ -146,6 +148,17 @@ export const useBuildStore = create<BuildStore>()(
             const selection = new Set(state.selection)
             selection.delete(id)
             return { bricks, selection, lastCollapse: null }
+          }),
+
+        recolorBrick: (id, color) =>
+          set((state) => {
+            if (!(id in state.bricks)) return state
+            return {
+              bricks: {
+                ...state.bricks,
+                [id]: { ...state.bricks[id], color },
+              },
+            }
           }),
 
         moveSelection: (delta) => {

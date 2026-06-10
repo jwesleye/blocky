@@ -12,6 +12,10 @@ export interface InstancedBricksProps {
   bricks: readonly RenderBrick[]
   getDims: PartDimsResolver
   getColor: (color: string) => string
+  onInstanceClick?: (
+    brick: RenderBrick,
+    event: ThreeEvent<MouseEvent>,
+  ) => void
   onInstancePointerMove?: (
     brick: RenderBrick,
     event: ThreeEvent<MouseEvent>,
@@ -26,6 +30,7 @@ export function InstancedBricks({
   bricks,
   getDims,
   getColor,
+  onInstanceClick,
   onInstancePointerMove,
   onInstanceContextMenu,
 }: InstancedBricksProps) {
@@ -67,6 +72,7 @@ export function InstancedBricks({
                 key={brick.id ?? index}
                 position={instance.position}
                 rotation={[0, instance.rotationY, 0]}
+                onClick={(event) => onInstanceClick?.(brick, event)}
                 onPointerMove={(event) => onInstancePointerMove?.(brick, event)}
                 onContextMenu={(event) => onInstanceContextMenu?.(brick, event)}
               />
