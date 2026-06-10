@@ -18,7 +18,8 @@ function isPointOnPolygonBoundary(point: Point2D, polygon: Polygon2D): boolean {
     const a = polygon[i]
     const b = polygon[(i + 1) % n]
     // Cross product of (point - a) and (b - a) is zero iff point is collinear with a and b.
-    const cross = (point[0] - a[0]) * (b[1] - a[1]) - (point[1] - a[1]) * (b[0] - a[0])
+    const cross =
+      (point[0] - a[0]) * (b[1] - a[1]) - (point[1] - a[1]) * (b[0] - a[0])
     if (Math.abs(cross) > BOUNDARY_EPS) continue
     // Confirm the point lies within the segment's bounding box.
     if (
@@ -133,7 +134,10 @@ export function isBalanced(
 
   const com = computeCoM(component, catalog)
   const projection: Point2D = [com.x, com.z]
-  return polygonContains(footprint, projection) || isPointOnPolygonBoundary(projection, footprint)
+  return (
+    polygonContains(footprint, projection) ||
+    isPointOnPolygonBoundary(projection, footprint)
+  )
 }
 
 /**
