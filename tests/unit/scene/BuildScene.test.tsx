@@ -7,11 +7,11 @@ vi.mock('@react-three/fiber', () => ({
   Canvas: () => <canvas data-testid="scene-canvas" />,
 }))
 
-import { Scene } from '@/scene/Scene'
+import { BuildScene } from '@/scene/BuildScene'
 
-describe('Scene', () => {
+describe('BuildScene', () => {
   it('mounts without crashing and renders a canvas element', () => {
-    const { getByTestId } = render(<Scene />)
+    const { getByTestId } = render(<BuildScene />)
     expect(getByTestId('scene-canvas')).toBeTruthy()
   })
 })
