@@ -235,5 +235,16 @@ describe('Balance primitives', () => {
     it('returns true for empty array', () => {
       expect(isBalanced([], PART_CATALOG)).toBe(true)
     })
+
+    it('CoM on hull boundary is considered balanced', () => {
+      // Grounded brick-1x1 at (0,0,0) gives support footprint [0,1]x[0,1].
+      // Second brick-1x1 at (1,3,0) is not grounded so does not widen footprint.
+      // Combined CoM projects to x=1.0, z=0.5 — exactly on the right edge of the hull.
+      const bricks: PlacedBrick[] = [
+        { id: '1', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+        { id: '2', partId: 'brick-1x1', color: 'red', x: 1, y: 3, z: 0, rot: 0 },
+      ]
+      expect(isBalanced(bricks, PART_CATALOG)).toBe(true)
+    })
   })
 })
