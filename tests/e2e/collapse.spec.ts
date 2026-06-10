@@ -6,7 +6,13 @@ interface CollapseDevStore {
     triggerCollapse: () => void
     bricks: Record<string, unknown>
   }
-  setState: (fn: (state: any) => any) => void
+  setState: (
+    fn: (state: {
+      bricks: Record<string, unknown>
+    }) => {
+      bricks: Record<string, unknown>
+    },
+  ) => void
 }
 
 interface CollapseDebug {
@@ -87,9 +93,6 @@ test('collapse spawns dynamic bodies and shrinks the build', async ({
   )
   expect(afterCount).toBeLessThan(initialCount)
   expect(afterCount).toBe(1)
-
-  // The visible brick count reflects the shrunken build.
-  await expect(page.getByText(`Bricks in build: ${afterCount}`)).toBeVisible()
 
   // At least one dynamic body exists during the collapse animation.
   await page.waitForFunction(

@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { getBrickColor } from '@/domain/model/colors'
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
-import { bricksToBuild, buildToBricks } from '@/domain/model/build'
-import { createAutosaver, loadBuild } from '@/domain/persistence'
-import { getPart } from '@/domain/parts/catalog'
 import { BaseplateSizePicker } from '@/components/BaseplateSizePicker'
 import { ColorPicker } from '@/components/ColorPicker'
+import { Gallery } from '@/components/Gallery'
 import { HUD } from '@/components/HUD'
 import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { ViewControls } from '@/components/ViewControls'
-import { Gallery } from '@/components/Gallery'
+import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { bricksToBuild, buildToBricks } from '@/domain/model/build'
+import { getBrickColor } from '@/domain/model/colors'
+import { getPart } from '@/domain/parts/catalog'
+import { createAutosaver, loadBuild } from '@/domain/persistence'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
-import { Scene } from '@/scene/Scene'
+import { BuildScene } from '@/scene/BuildScene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import '@/styles/gallery.css'
@@ -156,8 +156,6 @@ export function App() {
           <ColorPicker selected={colorId} onSelect={setColor} />
         </div>
 
-
-        {/* Baseplate size picker */}
         <div style={{ borderBottom: '1px solid #333' }}>
           <div
             style={{
@@ -174,7 +172,6 @@ export function App() {
           <BaseplateSizePicker />
         </div>
 
-        {/* Part picker */}
         <div
           style={{
             flex: 1,
@@ -198,7 +195,6 @@ export function App() {
           <PartPicker selected={partId} onSelect={setPart} />
         </div>
 
-        {/* Transform controls */}
         <div style={{ borderTop: '1px solid #333' }}>
           <div
             style={{
@@ -243,7 +239,7 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <Scene />
+          <BuildScene />
           <ViewControls />
           <HUD />
         </div>
