@@ -1,18 +1,14 @@
 import { test, expect } from '@playwright/test'
 
+interface CollapseState {
+  placeBrick: (b: object) => string | null
+  triggerCollapse: () => void
+  bricks: Record<string, unknown>
+}
+
 interface CollapseDevStore {
-  getState: () => {
-    placeBrick: (b: object) => string | null
-    triggerCollapse: () => void
-    bricks: Record<string, unknown>
-  }
-  setState: (
-    fn: (state: {
-      bricks: Record<string, unknown>
-    }) => {
-      bricks: Record<string, unknown>
-    },
-  ) => void
+  getState: () => CollapseState
+  setState: (fn: (state: CollapseState) => Partial<CollapseState>) => void
 }
 
 interface CollapseDebug {

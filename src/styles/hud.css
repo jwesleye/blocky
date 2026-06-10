@@ -1,0 +1,158 @@
+.hud {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.hud__top {
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+.hud__bottom {
+  display: flex;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.brick-count {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #111827;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.22);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  background: #e2e8f0;
+  box-shadow: 0 10px 24px rgb(15 23 42 / 0.28);
+}
+
+.hud-button,
+.toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #111827;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hud-button:hover:not(:disabled),
+.toolbar button:hover:not(:disabled) {
+  background: #e0f2fe;
+  border-color: #0369a1;
+}
+
+.hud-button:focus-visible,
+.toolbar button:focus-visible {
+  outline: 3px solid #facc15;
+  outline-offset: 2px;
+}
+
+.hud-button:disabled,
+.toolbar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.hud-button--danger {
+  border-color: #991b1b;
+}
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 0.66);
+  pointer-events: auto;
+}
+
+.dialog {
+  width: min(26rem, 100%);
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #111827;
+  box-shadow: 0 18px 44px rgb(15 23 42 / 0.38);
+  padding: 1rem;
+}
+
+.dialog h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.dialog p {
+  margin: 0 0 1rem;
+  line-height: 1.45;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.shortcut-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0 0;
+}
+
+.shortcut-list__row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) 1.4fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.shortcut-list dt {
+  font-weight: 700;
+}
+
+.shortcut-list dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.shortcut-list kbd {
+  border: 1px solid #64748b;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: #111827;
+  padding: 0.12rem 0.35rem;
+  font:
+    0.8rem ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+}

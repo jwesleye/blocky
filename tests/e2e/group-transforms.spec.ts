@@ -1,25 +1,21 @@
 import { test, expect } from '@playwright/test'
 
+interface DevState {
+  placeBrick: (b: object) => string | null
+  selectBrick: (id: string, additive?: boolean) => void
+  moveSelection: (delta: object) => boolean
+  duplicateSelection: (delta: object) => boolean
+  mirrorSelection: (axis: 'x' | 'z') => boolean
+  previewMirrorSelection: (axis: 'x' | 'z') => boolean
+  undo: () => void
+  redo: () => void
+  selection: { size: number }
+  bricks: Record<string, { x: number; z: number; y: number }>
+}
+
 interface DevStore {
-  getState: () => {
-    placeBrick: (b: object) => string | null
-    selectBrick: (id: string, additive?: boolean) => void
-    moveSelection: (delta: object) => boolean
-    duplicateSelection: (delta: object) => boolean
-    mirrorSelection: (axis: 'x' | 'z') => boolean
-    previewMirrorSelection: (axis: 'x' | 'z') => boolean
-    undo: () => void
-    redo: () => void
-    selection: { size: number }
-    bricks: Record<string, { x: number; z: number; y: number }>
-  }
-  setState: (
-    fn: (state: {
-      bricks: Record<string, unknown>
-    }) => {
-      bricks: Record<string, unknown>
-    },
-  ) => void
+  getState: () => DevState
+  setState: (fn: (state: DevState) => Partial<DevState>) => void
 }
 
 test('group move and duplicate via store handle', async ({ page }) => {
@@ -162,8 +158,22 @@ test('mirror selection via UI controls', async ({ page }) => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
     ).__blockyStore.getState()
-    const id1 = store.placeBrick({ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 })
-    const id2 = store.placeBrick({ partId: 'brick-1x1', color: 'blue', x: 5, y: 0, z: 0, rot: 0 })
+    const id1 = store.placeBrick({
+      partId: 'brick-2x4',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+    const id2 = store.placeBrick({
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 5,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
     if (id1 === null || id2 === null) {
       throw new Error('grounded brick placement unexpectedly rejected')
     }
@@ -250,10 +260,13 @@ test('mirror selection via UI controls', async ({ page }) => {
     store.getState().selectBrick(groundedId, true)
   })
 
-  const countBefore = await page.evaluate(() =>
-    Object.keys(
-      (window as unknown as { __blockyStore: DevStore }).__blockyStore.getState().bricks,
-    ).length,
+  const countBefore = await page.evaluate(
+    () =>
+      Object.keys(
+        (
+          window as unknown as { __blockyStore: DevStore }
+        ).__blockyStore.getState().bricks,
+      ).length,
   )
   // Drive the invalid mirror through the UI button — expects visible rejection feedback
   await page.click('[data-testid="mirror-x"]')

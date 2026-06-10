@@ -63,6 +63,8 @@ export interface BuildActions {
    */
   selectBrick: (id: string, additive?: boolean) => void
   clearSelection: () => void
+  /** Removes every brick and clears transient build state. */
+  clearBricks: () => void
   /** Updates the active baseplate side length in studs. */
   setBaseplateSize: (size: number) => void
   /**
@@ -313,6 +315,14 @@ export const useBuildStore = create<BuildStore>()(
 
         clearSelection: () =>
           set({ selection: new Set<string>(), lastCollapse: null }),
+
+        clearBricks: () =>
+          set({
+            bricks: {},
+            selection: new Set<string>(),
+            lastCollapse: null,
+            activeCollapse: null,
+          }),
 
         setBaseplateSize: (size) => set({ baseplateSize: size }),
 
