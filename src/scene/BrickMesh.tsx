@@ -1,5 +1,5 @@
-import { PART_CATALOG } from '@/domain/parts/catalog'
 import { getBrickColor } from '@/domain/model/colors'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import type { PlacedBrick } from '@/domain/model/types'
 
 interface Props {

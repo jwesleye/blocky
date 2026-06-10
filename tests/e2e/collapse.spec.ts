@@ -6,7 +6,13 @@ interface CollapseDevStore {
     triggerCollapse: () => void
     bricks: Record<string, unknown>
   }
-  setState: (fn: (state: any) => any) => void
+  setState: (
+    fn: (state: {
+      bricks: Record<string, unknown>
+    }) => {
+      bricks: Record<string, unknown>
+    },
+  ) => void
 }
 
 interface CollapseDebug {

@@ -13,7 +13,13 @@ interface DevStore {
     selection: { size: number }
     bricks: Record<string, { x: number; z: number; y: number }>
   }
-  setState: (fn: (state: any) => any) => void
+  setState: (
+    fn: (state: {
+      bricks: Record<string, unknown>
+    }) => {
+      bricks: Record<string, unknown>
+    },
+  ) => void
 }
 
 test('group move and duplicate via store handle', async ({ page }) => {
