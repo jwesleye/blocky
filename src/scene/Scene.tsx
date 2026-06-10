@@ -149,6 +149,7 @@ export function Scene() {
         far: 1000,
         position: CAMERA_DEFAULT_POSITION,
       }}
+      gl={{ preserveDrawingBuffer: true }}
       onClick={handlePlace}
       onPointerLeave={() => setGhostGrid(null)}
       onKeyDown={(event) => {

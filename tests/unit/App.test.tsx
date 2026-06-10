@@ -6,11 +6,15 @@ vi.mock('@react-three/fiber', () => ({
   Canvas: () => <canvas data-testid="scene-canvas" />,
 }))
 
+vi.mock('@/scene/Scene', () => ({
+  Scene: () => <canvas data-testid="interactive-scene" />,
+}))
+
 import { App } from '@/App'
 
 describe('App', () => {
-  it('renders the scene canvas inside the app shell', () => {
+  it('mounts the interactive scene inside the app shell', () => {
     const { getByTestId } = render(<App />)
-    expect(getByTestId('scene-canvas')).toBeTruthy()
+    expect(getByTestId('interactive-scene')).toBeTruthy()
   })
 })
