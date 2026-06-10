@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  BASEPLATE_BOUNDS,
   BASEPLATE_SIZE_STUDS,
   SUPPORTED_BASEPLATE_SIZES,
   type BaseplateSize,
@@ -26,9 +27,9 @@ const halfStudOffsetSchema = z.object({
 const buildBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
-  x: z.number().int(),
-  y: z.number().int(),
-  z: z.number().int(),
+  x: z.number().int().min(BASEPLATE_BOUNDS.minX).max(BASEPLATE_BOUNDS.maxX),
+  y: z.number().int().min(0),
+  z: z.number().int().min(BASEPLATE_BOUNDS.minZ).max(BASEPLATE_BOUNDS.maxZ),
   rot: rotationSchema,
   offset: halfStudOffsetSchema.optional(),
 })

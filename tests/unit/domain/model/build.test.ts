@@ -327,4 +327,60 @@ describe('safeParseBuild', () => {
 
     expect(safeParseBuild(bad)).toBeNull()
   })
+
+  it('returns null when x is greater than the baseplate max', () => {
+    const bad = JSON.stringify({
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: BASEPLATE_SIZE_STUDS, y: 0, z: 0, rot: 0 },
+      ],
+    })
+
+    expect(safeParseBuild(bad)).toBeNull()
+  })
+
+  it('returns null when z is negative', () => {
+    const bad = JSON.stringify({
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: -1, rot: 0 },
+      ],
+    })
+
+    expect(safeParseBuild(bad)).toBeNull()
+  })
+
+  it('returns null when y is negative', () => {
+    const bad = JSON.stringify({
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 0, y: -1, z: 0, rot: 0 },
+      ],
+    })
+
+    expect(safeParseBuild(bad)).toBeNull()
+  })
+
+  it('accepts bricks at the baseplate edges', () => {
+    const atMinEdge = JSON.stringify({
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+      ],
+    })
+    const atMaxEdge = JSON.stringify({
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: BASEPLATE_SIZE_STUDS - 1, y: 0, z: BASEPLATE_SIZE_STUDS - 1, rot: 0 },
+      ],
+    })
+
+    expect(safeParseBuild(atMinEdge)).not.toBeNull()
+    expect(safeParseBuild(atMaxEdge)).not.toBeNull()
+  })
 })
