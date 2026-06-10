@@ -53,6 +53,8 @@ export function InstancedBricks({
           key={bucket.key}
           limit={bucket.instances.length}
           range={bucket.instances.length}
+          castShadow
+          receiveShadow
         >
           <boxGeometry args={bucket.size} />
           <meshStandardMaterial color={getColor(bucket.color)} />
