@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
-import { ViewControls, RESET_VIEW_KEY } from '@/components/ViewControls'
+import { ViewControls } from '@/components/ViewControls'
 
 const mockResetCamera = vi.fn()
 
@@ -29,15 +29,10 @@ describe('ViewControls', () => {
     expect(mockResetCamera).toHaveBeenCalledTimes(1)
   })
 
-  it('calls resetCamera when the keyboard shortcut is pressed', () => {
+  it('does not reserve keyboard shortcuts directly', () => {
     render(<ViewControls />)
-    fireEvent.keyDown(window, { key: RESET_VIEW_KEY })
-    expect(mockResetCamera).toHaveBeenCalledTimes(1)
-  })
-
-  it('does not call resetCamera if modifiers are pressed', () => {
-    render(<ViewControls />)
-    fireEvent.keyDown(window, { key: RESET_VIEW_KEY, shiftKey: true })
+    fireEvent.keyDown(window, { key: 'Home' })
+    fireEvent.keyDown(window, { key: 'r' })
     expect(mockResetCamera).not.toHaveBeenCalled()
   })
 })

@@ -176,6 +176,17 @@ describe('useBuildStore', () => {
     expect(useBuildStore.getState().selection.size).toBe(0)
   })
 
+  it('clearBricks removes all bricks and selection in one action', () => {
+    const id = placeBrick(sampleBrick)
+    useBuildStore.getState().selectBrick(id)
+
+    useBuildStore.getState().clearBricks()
+
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(0)
+    expect(useBuildStore.getState().selection.size).toBe(0)
+    expect(useBuildStore.getState().lastCollapse).toBeNull()
+  })
+
   it('selectBrick is a no-op for an unknown id', () => {
     const id = placeBrick(sampleBrick)
     useBuildStore.getState().selectBrick(id)

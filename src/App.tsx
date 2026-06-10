@@ -16,6 +16,7 @@ import { BuildScene } from '@/scene/BuildScene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import '@/styles/gallery.css'
+import '@/styles/hud.css'
 import '@/styles/pickers.css'
 
 export function App() {

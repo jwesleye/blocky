@@ -13,6 +13,7 @@ interface CursorState {
   colorId: string
   partId: string
   rot: 0 | 1 | 2 | 3
+  rotation: 0 | 90 | 180 | 270
   /**
    * Complete model for the ghost/preview brick being placed.
    * Derived from the selected scalars but provided as a single object
@@ -22,12 +23,16 @@ interface CursorState {
   setColor: (id: string) => void
   setPart: (id: string) => void
   rotate: () => void
+  rotateCursor: () => void
 }
 
-export const useCursorStore = create<CursorState>()((set) => ({
+const nextRotation = (rot: 0 | 1 | 2 | 3) => (rot * 90) as 0 | 90 | 180 | 270
+
+export const useCursorStore = create<CursorState>()((set, get) => ({
   colorId: DEFAULT_COLOR_ID,
   partId: DEFAULT_PART_ID,
   rot: 0,
+  rotation: 0,
   cursorBrick: {
     partId: DEFAULT_PART_ID,
     colorId: DEFAULT_COLOR_ID,
@@ -46,6 +51,11 @@ export const useCursorStore = create<CursorState>()((set) => ({
   rotate: () =>
     set((state) => {
       const rot = ((state.rot + 1) % 4) as 0 | 1 | 2 | 3
-      return { rot, cursorBrick: { ...state.cursorBrick, rot } }
+      return {
+        rot,
+        rotation: nextRotation(rot),
+        cursorBrick: { ...state.cursorBrick, rot },
+      }
     }),
+  rotateCursor: () => get().rotate(),
 }))
