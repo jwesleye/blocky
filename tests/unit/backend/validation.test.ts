@@ -25,7 +25,9 @@ describe('backend PublishRequestSchema baseplate contract', () => {
       build: {
         ...validRequest.build,
         baseplate: { size: 48 },
-        bricks: [{ partId: 'brick-1x1', color: 'blue', x: 40, y: 0, z: 0, rot: 0 }],
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 40, y: 0, z: 0, rot: 0 },
+        ],
       },
     }
     expect(PublishRequestSchema.safeParse(request).success).toBe(true)
@@ -37,7 +39,9 @@ describe('backend PublishRequestSchema baseplate contract', () => {
       build: {
         ...validRequest.build,
         baseplate: { size: 48 },
-        bricks: [{ partId: 'brick-1x1', color: 'blue', x: 48, y: 0, z: 0, rot: 0 }],
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 48, y: 0, z: 0, rot: 0 },
+        ],
       },
     }
 
@@ -65,7 +69,9 @@ describe('backend PublishRequestSchema baseplate contract', () => {
       ...validRequest,
       build: {
         ...validRequest.build,
-        bricks: [{ partId: 'brick-1x1', color: 'blue', x: 0, y: -1, z: -1, rot: 0 }],
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 0, y: -1, z: -1, rot: 0 },
+        ],
       },
     }
 

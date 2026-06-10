@@ -15,7 +15,9 @@ describe('getBaseplateFraming', () => {
     const framing32 = getBaseplateFraming(32)
     const framing64 = getBaseplateFraming(64)
 
-    expect(distanceBetween(framing64.cameraPosition, framing64.target)).toBeGreaterThan(
+    expect(
+      distanceBetween(framing64.cameraPosition, framing64.target),
+    ).toBeGreaterThan(
       distanceBetween(framing32.cameraPosition, framing32.target),
     )
     expect(framing64.extent).toBeGreaterThan(framing32.extent)
