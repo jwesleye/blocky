@@ -241,8 +241,24 @@ describe('Balance primitives', () => {
       // Second brick-1x1 at (1,3,0) is not grounded so does not widen footprint.
       // Combined CoM projects to x=1.0, z=0.5 — exactly on the right edge of the hull.
       const bricks: PlacedBrick[] = [
-        { id: '1', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
-        { id: '2', partId: 'brick-1x1', color: 'red', x: 1, y: 3, z: 0, rot: 0 },
+        {
+          id: '1',
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        {
+          id: '2',
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 1,
+          y: 3,
+          z: 0,
+          rot: 0,
+        },
       ]
       expect(isBalanced(bricks, PART_CATALOG)).toBe(true)
     })
