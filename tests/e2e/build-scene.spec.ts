@@ -44,16 +44,34 @@ async function waitForSceneDebugHandles(page: import('@playwright/test').Page) {
   )
 }
 
+async function getBrickCount(
+  page: import('@playwright/test').Page,
+): Promise<number> {
+  return page.evaluate(() => {
+    const { bricks } = (window as unknown as DevWindow).__blockyStore.getState()
+    return Object.keys(bricks).length
+  })
+}
+
 async function projectToCanvas(
   page: import('@playwright/test').Page,
   worldX: number,
   worldY: number,
   worldZ: number,
-) {
+): Promise<{ x: number; y: number }> {
   return page.evaluate(
     ([wx, wy, wz]) =>
       (window as unknown as DevWindow).__blockyProjectToCanvas(wx, wy, wz),
     [worldX, worldY, worldZ] as [number, number, number],
+  )
+}
+
+async function settlePointer(page: import('@playwright/test').Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
   )
 }
 
@@ -65,9 +83,7 @@ test('seeded bricks render to nonblank canvas, Build Status absent', async ({
   await waitForSceneDebugHandles(page)
 
   await page.evaluate(() => {
-    const store = (
-      window as unknown as { __blockyStore: DevStore }
-    ).__blockyStore.getState()
+    const store = (window as unknown as DevWindow).__blockyStore.getState()
     store.placeBrick({
       partId: 'brick-2x4',
       color: 'red',
@@ -165,6 +181,56 @@ test('place mode deletes an existing brick on click and R rotates the cursor mod
     () => (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
   )
   expect(afterRot).toBe((beforeRot + 1) % 4)
+})
+
+test('clicking an empty baseplate stud places exactly one ghost brick', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await waitForSceneDebugHandles(page)
+
+  const initialCount = await getBrickCount(page)
+  const placePos = await projectToCanvas(page, 4, 0, 0)
+
+  await page.mouse.move(placePos.x, placePos.y)
+  await settlePointer(page)
+  await page.mouse.click(placePos.x, placePos.y)
+
+  await expect
+    .poll(() => getBrickCount(page), { timeout: 5000 })
+    .toBe(initialCount + 1)
+})
+
+test('clicking a colliding ghost position does not add a brick', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await waitForSceneDebugHandles(page)
+
+  const seededBrickId = await page.evaluate(() => {
+    const store = (window as unknown as DevWindow).__blockyStore.getState()
+    return store.placeBrick({
+      partId: 'brick-2x4',
+      color: 'red',
+      x: 4,
+      y: 0,
+      z: 4,
+      rot: 0,
+    })
+  })
+
+  expect(seededBrickId).toBeTruthy()
+
+  const initialCount = await getBrickCount(page)
+  const collidingPos = await projectToCanvas(page, 4, 1.5, 5)
+
+  await page.mouse.move(collidingPos.x, collidingPos.y)
+  await settlePointer(page)
+  await page.mouse.click(collidingPos.x, collidingPos.y)
+
+  await expect
+    .poll(() => getBrickCount(page), { timeout: 5000 })
+    .toBe(initialCount)
 })
 
 test('canvas click places brick on a valid baseplate position', async ({
