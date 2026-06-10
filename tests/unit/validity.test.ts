@@ -146,4 +146,22 @@ describe('isValidPlacement', () => {
     const ghost = brick({ y: 2 })
     expect(isValidPlacement(ghost, [support])).toBe(false)
   })
+
+  it('rejects an offset brick overlapping an existing brick by 0.5 studs', () => {
+    const existing = brick({ id: 'existing', partId: 'brick-1x1', x: 3, z: 3 })
+    const ghost = brick({ partId: 'brick-1x1', x: 2, z: 3, offset: { x: 1, z: 0 } })
+    expect(isValidPlacement(ghost, [existing])).toBe(false)
+  })
+
+  it('allows a lone offset brick on the baseplate', () => {
+    const ghost = brick({ partId: 'brick-1x1', x: 2, z: 3, offset: { x: 1, z: 0 } })
+    expect(isValidPlacement(ghost, [])).toBe(true)
+  })
+
+  it('allows a valid jumper interlock', () => {
+    const support1 = brick({ id: 's1', partId: 'brick-1x1', x: 2, z: 3 })
+    const support2 = brick({ id: 's2', partId: 'brick-1x1', x: 3, z: 3 })
+    const ghost = brick({ partId: 'brick-1x1', x: 2, y: 3, z: 3, offset: { x: 1, z: 0 } })
+    expect(isValidPlacement(ghost, [support1, support2])).toBe(true)
+  })
 })

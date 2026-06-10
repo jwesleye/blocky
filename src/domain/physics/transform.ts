@@ -1,6 +1,6 @@
 import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
-import { toBrickFootprint, getOccupiedCells } from '../parts/footprint'
+import { toBrickFootprint, getOccupiedCells, getOccupiedHalfStudCells } from '../parts/footprint'
 import { groundedIds } from './placement'
 import { BASEPLATE_SIZE_STUDS } from '../grid'
 
@@ -79,7 +79,7 @@ export function findCollisions(
     const def = catalog[brick.partId]
     if (!def) continue
 
-    const cells = getOccupiedCells(brick, def)
+    const cells = getOccupiedHalfStudCells(brick, def)
     for (const cell of cells) {
       // A brick occupies cells from y to y + height - 1
       for (let dy = 0; dy < def.height; dy++) {
@@ -143,13 +143,13 @@ export function canPlaceGroup(
   for (const brick of moved) {
     const def = catalog[brick.partId]
     if (!def) continue
-    const cells = getOccupiedCells(brick, def)
+    const cells = getOccupiedHalfStudCells(brick, def)
     for (const cell of cells) {
       if (
         cell.x < 0 ||
-        cell.x >= baseplateSize ||
+        cell.x >= baseplateSize * 2 ||
         cell.z < 0 ||
-        cell.z >= baseplateSize
+        cell.z >= baseplateSize * 2
       ) {
         return false
       }

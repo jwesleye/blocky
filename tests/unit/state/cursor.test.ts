@@ -71,4 +71,17 @@ describe('useCursorStore', () => {
     expect(state.partId).toBe('plate-1x1')
     expect(state.cursorBrick.partId).toBe('plate-1x1')
   })
+
+  it('exposes an offset that toggleOffset flips on/off and mirrors into cursorBrick', () => {
+    expect(useCursorStore.getState().offset).toBeUndefined()
+    expect(useCursorStore.getState().cursorBrick.offset).toBeUndefined()
+
+    useCursorStore.getState().toggleOffset()
+    expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
+    expect(useCursorStore.getState().cursorBrick.offset).toEqual({ x: 1, z: 0 })
+
+    useCursorStore.getState().toggleOffset()
+    expect(useCursorStore.getState().offset).toBeUndefined()
+    expect(useCursorStore.getState().cursorBrick.offset).toBeUndefined()
+  })
 })

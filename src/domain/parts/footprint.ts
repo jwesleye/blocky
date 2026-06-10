@@ -9,6 +9,26 @@ export interface Cell {
 }
 
 /**
+ * Returns the half-stud cells (X, Z) occupied by a placed brick.
+ * Each stud spans 2x2 half-stud cells.
+ * Rotations 1 and 3 swap width and length.
+ */
+export function getOccupiedHalfStudCells(brick: PlacedBrick, def: PartDef): Cell[] {
+  const [W, L] =
+    brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
+  const cells: Cell[] = []
+  const startX = 2 * brick.x + (brick.offset?.x ?? 0)
+  const startZ = 2 * brick.z + (brick.offset?.z ?? 0)
+
+  for (let hx = 0; hx < 2 * W; hx++) {
+    for (let hz = 0; hz < 2 * L; hz++) {
+      cells.push({ x: startX + hx, z: startZ + hz })
+    }
+  }
+  return cells
+}
+
+/**
  * Returns the stud cells (X, Z) occupied by a placed brick.
  * Rotations 1 and 3 swap width and length (90° / 270° turns about Y).
  */
