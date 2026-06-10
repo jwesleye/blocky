@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
 import { ColorPicker } from '@/components/ColorPicker'
+import { HUD } from '@/components/HUD'
 import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { ViewControls } from '@/components/ViewControls'
@@ -21,8 +22,6 @@ export function App() {
   const setColor = useCursorStore((s) => s.setColor)
   const setPart = useCursorStore((s) => s.setPart)
 
-  const bricksById = useBuildStore((state) => state.bricks)
-  const bricks = Object.values(bricksById)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
 
@@ -49,7 +48,6 @@ export function App() {
         color: '#e0e0e0',
       }}
     >
-      {/* Sidebar */}
       <aside
         style={{
           width: 220,
@@ -71,7 +69,6 @@ export function App() {
           blocky
         </div>
 
-        {/* Cursor preview */}
         <div style={{ padding: '8px', borderBottom: '1px solid #333' }}>
           <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>
             Active brick
@@ -94,7 +91,6 @@ export function App() {
           </div>
         </div>
 
-        {/* Color picker */}
         <div style={{ borderBottom: '1px solid #333' }}>
           <div
             style={{
@@ -111,7 +107,6 @@ export function App() {
           <ColorPicker selected={colorId} onSelect={setColor} />
         </div>
 
-        {/* Part picker */}
         <div
           style={{
             flex: 1,
@@ -178,11 +173,11 @@ export function App() {
         </div>
       </aside>
 
-      {/* Main canvas area */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <Scene />
           <ViewControls />
+          <HUD />
         </div>
         <div style={{ padding: '1rem' }}>
           <PersistenceControls />
@@ -196,19 +191,6 @@ export function App() {
             Gallery
           </button>
           {galleryOpen && <Gallery />}
-          <div>
-            <h2>Build Status</h2>
-            <p>Bricks in build: {bricks.length}</p>
-            <ul>
-              {bricks.slice(0, 10).map((brick) => (
-                <li key={brick.id}>
-                  {brick.partId} ({brick.color}) at {brick.x},{brick.y},
-                  {brick.z}
-                </li>
-              ))}
-              {bricks.length > 10 && <li>... and {bricks.length - 10} more</li>}
-            </ul>
-          </div>
         </div>
       </main>
     </div>
