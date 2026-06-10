@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 import {
+  BUDGET_DOC_URL,
   COLLAPSE_BRICK_COUNT,
   LONG_FRAME_THRESHOLD_MS,
   MIN_SAMPLE_FRAMES,
@@ -228,18 +229,18 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   // long enough to cause a frame stall.
   expect(
     result.computeMs,
-    `collapse computation (${COLLAPSE_BRICK_COUNT} bricks) took ${result.computeMs.toFixed(1)} ms — must stay under the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold`,
+    `collapse computation (${COLLAPSE_BRICK_COUNT} bricks) took ${result.computeMs.toFixed(1)} ms — must stay under the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold. See ${BUDGET_DOC_URL} for details.`,
   ).toBeLessThan(LONG_FRAME_THRESHOLD_MS)
 
   // No single frame during the collapse animation window may stall.
   expect(
     maxFrame,
-    `max frame time ${maxFrame.toFixed(1)} ms exceeds the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold`,
+    `max frame time ${maxFrame.toFixed(1)} ms exceeds the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold. See ${BUDGET_DOC_URL} for details.`,
   ).toBeLessThan(LONG_FRAME_THRESHOLD_MS)
 
   // p95 must stay within the ~60 fps render budget.
   expect(
     p95,
-    `p95 frame time ${p95.toFixed(1)} ms exceeds the ${P95_FRAME_BUDGET_MS} ms render budget`,
+    `p95 frame time ${p95.toFixed(1)} ms exceeds the ${P95_FRAME_BUDGET_MS} ms render budget. See ${BUDGET_DOC_URL} for details.`,
   ).toBeLessThanOrEqual(P95_FRAME_BUDGET_MS)
 })
