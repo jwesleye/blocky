@@ -4,9 +4,7 @@ import {
   validateBuild,
   buildToBricks,
 } from '@/domain/model/build'
-import {
-  assertSupportedBaseplateSize,
-} from '@/domain/grid'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
 import { createGalleryClient } from '@/domain/persistence/galleryClient'
 import type {
   GalleryPublishRequest,

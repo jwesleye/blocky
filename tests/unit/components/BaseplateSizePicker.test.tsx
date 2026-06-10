@@ -118,7 +118,9 @@ describe('BaseplateSizePicker', () => {
 
     fireEvent.keyDown(group, { key: 'ArrowDown' })
 
-    expect(useBuildStore.getState().baseplateSize).toBe(SUPPORTED_BASEPLATE_SIZES[1])
+    expect(useBuildStore.getState().baseplateSize).toBe(
+      SUPPORTED_BASEPLATE_SIZES[1],
+    )
   })
 
   it('moves selection backward with ArrowUp', () => {
@@ -128,17 +130,24 @@ describe('BaseplateSizePicker', () => {
 
     fireEvent.keyDown(group, { key: 'ArrowUp' })
 
-    expect(useBuildStore.getState().baseplateSize).toBe(SUPPORTED_BASEPLATE_SIZES[0])
+    expect(useBuildStore.getState().baseplateSize).toBe(
+      SUPPORTED_BASEPLATE_SIZES[0],
+    )
   })
 
   it('jumps to first size with Home', () => {
-    seedStore({ baseplateSize: SUPPORTED_BASEPLATE_SIZES[SUPPORTED_BASEPLATE_SIZES.length - 1] })
+    seedStore({
+      baseplateSize:
+        SUPPORTED_BASEPLATE_SIZES[SUPPORTED_BASEPLATE_SIZES.length - 1],
+    })
     render(<BaseplateSizePicker />)
     const group = screen.getByRole('radiogroup')
 
     fireEvent.keyDown(group, { key: 'Home' })
 
-    expect(useBuildStore.getState().baseplateSize).toBe(SUPPORTED_BASEPLATE_SIZES[0])
+    expect(useBuildStore.getState().baseplateSize).toBe(
+      SUPPORTED_BASEPLATE_SIZES[0],
+    )
   })
 
   it('jumps to last size with End', () => {
