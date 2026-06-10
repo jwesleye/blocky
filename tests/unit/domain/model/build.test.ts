@@ -333,7 +333,14 @@ describe('safeParseBuild', () => {
       version: 1,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
       bricks: [
-        { partId: 'brick-1x1', color: 'red', x: BASEPLATE_SIZE_STUDS, y: 0, z: 0, rot: 0 },
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: BASEPLATE_SIZE_STUDS,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
       ],
     })
 
@@ -380,15 +387,20 @@ describe('safeParseBuild', () => {
     const atMinEdge = JSON.stringify({
       version: 1,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
-      bricks: [
-        { partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
-      ],
+      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 }],
     })
     const atMaxEdge = JSON.stringify({
       version: 1,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
       bricks: [
-        { partId: 'brick-1x1', color: 'red', x: BASEPLATE_SIZE_STUDS - 1, y: 0, z: BASEPLATE_SIZE_STUDS - 1, rot: 0 },
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: BASEPLATE_SIZE_STUDS - 1,
+          y: 0,
+          z: BASEPLATE_SIZE_STUDS - 1,
+          rot: 0,
+        },
       ],
     })
 
