@@ -1,7 +1,7 @@
 import type { PlacedBrick } from '@/domain/model/types'
 
 export const STUD_SCENE_UNIT = 1
-export const PLATE_SCENE_UNIT = 0.4
+export const PLATE_SCENE_UNIT = 1
 
 export interface PartDims {
   w: number

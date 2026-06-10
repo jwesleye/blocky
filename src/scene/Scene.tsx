@@ -191,9 +191,9 @@ export function Scene() {
           const normal = event.face?.normal
           if ((normal?.y ?? 0) > 0.9) {
             setGhostGrid({
-              x: brick.x,
+              x: Math.round(event.point.x / STUD),
               y: brick.y + part.height,
-              z: brick.z,
+              z: Math.round(event.point.z / STUD),
             })
             return
           }
