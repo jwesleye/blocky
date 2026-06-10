@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import {
   translateBrick,
   findCollisions,

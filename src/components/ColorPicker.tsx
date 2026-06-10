@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react'
-import { BRICK_COLORS } from '@/domain/model/colors'
+import { COLOR_PALETTE } from '@/domain/parts/colors'
 
 interface ColorPickerProps {
   selected: string
@@ -11,18 +11,18 @@ export function ColorPicker({ selected, onSelect }: ColorPickerProps) {
     let nextIndex: number | null = null
 
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      nextIndex = (currentIndex + 1) % BRICK_COLORS.length
+      nextIndex = (currentIndex + 1) % COLOR_PALETTE.length
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      nextIndex = (currentIndex - 1 + BRICK_COLORS.length) % BRICK_COLORS.length
+      nextIndex = (currentIndex - 1 + COLOR_PALETTE.length) % COLOR_PALETTE.length
     } else if (e.key === 'Home') {
       nextIndex = 0
     } else if (e.key === 'End') {
-      nextIndex = BRICK_COLORS.length - 1
+      nextIndex = COLOR_PALETTE.length - 1
     }
 
     if (nextIndex !== null) {
       e.preventDefault()
-      const nextColor = BRICK_COLORS[nextIndex]
+      const nextColor = COLOR_PALETTE[nextIndex]
       onSelect(nextColor.id)
       // Focus the next button
       const buttons = e.currentTarget.parentElement?.querySelectorAll('button')
@@ -32,20 +32,20 @@ export function ColorPicker({ selected, onSelect }: ColorPickerProps) {
 
   return (
     <div className="color-picker" role="radiogroup" aria-label="Brick color">
-      {BRICK_COLORS.map((color, index) => (
+      {COLOR_PALETTE.map((color, index) => (
         <button
           key={color.id}
           role="radio"
           aria-checked={selected === color.id}
-          aria-label={color.name}
-          title={color.name}
+          aria-label={color.label}
+          title={color.label}
           tabIndex={selected === color.id ? 0 : -1}
           className={`color-swatch${selected === color.id ? ' color-swatch--selected' : ''}`}
           style={{ backgroundColor: color.hex }}
           onClick={() => onSelect(color.id)}
           onKeyDown={(e) => handleKeyDown(e, index)}
         >
-          <span className="color-swatch__label">{color.name}</span>
+          <span className="color-swatch__label">{color.label}</span>
         </button>
       ))}
     </div>

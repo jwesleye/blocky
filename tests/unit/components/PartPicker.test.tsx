@@ -12,13 +12,20 @@ describe('PartPicker', () => {
     )
   })
 
-  it('renders a button for every part in the catalog', () => {
+  it('renders a button for every inventory part in the catalog', () => {
     render(<PartPicker selected="brick-2x4" onSelect={() => undefined} />)
     expect(screen.getByRole('radio', { name: 'Tile 1×1' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Slope 2×1' })).toBeInTheDocument()
     expect(
       screen.getByRole('radio', { name: 'Round Brick 1×1' }),
     ).toBeInTheDocument()
+  })
+
+  it('does not render the baseplate as an inventory option', () => {
+    render(<PartPicker selected="brick-2x4" onSelect={() => undefined} />)
+    expect(
+      screen.queryByRole('radio', { name: 'Baseplate 32×32' }),
+    ).not.toBeInTheDocument()
   })
 
   it('calls onSelect with the part id when a part button is clicked', () => {

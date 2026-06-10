@@ -1,5 +1,5 @@
 import type { PlacedBrick } from '../model/types'
-import { PART_CATALOG } from '../parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '../parts/catalog'
 import { buildConnectionGraph } from './graph'
 import { getFloatingBricks } from './grounding'
 import { isBalanced } from './balance'

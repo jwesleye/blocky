@@ -8,7 +8,7 @@ import {
 import { createBrickId } from '@/domain/model/ids'
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { buildConnectionGraph } from '@/domain/physics/graph'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 
 /**
  * Build JSON schema and (de)serialization helpers.

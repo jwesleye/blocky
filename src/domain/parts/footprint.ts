@@ -1,5 +1,5 @@
 import type { PlacedBrick } from '../model/types'
-import type { PartDef } from './catalog'
+import type { PhysicsPartDef as PartDef } from './catalog'
 import type { PartCatalog } from './catalog'
 import type { BrickFootprint } from '../physics/placement'
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildConnectionGraph } from '@/domain/physics/graph'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import type { PlacedBrick } from '@/domain/model/types'
 
 describe('buildConnectionGraph', () => {

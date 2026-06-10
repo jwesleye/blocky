@@ -17,7 +17,7 @@ import {
   createCollapseTransaction,
   type CollapseTransaction,
 } from '@/domain/physics'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 
 export interface BuildActions {

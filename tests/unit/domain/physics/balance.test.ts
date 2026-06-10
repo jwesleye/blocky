@@ -6,7 +6,7 @@ import {
   isBalanced,
 } from '@/domain/physics/balance'
 import type { PlacedBrick } from '@/domain/model/types'
-import { PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 
 function sortPoints(points: ReadonlyArray<readonly [number, number]>) {
   return [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1])

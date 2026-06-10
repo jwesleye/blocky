@@ -27,9 +27,9 @@ describe('BRICK_COLORS', () => {
     expect(BRICK_COLORS).toHaveLength(14)
   })
 
-  it('exposes a non-empty name for every color (color names not color-only)', () => {
+  it('exposes a non-empty label for every color (color labels not color-only)', () => {
     for (const color of BRICK_COLORS) {
-      expect(color.name.length).toBeGreaterThan(0)
+      expect(color.label.length).toBeGreaterThan(0)
     }
   })
 
@@ -45,7 +45,7 @@ describe('getBrickColor', () => {
   it('returns the color object for a known id', () => {
     const color = getBrickColor('red')
     expect(color).toBeDefined()
-    expect(color?.name).toBe('Red')
+    expect(color?.label).toBe('Red')
   })
 
   it('returns undefined for an unknown id', () => {
