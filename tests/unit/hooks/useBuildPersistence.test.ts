@@ -22,6 +22,42 @@ const resetStore = () => {
   temporal.resume()
 }
 
+type FakeFile = { text: () => Promise<string> }
+
+function makeMockInput() {
+  let handleChange:
+    | ((event: { target: { files: FakeFile[] } }) => Promise<void>)
+    | null = null
+
+  const input = {
+    type: '',
+    accept: '',
+    click: vi.fn(),
+    set onchange(fn: typeof handleChange) {
+      handleChange = fn
+    },
+    get onchange() {
+      return handleChange
+    },
+  }
+
+  const originalCreateElement = document.createElement.bind(document)
+  vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+    if (tagName === 'input') return input as unknown as HTMLInputElement
+    return originalCreateElement(tagName)
+  })
+
+  async function triggerChange(fileText: string) {
+    await act(async () => {
+      await handleChange?.({
+        target: { files: [{ text: async () => fileText }] },
+      })
+    })
+  }
+
+  return { input, triggerChange }
+}
+
 describe('useBuildPersistence', () => {
   beforeEach(() => {
     resetStore()
@@ -109,30 +145,49 @@ describe('useBuildPersistence', () => {
       48,
     )
 
-    let handleChange:
-      | ((event: {
-          target: { files: Array<{ text: () => Promise<string> }> }
-        }) => Promise<void>)
-      | null = null
+    const { input, triggerChange } = makeMockInput()
+    const { result } = renderHook(() => useBuildPersistence())
+    let importPromise: Promise<void>
+    await act(async () => {
+      importPromise = result.current.importFromJSON()
+    })
 
-    const input = {
-      type: '',
-      accept: '',
-      click: vi.fn(),
-      set onchange(fn) {
-        handleChange = fn
-      },
-      get onchange() {
-        return handleChange
-      },
-    }
+    expect(input.click).toHaveBeenCalledTimes(1)
 
-    const originalCreateElement = document.createElement.bind(document)
-    vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
-      if (tagName === 'input') {
-        return input as unknown as HTMLInputElement
-      }
-      return originalCreateElement(tagName)
+    await triggerChange(JSON.stringify(build))
+    await importPromise!
+
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(1)
+    expect(useBuildStore.getState().baseplateSize).toBe(48)
+  })
+
+  it('alerts and does not update store when JSON is malformed', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    const { triggerChange } = makeMockInput()
+
+    const { result } = renderHook(() => useBuildPersistence())
+    let importPromise: Promise<void>
+    await act(async () => {
+      importPromise = result.current.importFromJSON()
+    })
+
+    await triggerChange('{not json')
+    await importPromise!
+
+    expect(alertSpy).toHaveBeenCalledOnce()
+    expect(alertSpy.mock.calls[0]?.[0]).toMatch(/Invalid build file/)
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
+  })
+
+  it('alerts and does not update store when JSON fails schema validation', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    const { triggerChange } = makeMockInput()
+
+    // version 99 is not in the valid version union, so validateBuild rejects it
+    const schemaInvalid = JSON.stringify({
+      version: 99,
+      baseplate: { size: 32 },
+      bricks: [],
     })
 
     const { result } = renderHook(() => useBuildPersistence())
@@ -141,24 +196,11 @@ describe('useBuildPersistence', () => {
       importPromise = result.current.importFromJSON()
     })
 
-    expect(input.click).toHaveBeenCalledTimes(1)
-    expect(handleChange).not.toBeNull()
-
-    await act(async () => {
-      await handleChange?.({
-        target: {
-          files: [
-            {
-              text: async () => JSON.stringify(build),
-            },
-          ],
-        },
-      })
-    })
-
+    await triggerChange(schemaInvalid)
     await importPromise!
 
-    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(1)
-    expect(useBuildStore.getState().baseplateSize).toBe(48)
+    expect(alertSpy).toHaveBeenCalledOnce()
+    expect(alertSpy.mock.calls[0]?.[0]).toMatch(/Invalid build file/)
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
   })
 })
