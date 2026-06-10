@@ -84,7 +84,9 @@ describe('useBuildPersistence.loadFromShareUrl', () => {
 
     let applied = false
     // renderHook callbacks are stable; invoke the load action with the search.
-    applied = result.current.loadFromShareUrl(search)
+    act(() => {
+      applied = result.current.loadFromShareUrl(search)
+    })
     expect(applied).toBe(true)
 
     const bricks = Object.values(useBuildStore.getState().bricks)
@@ -105,9 +107,12 @@ describe('useBuildPersistence.loadFromShareUrl', () => {
   it('leaves the build untouched for a malformed share URL', () => {
     const { result } = renderHook(() => useBuildPersistence())
 
-    const applied = result.current.loadFromShareUrl(
-      `?${SHARE_URL_PARAM}=not-decompressible`,
-    )
+    let applied = false
+    act(() => {
+      applied = result.current.loadFromShareUrl(
+        `?${SHARE_URL_PARAM}=not-decompressible`,
+      )
+    })
 
     expect(applied).toBe(false)
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(0)
@@ -116,7 +121,11 @@ describe('useBuildPersistence.loadFromShareUrl', () => {
   it('returns false when the URL carries no share token', () => {
     const { result } = renderHook(() => useBuildPersistence())
 
-    expect(result.current.loadFromShareUrl('?foo=bar')).toBe(false)
+    let applied = true
+    act(() => {
+      applied = result.current.loadFromShareUrl('?foo=bar')
+    })
+    expect(applied).toBe(false)
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(0)
   })
 })

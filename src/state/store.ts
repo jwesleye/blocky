@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { temporal } from 'zundo'
 import type { TemporalState } from 'zundo'
 import { subscribeWithSelector } from 'zustand/middleware'
+import type { StoreApi } from 'zustand/vanilla'
 import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
@@ -97,9 +98,7 @@ export interface CollapseSlice {
 export type BuildStore = BuildState & BuildActions & CollapseSlice
 
 export interface BuildStoreWithTemporal extends BuildStore {
-  temporal: {
-    getState: () => TemporalState<Partial<BuildState>>
-  }
+  temporal: StoreApi<TemporalState<Partial<BuildState>>>
 }
 
 export const useBuildStore = create<BuildStore>()(
