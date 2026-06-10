@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import { Vector3, type PerspectiveCamera } from 'three'
 
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
@@ -92,6 +93,34 @@ function Baseplate({
   )
 }
 
+function ThreeDevExpose() {
+  const { camera, gl } = useThree()
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      window.__blockyCamera = camera as PerspectiveCamera
+      window.__blockyProjectToCanvas = (worldX, worldY, worldZ) => {
+        const point = new Vector3(worldX, worldY, worldZ).project(
+          camera as PerspectiveCamera,
+        )
+        const rect = gl.domElement.getBoundingClientRect()
+        return {
+          x: rect.left + ((point.x + 1) / 2) * rect.width,
+          y: rect.top + ((-point.y + 1) / 2) * rect.height,
+        }
+      }
+    }
+
+    return () => {
+      if (import.meta.env.DEV) {
+        delete window.__blockyProjectToCanvas
+      }
+    }
+  }, [camera, gl])
+
+  return null
+}
+
 /**
  * Renders the live build as static meshes, overlays the ghost placement cursor,
  * and runs the Rapier collapse simulation while a collapse is in flight.
@@ -103,11 +132,14 @@ export function Scene() {
   const completeCollapse = useBuildStore((state) => state.completeCollapse)
   const placeBrick = useBuildStore((state) => state.placeBrick)
   const deleteBrick = useBuildStore((state) => state.deleteBrick)
+  const recolorBrick = useBuildStore((state) => state.recolorBrick)
   const partId = useCursorStore((state) => state.partId)
   const colorId = useCursorStore((state) => state.colorId)
   const rot = useCursorStore((state) => state.rot)
   const offset = useCursorStore((state) => state.offset)
   const rotate = useCursorStore((state) => state.rotate)
+  const editingTool = useCursorStore((state) => state.editingTool)
+  const sampleBrick = useCursorStore((state) => state.sampleBrick)
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
 
   useEffect(() => {
@@ -133,6 +165,7 @@ export function Scene() {
   }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot, offset])
 
   const handlePlace = () => {
+    if (editingTool !== 'place') return
     if (!ghostGrid || !ghostValid) return
     placeBrick({
       partId,
@@ -143,6 +176,18 @@ export function Scene() {
       rot,
       offset,
     })
+  }
+
+  const handleBrickClick = (brickId: string) => {
+    if (editingTool === 'paint') {
+      recolorBrick(brickId, colorId)
+      return
+    }
+
+    if (editingTool === 'eyedropper') {
+      const brick = bricks[brickId]
+      if (brick) sampleBrick(brick)
+    }
   }
 
   return (
@@ -173,6 +218,7 @@ export function Scene() {
         enableZoom
         target={CAMERA_DEFAULT_TARGET}
       />
+      <ThreeDevExpose />
       <Baseplate size={baseplateSize} onPointerMove={setGhostGrid} />
       <InstancedBricks
         bricks={placedBricks}
@@ -189,6 +235,12 @@ export function Scene() {
           }
         }}
         getColor={(color) => getBrickColor(color)?.hex ?? color}
+        onInstanceClick={(brick, event) => {
+          event.stopPropagation()
+          if (editingTool !== 'place' && brick.id) {
+            handleBrickClick(brick.id)
+          }
+        }}
         onInstancePointerMove={(brick, event) => {
           event.stopPropagation()
           const part = PART_CATALOG[brick.partId]

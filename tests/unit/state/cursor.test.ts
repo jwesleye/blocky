@@ -1,22 +1,25 @@
-import { describe, expect, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useCursorStore } from '@/state/cursor'
 import { DEFAULT_COLOR_ID } from '@/domain/model/colors'
 import { DEFAULT_PART_ID } from '@/domain/parts/catalog'
 
-describe('useCursorStore', () => {
-  beforeEach(() => {
-    useCursorStore.setState({
-      colorId: DEFAULT_COLOR_ID,
+const resetCursor = () => {
+  useCursorStore.setState({
+    colorId: DEFAULT_COLOR_ID,
+    partId: DEFAULT_PART_ID,
+    rot: 0,
+    rotation: 0,
+    cursorBrick: {
       partId: DEFAULT_PART_ID,
+      colorId: DEFAULT_COLOR_ID,
       rot: 0,
-      rotation: 0,
-      cursorBrick: {
-        partId: DEFAULT_PART_ID,
-        colorId: DEFAULT_COLOR_ID,
-        rot: 0,
-      },
-    })
+    },
+    editingTool: 'place',
   })
+}
+
+describe('useCursorStore', () => {
+  beforeEach(resetCursor)
 
   it('initializes with default values', () => {
     const state = useCursorStore.getState()
@@ -83,5 +86,63 @@ describe('useCursorStore', () => {
     useCursorStore.getState().toggleOffset()
     expect(useCursorStore.getState().offset).toBeUndefined()
     expect(useCursorStore.getState().cursorBrick.offset).toBeUndefined()
+  })
+
+  describe('editingTool', () => {
+    it('defaults to place', () => {
+      expect(useCursorStore.getState().editingTool).toBe('place')
+    })
+
+    it('setEditingTool switches to paint', () => {
+      useCursorStore.getState().setEditingTool('paint')
+      expect(useCursorStore.getState().editingTool).toBe('paint')
+    })
+
+    it('setEditingTool switches to eyedropper', () => {
+      useCursorStore.getState().setEditingTool('eyedropper')
+      expect(useCursorStore.getState().editingTool).toBe('eyedropper')
+    })
+
+    it('setEditingTool switches back to place', () => {
+      useCursorStore.getState().setEditingTool('paint')
+      useCursorStore.getState().setEditingTool('place')
+      expect(useCursorStore.getState().editingTool).toBe('place')
+    })
+  })
+
+  describe('sampleBrick', () => {
+    it('copies partId and color into cursor state without changing rot', () => {
+      useCursorStore.getState().sampleBrick({
+        partId: 'plate-1x1',
+        color: 'green',
+      })
+      const state = useCursorStore.getState()
+      expect(state.partId).toBe('plate-1x1')
+      expect(state.colorId).toBe('green')
+      expect(state.cursorBrick.partId).toBe('plate-1x1')
+      expect(state.cursorBrick.colorId).toBe('green')
+      expect(state.rot).toBe(0)
+      expect(state.rotation).toBe(0)
+    })
+
+    it('does not change editingTool when sampling', () => {
+      useCursorStore.getState().setEditingTool('eyedropper')
+      useCursorStore.getState().sampleBrick({
+        partId: 'plate-1x1',
+        color: 'green',
+      })
+      expect(useCursorStore.getState().editingTool).toBe('eyedropper')
+    })
+
+    it('setColor and setPart remain independent after sampleBrick', () => {
+      useCursorStore.getState().sampleBrick({
+        partId: 'plate-1x1',
+        color: 'green',
+      })
+      useCursorStore.getState().setColor('red')
+      const state = useCursorStore.getState()
+      expect(state.colorId).toBe('red')
+      expect(state.partId).toBe('plate-1x1')
+    })
   })
 })
