@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
@@ -96,17 +96,13 @@ describe('gallery store resource bounds', () => {
     },
   )
 
-  it(
-    'never stores more builds than the configured cap',
-    { timeout: 30000 },
-    () => {
-      for (let index = 0; index < MAX_STORED_BUILDS * 2; index += 1) {
-        const buildId = generateBuildId()
-        storeBuild(makePayload(buildId))
-        expect(listBuilds().length).toBeLessThanOrEqual(MAX_STORED_BUILDS)
-      }
-    },
-  )
+  it('never stores more builds than the configured cap', () => {
+    for (let index = 0; index < MAX_STORED_BUILDS * 2; index += 1) {
+      const buildId = generateBuildId()
+      storeBuild(makePayload(buildId))
+      expect(listBuilds().length).toBeLessThanOrEqual(MAX_STORED_BUILDS)
+    }
+  })
 
   it('evicts the oldest deleted tombstone when the delete cap is exceeded', () => {
     const deletedIds: string[] = []
@@ -126,6 +122,15 @@ describe('gallery store resource bounds', () => {
 })
 
 describe('gallery store durability', () => {
+  it('does not create a store file when only generating a build id', () => {
+    const buildId = generateBuildId()
+    const dataDir = process.env['GALLERY_DATA_DIR']
+
+    expect(buildId).toMatch(/^build_/)
+    expect(dataDir).toBeDefined()
+    expect(existsSync(join(dataDir as string, 'store.json'))).toBe(false)
+  })
+
   it('reloads stored builds from disk without changing server-owned fields', () => {
     const buildId = generateBuildId()
     const payload = makePayload(buildId)
@@ -138,6 +143,7 @@ describe('gallery store durability', () => {
 
   it('persists the build id counter across reloads', () => {
     const firstId = generateBuildId()
+    storeBuild(makePayload(firstId))
 
     reloadStore()
     const secondId = generateBuildId()
