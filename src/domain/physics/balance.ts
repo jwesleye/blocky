@@ -1,5 +1,3 @@
-import type Graph from 'graphology'
-import { connectedComponents } from 'graphology-components'
 import { polygonContains, polygonHull } from 'd3-polygon'
 import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
@@ -63,7 +61,7 @@ export function computeSupportFootprint(
 
   const hull = polygonHull(supportCorners)
   if (!hull) {
-    // Degenerate (all points collinear): check bounding box
+    // Degenerate (all points collinear): check bounding box.
     const xs = supportCorners.map((c) => c[0])
     const zs = supportCorners.map((c) => c[1])
     const minX = Math.min(...xs)
@@ -104,7 +102,7 @@ export function computeCoM(
     const cx = cells.reduce((s, c) => s + c.x + 0.5, 0) / cells.length + ox
     const cz = cells.reduce((s, c) => s + c.z + 0.5, 0) / cells.length + oz
 
-    // For y, it's the vertical center of the brick
+    // For y, it's the vertical center of the brick.
     const cy = brick.y + def.height / 2
 
     comX += cx * mass
@@ -134,9 +132,7 @@ export function isBalanced(
 
   const footprint = computeSupportFootprint(component, catalog)
   if (footprint.length === 0) {
-    // If it has no footprint (not on the ground), we consider it unbalanced
-    // unless floating objects are handled elsewhere. But for `isBalanced` logic,
-    // a floating object isn't supported, so it's not balanced on the ground.
+    // A floating object is unsupported for ground-balance checks.
     return false
   }
 
@@ -146,38 +142,4 @@ export function isBalanced(
     polygonContains(footprint, projection) ||
     isPointOnPolygonBoundary(projection, footprint)
   )
-}
-
-/**
- * Returns the IDs of all bricks that belong to an unbalanced connected
- * component. For Phase 1 MVP the whole component topples (no smart shear).
- */
-export function getUnbalancedBricks(
-  bricks: PlacedBrick[],
-  graph: Graph,
-  catalog: PartCatalog,
-): Set<string> {
-  const brickById = new Map<string, PlacedBrick>()
-  for (const brick of bricks) brickById.set(brick.id, brick)
-
-  const unbalanced = new Set<string>()
-  const components = connectedComponents(graph)
-
-  for (const component of components) {
-    const componentBricks = component
-      .map((id) => brickById.get(id)!)
-      .filter(Boolean)
-
-    // Skip floating components — grounding handles those
-    const isGrounded = componentBricks.some((b) => b.y === 0)
-    if (!isGrounded) continue
-
-    if (!isBalanced(componentBricks, catalog)) {
-      for (const id of component) {
-        unbalanced.add(id)
-      }
-    }
-  }
-
-  return unbalanced
 }

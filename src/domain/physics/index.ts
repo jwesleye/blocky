@@ -4,13 +4,8 @@ export { buildConnectionGraph } from './graph'
 export { getFloatingBricks } from './grounding'
 export { findBuildInvariantViolations } from './buildInvariants'
 export type { BuildInvariantViolations } from './buildInvariants'
-export {
-  getUnbalancedBricks,
-  computeSupportFootprint,
-  computeCoM,
-  isBalanced,
-} from './balance'
-export { findShearRegion, recursiveShear } from './shear'
+export { computeSupportFootprint, computeCoM, isBalanced } from './balance'
+export { findShearRegion } from './shear'
 export {
   translateBrick,
   findCollisions,
