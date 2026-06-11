@@ -1,8 +1,13 @@
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import type { SharedBuildPayload } from './validation.js'
 import type { ReportRecord, ReportRequest } from './moderation.js'
 import { buildReportRecord } from './moderation.js'
 
 export const MAX_STORED_BUILDS = 1000
+const STORE_VERSION = 1
+const DEFAULT_DATA_DIR = resolve('backend/.gallery-data')
+const STORE_FILE_NAME = 'store.json'
 
 const builds = new Map<string, SharedBuildPayload>()
 const deleted = new Set<string>()
@@ -10,8 +15,78 @@ const reports = new Map<string, ReportRecord[]>()
 
 let counter = 0
 
+interface PersistedStore {
+  version: number
+  counter: number
+  builds: SharedBuildPayload[]
+  deleted: string[]
+  reports: Record<string, ReportRecord[]>
+}
+
+function getStoreFilePath(): string {
+  const dataDir = process.env['GALLERY_DATA_DIR']
+    ? resolve(process.env['GALLERY_DATA_DIR'])
+    : DEFAULT_DATA_DIR
+  return join(dataDir, STORE_FILE_NAME)
+}
+
+function snapshotStore(): PersistedStore {
+  return {
+    version: STORE_VERSION,
+    counter,
+    builds: Array.from(builds.values()),
+    deleted: Array.from(deleted),
+    reports: Object.fromEntries(reports.entries()),
+  }
+}
+
+function hydrateStore(state: PersistedStore): void {
+  builds.clear()
+  deleted.clear()
+  reports.clear()
+
+  counter = state.counter
+  for (const payload of state.builds) {
+    builds.set(payload.buildId, payload)
+  }
+  for (const buildId of state.deleted) {
+    deleted.add(buildId)
+  }
+  for (const [buildId, reportEntries] of Object.entries(state.reports)) {
+    reports.set(buildId, reportEntries)
+  }
+}
+
+function emptyStore(): void {
+  builds.clear()
+  deleted.clear()
+  reports.clear()
+  counter = 0
+}
+
+function persistStore(): void {
+  const storeFile = getStoreFilePath()
+  mkdirSync(dirname(storeFile), { recursive: true })
+
+  const tempFile = `${storeFile}.tmp`
+  writeFileSync(tempFile, JSON.stringify(snapshotStore()), 'utf8')
+  renameSync(tempFile, storeFile)
+}
+
+export function reloadStore(): void {
+  const storeFile = getStoreFilePath()
+  if (!existsSync(storeFile)) {
+    emptyStore()
+    return
+  }
+
+  const parsed = JSON.parse(readFileSync(storeFile, 'utf8')) as PersistedStore
+  hydrateStore(parsed)
+}
+
 export function generateBuildId(): string {
   counter += 1
+  persistStore()
   return `build_${Date.now().toString(36)}_${counter.toString(36)}`
 }
 
@@ -24,6 +99,7 @@ export function storeBuild(payload: SharedBuildPayload): void {
       reports.delete(oldestBuildId)
     }
   }
+  persistStore()
 }
 
 export function getBuild(id: string): SharedBuildPayload | undefined {
@@ -66,6 +142,7 @@ export function deleteBuild(id: string, requesterUserId: string): DeleteResult {
   }
   builds.delete(id)
   deleted.add(id)
+  persistStore()
   return { success: true }
 }
 
@@ -74,6 +151,7 @@ export function addReport(buildId: string, request: ReportRequest): void {
   const existing = reports.get(buildId) ?? []
   existing.push(record)
   reports.set(buildId, existing)
+  persistStore()
 }
 
 export function getReports(buildId: string): ReportRecord[] {
@@ -81,8 +159,8 @@ export function getReports(buildId: string): ReportRecord[] {
 }
 
 export function clearStore(): void {
-  builds.clear()
-  deleted.clear()
-  reports.clear()
-  counter = 0
+  emptyStore()
+  rmSync(getStoreFilePath(), { force: true })
 }
+
+reloadStore()

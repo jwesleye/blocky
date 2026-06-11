@@ -27,6 +27,12 @@ services:
       - '4000:4000'
     environment:
       - PORT=4000
+      - GALLERY_DATA_DIR=/data/gallery
+    volumes:
+      - gallery-backend-data:/data/gallery
     # The web service intentionally has no `depends_on: gallery-backend` so
     # the SPA starts without the backend. Local-only autosave, JSON
     # import/export, and URL sharing all work with no backend running.
+
+volumes:
+  gallery-backend-data:
