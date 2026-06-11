@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import { Vector3, type PerspectiveCamera } from 'three'
@@ -7,27 +14,45 @@ import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
 import { getBrickColor } from '@/domain/model/colors'
 import type { PlacedBrick, HalfStudOffset } from '@/domain/model/types'
-import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
+import {
+  CATALOG_BY_ID as PART_CATALOG,
+  getPart,
+  type PartType,
+} from '@/domain/parts/catalog'
 import { isValidPlacement } from '@/domain/physics/validity'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import { CameraControls } from './CameraControls'
 import { CameraRig } from './CameraRig'
 import { collapseDebug } from './collapseDebug'
+import {
+  DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
+  getSceneEnvironmentPreset,
+  type SceneEnvironmentPresetId,
+} from './environmentPresets'
 import type { RenderBrick } from './instancing'
 import { InstancedBricks } from './InstancedBricks'
-import { Lighting } from './Lighting'
-import {
-  BACKGROUND_COLOR,
-  CAMERA_DEFAULT_FOV,
-  CAMERA_DEFAULT_POSITION,
-} from './sceneConfig'
+import { getPartGeometry } from './parts/geometries'
+import { SceneEnvironment } from './SceneEnvironment'
+import { ScreenshotCaptureBridge, type CaptureScreenshot } from './ScreenshotCaptureBridge'
+import { CAMERA_DEFAULT_FOV, CAMERA_DEFAULT_POSITION } from './sceneConfig'
+
+export type { CaptureScreenshot }
 
 const CollapseSimulation = lazy(() =>
   import('./CollapseSimulation').then((m) => ({
     default: m.CollapseSimulation,
   })),
 )
+
+function toRenderPartType(partId: string): PartType | null {
+  const part = getPart(partId)
+  if (!part || part.category === 'baseplate') {
+    return null
+  }
+
+  return part.category
+}
 
 function GhostBrickMesh({
   grid,
@@ -53,8 +78,20 @@ function GhostBrickMesh({
   ]
 
   return (
-    <mesh position={position} raycast={() => null}>
-      <boxGeometry args={[width * 0.97, part.height * 0.97, depth * 0.97]} />
+    <mesh
+      name="ghost-brick"
+      position={position}
+      raycast={() => null}
+      scale={[0.97, 0.97, 0.97]}
+    >
+      <primitive
+        object={getPartGeometry(partId, {
+          w: width,
+          h: part.height,
+          d: depth,
+        })}
+        attach="geometry"
+      />
       <meshStandardMaterial
         color={valid ? '#00ee55' : '#ff3333'}
         transparent
@@ -67,10 +104,12 @@ function GhostBrickMesh({
 
 function Baseplate({
   size,
+  color,
   onPointerPos,
   onPointerEnterEmpty,
 }: {
   size: number
+  color: string
   onPointerPos: (pos: GridCoord) => void
   onPointerEnterEmpty: () => void
 }) {
@@ -95,7 +134,7 @@ function Baseplate({
       onPointerDown={updateGhost}
     >
       <planeGeometry args={[sceneSize, sceneSize]} />
-      <meshStandardMaterial color="#5a7a5a" />
+      <meshStandardMaterial color={color} />
     </mesh>
   )
 }
@@ -153,11 +192,19 @@ function brickPointerToGhostGrid(
   }
 }
 
+interface BuildSceneProps {
+  presetId?: SceneEnvironmentPresetId
+  onCaptureFnReady?: (fn: CaptureScreenshot) => void
+}
+
 /**
  * Renders the live build as static meshes, overlays the ghost placement cursor,
  * and runs the Rapier collapse simulation while a collapse is in flight.
  */
-export function BuildScene() {
+export function BuildScene({
+  presetId = DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
+  onCaptureFnReady,
+}: BuildSceneProps = {}) {
   const bricks = useBuildStore((state) => state.bricks)
   const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const activeCollapse = useBuildStore((state) => state.activeCollapse)
@@ -174,6 +221,11 @@ export function BuildScene() {
   const setHoveredBrickId = useCursorStore((state) => state.setHoveredBrickId)
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
 
+  const stableOnCaptureFnReady = useCallback(
+    (fn: CaptureScreenshot) => onCaptureFnReady?.(fn),
+    [onCaptureFnReady],
+  )
+
   useEffect(() => {
     collapseDebug.dynamicBodyCount = activeCollapse
       ? activeCollapse.collapsingBodies.length
@@ -181,6 +233,15 @@ export function BuildScene() {
   }, [activeCollapse])
 
   const placedBricks = useMemo(() => Object.values(bricks), [bricks])
+  const preset = getSceneEnvironmentPreset(presetId)
+  const renderBricks = useMemo(
+    () =>
+      placedBricks.flatMap((brick) => {
+        const partType = toRenderPartType(brick.partId)
+        return partType ? [{ ...brick, partType }] : []
+      }),
+    [placedBricks],
+  )
   const ghostValid = useMemo(() => {
     if (!ghostGrid) return false
     const ghost: PlacedBrick = {
@@ -259,6 +320,26 @@ export function BuildScene() {
             if (!part) {
               throw new Error(`unknown partId "${partId}"`)
             }
+      <SceneEnvironment presetId={presetId} />
+      <CameraRig />
+      <CameraControls />
+      <ThreeDevExpose />
+      {onCaptureFnReady && (
+        <ScreenshotCaptureBridge onReady={stableOnCaptureFnReady} />
+      )}
+      <Baseplate
+        size={baseplateSize}
+        color={preset.groundColor}
+        onPointerPos={setGhostGrid}
+        onPointerEnterEmpty={() => setHoveredBrickId(null)}
+      />
+      <InstancedBricks
+        bricks={renderBricks}
+        getDims={(partId) => {
+          const part = PART_CATALOG[partId]
+          if (!part) {
+            throw new Error(`unknown partId "${partId}"`)
+          }
 
             return {
               w: part.width,

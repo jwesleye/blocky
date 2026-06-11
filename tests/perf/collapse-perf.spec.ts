@@ -68,7 +68,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
     bricks.push({
       id: `f${i}`,
       partId: floatingPartIds[i % floatingPartIds.length] as string,
-      color: 'gray',
+      color: 'light-gray',
       // Offset far from the anchor so no stud connection forms
       x: 50 + (i % 20) * 5,
       y: 3,

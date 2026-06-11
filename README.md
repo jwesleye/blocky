@@ -98,9 +98,6 @@ docker run --rm -p 4000:4000 blocky:gallery-backend
 # http://localhost:4000
 ```
 
-> Note: the app entry point (`src/main.tsx`) and source modules are added in a
-> later step. The skeleton above is the project scaffold and configuration.
-
 ## Gallery Backend (Future Feature)
 
 The community-sharing gallery backend is a separate Node.js HTTP server in

@@ -7,6 +7,7 @@ import type { Build } from '@/domain/model/build'
 import {
   AUTOSAVE_STORAGE_KEY,
   createShareUrl,
+  loadBuild,
   saveBuild,
 } from '@/domain/persistence'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
@@ -65,6 +66,16 @@ describe('App', () => {
     expect(getByTestId('interactive-scene')).toBeTruthy()
   })
 
+  it('mirror controls have a labeled group and accessible button names', () => {
+    const { getByRole } = render(<App />)
+    expect(getByRole('group', { name: 'Mirror selection' })).toBeInTheDocument()
+    expect(
+      getByRole('button', { name: 'Mirror along X axis' }),
+    ).toBeInTheDocument()
+    expect(
+      getByRole('button', { name: 'Mirror along Z axis' }),
+    ).toBeInTheDocument()
+  })
   it('hydrates the build store from the share URL before autosave', async () => {
     const autosavedBuild = seedBuild(
       {
@@ -109,6 +120,10 @@ describe('App', () => {
         }),
       ])
       expect(useBuildStore.getState().baseplateSize).toBe(48)
+    })
+
+    await waitFor(() => {
+      expect(loadBuild()?.baseplate.size).toBe(48)
     })
   })
 

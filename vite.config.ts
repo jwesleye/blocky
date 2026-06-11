@@ -51,7 +51,11 @@ function enforceBundleBudget() {
 export default defineConfig({
   plugins: [react(), enforceBundleBudget()],
   build: {
-    chunkSizeWarningLimit: BUNDLE_ENTRY_BUDGET_KIB,
+    // Vite's chunkSizeWarningLimit is an uncompressed-size threshold. The gzip
+    // enforcement is handled by enforceBundleBudget above. Set this to a value
+    // that matches the actual uncompressed bundle size so the Rollup warning
+    // does not fire on every passing build.
+    chunkSizeWarningLimit: 3000,
   },
   resolve: {
     alias: {

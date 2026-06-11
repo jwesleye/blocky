@@ -65,4 +65,26 @@ describe('EditingToolbar', () => {
       'false',
     )
   })
+
+  it('active tool button carries a non-color visual cue: fontWeight 700 and outline', () => {
+    render(<EditingToolbar activeTool="paint" onToolChange={() => undefined} />)
+    const activeBtn = screen.getByTestId('tool-paint')
+    const inactiveBtn = screen.getByTestId('tool-place')
+
+    expect(activeBtn).toHaveStyle('font-weight: 700')
+    expect(inactiveBtn).not.toHaveStyle('font-weight: 700')
+
+    const activeOutline = activeBtn.style.outline
+    expect(activeOutline).toBeTruthy()
+    expect(activeBtn.style.outline).not.toBe('')
+  })
+
+  it('each button has an accessible name', () => {
+    render(<EditingToolbar activeTool="place" onToolChange={() => undefined} />)
+    expect(screen.getByRole('button', { name: 'Place' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Paint' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Eyedropper' }),
+    ).toBeInTheDocument()
+  })
 })

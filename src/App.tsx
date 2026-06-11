@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { BaseplateSizePicker } from '@/components/BaseplateSizePicker'
 import { ColorPicker } from '@/components/ColorPicker'
 import { EditingToolbar } from '@/components/EditingToolbar'
+import { EnvironmentPresetPicker } from '@/components/EnvironmentPresetPicker'
 import { Gallery } from '@/components/Gallery'
 import { HUD } from '@/components/HUD'
 import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { SoundToggle } from '@/components/SoundToggle'
 import { ViewControls } from '@/components/ViewControls'
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
 import { bricksToBuild, buildToBricks } from '@/domain/model/build'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
@@ -17,8 +18,11 @@ import {
   loadBuild,
   loadBuildFromShareSearch,
 } from '@/domain/persistence'
-import { BuildScene } from '@/scene/BuildScene'
+import { useScenePresetPreference } from '@/hooks/useScenePresetPreference'
+import { BuildScene, type CaptureScreenshot } from '@/scene/BuildScene'
+import { downloadScreenshot } from '@/lib/screenshotExport'
 import { useCursorStore } from '@/state/cursor'
+import { useSceneSettingsStore } from '@/state/sceneSettings'
 import { useBuildStore } from '@/state/store'
 import { TouchToolbar } from '@/components/TouchToolbar'
 import '@/styles/gallery.css'
@@ -27,8 +31,8 @@ import '@/styles/pickers.css'
 import '@/styles/responsive.css'
 
 export function App() {
-  const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
-  const [galleryOpen, setGalleryOpen] = useState(false)
+  const brickMap = useBuildStore((state) => state.bricks)
+  const bricks = Object.values(brickMap)
 
   const colorId = useCursorStore((s) => s.colorId)
   const partId = useCursorStore((s) => s.partId)
@@ -39,8 +43,10 @@ export function App() {
 
   const bricksById = useBuildStore((state) => state.bricks)
   const bricks = Object.values(bricksById)
+  const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
+  const selectedPresetId = useSceneSettingsStore((s) => s.selectedPresetId)
   const autosaverRef = useRef(createAutosaver())
   const [hasHydratedPersistence, setHasHydratedPersistence] = useState(false)
 
@@ -67,8 +73,9 @@ export function App() {
 
   useEffect(() => {
     if (!hasHydratedPersistence) return
-    autosaverRef.current.schedule(bricksToBuild(bricks, BASEPLATE_SIZE_STUDS))
-  }, [bricks, hasHydratedPersistence])
+    assertSupportedBaseplateSize(baseplateSize)
+    autosaverRef.current.schedule(bricksToBuild(bricks, baseplateSize))
+  }, [baseplateSize, bricks, hasHydratedPersistence])
 
   useEffect(() => {
     const autosaver = autosaverRef.current
@@ -78,8 +85,10 @@ export function App() {
     }
   }, [])
 
-  const currentColor = getBrickColor(colorId)
-  const currentPart = getPart(partId)
+  const handleCaptureFnReady = useCallback((fn: CaptureScreenshot) => {
+    captureScreenshotRef.current = fn
+    setIsCaptureReady(true)
+  }, [])
 
   const handleMirror = (axis: 'x' | 'z') => {
     const ok = mirrorSelection(axis)
@@ -176,6 +185,22 @@ export function App() {
           <BaseplateSizePicker />
         </div>
 
+        <div style={{ borderBottom: '1px solid #333' }}>
+          <div
+            style={{
+              padding: '8px 8px 0',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#888',
+            }}
+          >
+            Environment
+          </div>
+          <EnvironmentPresetPicker />
+        </div>
+
         <div
           style={{
             flex: 1,
@@ -233,11 +258,16 @@ export function App() {
           >
             Transform
           </div>
-          <div style={{ padding: '4px 8px 4px', display: 'flex', gap: 4 }}>
+          <div
+            role="group"
+            aria-label="Mirror selection"
+            style={{ padding: '4px 8px 4px', display: 'flex', gap: 4 }}
+          >
             <button
               onClick={() => handleMirror('x')}
               disabled={selectionSize === 0}
               data-testid="mirror-x"
+              aria-label="Mirror along X axis"
               style={{ flex: 1, padding: '4px 0', cursor: 'pointer' }}
             >
               Mirror X
@@ -246,6 +276,7 @@ export function App() {
               onClick={() => handleMirror('z')}
               disabled={selectionSize === 0}
               data-testid="mirror-z"
+              aria-label="Mirror along Z axis"
               style={{ flex: 1, padding: '4px 0', cursor: 'pointer' }}
             >
               Mirror Z
@@ -280,13 +311,16 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <BuildScene />
+          <BuildScene
+            presetId={selectedPresetId}
+            onCaptureFnReady={handleCaptureFnReady}
+          />
           <ViewControls />
           <HUD />
           <TouchToolbar />
         </div>
         <div style={{ padding: '1rem' }}>
-          <PersistenceControls />
+          <PersistenceControls onExportScreenshot={handleExportScreenshot} />
           <button
             type="button"
             className="gallery-toggle"
