@@ -1,4 +1,5 @@
 import {
+  BufferAttribute,
   BoxGeometry,
   BufferGeometry,
   ConeGeometry,
@@ -72,6 +73,66 @@ function createSlopeGeometry(dims: PartDims) {
   return geometry
 }
 
+function createInvertedSlopeGeometry(dims: PartDims) {
+  const profile = new Shape()
+  profile.moveTo(-dims.w / 2, -dims.h / 2)
+  profile.lineTo(-dims.w / 2, dims.h / 2)
+  profile.lineTo(dims.w / 2, dims.h / 2)
+  profile.lineTo(-dims.w / 2, -dims.h / 2)
+
+  const geometry = new ExtrudeGeometry(profile, {
+    depth: dims.d,
+    bevelEnabled: false,
+    curveSegments: 1,
+    steps: 1,
+  })
+  geometry.translate(0, 0, -dims.d / 2)
+  return geometry
+}
+
+function createCornerSlopeGeometry(dims: PartDims) {
+  const xMin = -dims.w / 2
+  const xMax = dims.w / 2
+  const yMin = -dims.h / 2
+  const yMax = dims.h / 2
+  const zMin = -dims.d / 2
+  const zMax = dims.d / 2
+
+  const vertices = new Float32Array([
+    xMin,
+    yMin,
+    zMin,
+    xMax,
+    yMin,
+    zMin,
+    xMax,
+    yMin,
+    zMax,
+    xMin,
+    yMin,
+    zMax,
+    xMin,
+    yMax,
+    zMin,
+    xMin,
+    yMax,
+    zMax,
+    xMax,
+    yMax,
+    zMin,
+  ])
+
+  const indices = [
+    0, 3, 2, 0, 2, 1, 0, 4, 5, 0, 5, 3, 0, 1, 6, 0, 6, 4, 3, 5, 2, 1, 2, 6, 4,
+    6, 5,
+  ]
+
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(vertices, 3))
+  geometry.setIndex(indices)
+  return geometry
+}
+
 function createGeometry(partId: string, dims: PartDims) {
   const part = getPartDef(partId)
   if (!part) {
@@ -99,6 +160,19 @@ function createGeometry(partId: string, dims: PartDims) {
     dims.h === 3
   ) {
     return createSlopeGeometry(dims)
+  }
+
+  if (
+    partId === 'slope-corner' &&
+    dims.w === 2 &&
+    dims.d === 2 &&
+    dims.h === 3
+  ) {
+    return createCornerSlopeGeometry(dims)
+  }
+
+  if (partId === 'slope-inverted' && dims.w === 2 && dims.h === 3) {
+    return createInvertedSlopeGeometry(dims)
   }
 
   return createBoxGeometry(dims)
