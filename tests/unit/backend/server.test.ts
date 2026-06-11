@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import type { Server } from 'node:http'
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest'
-import { handler, MAX_BODY_BYTES } from '../../../backend/src/server'
+import { handler, MAX_REQUEST_BODY_BYTES } from '../../../backend/src/server'
 import {
   clearStore,
   storeBuild,
@@ -102,7 +102,7 @@ describe('POST /builds — publish', () => {
       gallery: validGallery,
     })
     expect(Buffer.byteLength(requestBody, 'utf8')).toBeLessThanOrEqual(
-      MAX_BODY_BYTES,
+      MAX_REQUEST_BODY_BYTES,
     )
 
     const res = await req('/builds', {
@@ -120,9 +120,10 @@ describe('POST /builds — publish', () => {
     const res = await req('/builds', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: 'x'.repeat(MAX_BODY_BYTES + 1),
+      body: 'x'.repeat(MAX_REQUEST_BODY_BYTES + 1),
     })
     expect(res.status).toBe(413)
+    await expect(res.json()).resolves.toEqual({ error: 'Payload Too Large' })
   })
 
   it('returns 422 for invalid publish payload', async () => {
@@ -312,9 +313,10 @@ describe('POST /builds/:id/reports — report', () => {
     const res = await req(`/builds/${payload.buildId}/reports`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: 'x'.repeat(MAX_BODY_BYTES + 1),
+      body: 'x'.repeat(MAX_REQUEST_BODY_BYTES + 1),
     })
     expect(res.status).toBe(413)
+    await expect(res.json()).resolves.toEqual({ error: 'Payload Too Large' })
   })
 
   it('returns 404 for an unknown build id', async () => {

@@ -21,7 +21,7 @@ import type { SharedBuildPayload } from './validation.js'
 
 const PORT = process.env['PORT'] ? parseInt(process.env['PORT']) : 4000
 
-export const MAX_BODY_BYTES = 1_048_576
+export const MAX_REQUEST_BODY_BYTES = 1024 * 1024
 
 class BodyTooLargeError extends Error {
   constructor() {
@@ -46,7 +46,7 @@ function sendJSON(res: ServerResponse, status: number, body: unknown): void {
 
 function sendBodyTooLarge(req: IncomingMessage, res: ServerResponse): void {
   res.once('finish', () => req.destroy())
-  sendJSON(res, 413, { error: 'Request body too large' })
+  sendJSON(res, 413, { error: 'Payload Too Large' })
 }
 
 async function readBody(req: IncomingMessage): Promise<string> {
@@ -60,7 +60,7 @@ async function readBody(req: IncomingMessage): Promise<string> {
         return
       }
       totalBytes += chunk.byteLength
-      if (totalBytes > MAX_BODY_BYTES) {
+      if (totalBytes > MAX_REQUEST_BODY_BYTES) {
         bodyTooLarge = true
         req.pause()
         reject(new BodyTooLargeError())
