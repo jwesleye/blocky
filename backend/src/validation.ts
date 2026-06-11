@@ -1,6 +1,11 @@
 import { z } from 'zod'
 
-const buildVersionSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
+const buildVersionSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+])
 
 const rotationSchema = z.union([
   z.literal(0),
@@ -21,6 +26,8 @@ const brickMountSchema = z.union([
   z.literal('nz'),
 ])
 
+const brickHingeSchema = z.union([z.literal('x'), z.literal('z')])
+
 const serializedBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
@@ -30,6 +37,7 @@ const serializedBrickSchema = z.object({
   rot: rotationSchema,
   offset: halfStudOffsetSchema.optional(),
   mount: brickMountSchema.optional(),
+  hinge: brickHingeSchema.optional(),
 })
 
 // Must match SUPPORTED_BASEPLATE_SIZES from the frontend contract.
@@ -99,6 +107,14 @@ const BuildSchema = z
           code: z.ZodIssueCode.custom,
           path: ['bricks', index, 'mount'],
           message: `mount requires version 3; envelope is version ${build.version}`,
+        })
+      }
+
+      if (brick.hinge !== undefined && build.version < 4) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'hinge'],
+          message: `hinge requires version 4; envelope is version ${build.version}`,
         })
       }
     }

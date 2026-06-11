@@ -193,3 +193,97 @@ describe('backend PublishRequestSchema mount contract', () => {
     expect(PublishRequestSchema.safeParse(request).success).toBe(false)
   })
 })
+
+describe('backend PublishRequestSchema hinge contract', () => {
+  it('accepts a version 4 build whose brick includes hinge x', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 4 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            hinge: 'x' as const,
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(true)
+  })
+
+  it('accepts a version 4 build whose brick includes hinge z', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 4 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            hinge: 'z' as const,
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(true)
+  })
+
+  it('rejects a version 4 build whose brick includes an unknown hinge value', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 4 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            hinge: 'y',
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects hinge on a version 3 build', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 3 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            hinge: 'x' as const,
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+})
