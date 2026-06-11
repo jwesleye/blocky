@@ -1,11 +1,16 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { bricksOutsideBaseplate } from '@/domain/physics'
 import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import { BUILD_SCHEMA_VERSION, deserialize, serialize } from '@/state/schema'
+import { playSoundEffect } from '@/lib/soundEffects'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
+
+vi.mock('@/lib/soundEffects', () => ({
+  playSoundEffect: vi.fn(),
+}))
 
 const sampleBrick: Omit<PlacedBrick, 'id'> = {
   partId: 'brick-2x4',
@@ -36,6 +41,7 @@ const resetStore = () => {
   })
   temporal.clear()
   temporal.resume()
+  vi.mocked(playSoundEffect).mockReset()
 }
 
 describe('useBuildStore', () => {
@@ -52,6 +58,7 @@ describe('useBuildStore', () => {
     const { bricks } = useBuildStore.getState()
     expect(Object.keys(bricks)).toEqual([id])
     expect(bricks[id]).toEqual({ id, ...sampleBrick })
+    expect(playSoundEffect).toHaveBeenCalledWith('place')
   })
 
   it('placeBrick updates the connectionGraph', () => {
@@ -78,6 +85,7 @@ describe('useBuildStore', () => {
     expect(state.bricks[b]).toBeUndefined()
     expect(state.connectionGraph.order).toBe(1)
     expect(state.connectionGraph.hasNode(a)).toBe(true)
+    expect(playSoundEffect).toHaveBeenLastCalledWith('delete')
   })
 
   it('deleteBrick collapses orphaned bricks in the same undoable edit', () => {
@@ -182,8 +190,10 @@ describe('useBuildStore', () => {
 
   it('deleteBrick is a no-op for an unknown id', () => {
     const id = placeBrick(sampleBrick)
+    vi.mocked(playSoundEffect).mockClear()
     useBuildStore.getState().deleteBrick('does-not-exist')
     expect(Object.keys(useBuildStore.getState().bricks)).toEqual([id])
+    expect(playSoundEffect).not.toHaveBeenCalled()
   })
 
   it('selectBrick replaces the selection by default', () => {
@@ -632,6 +642,7 @@ describe('useBuildStore', () => {
       expect(Object.keys(collapsed.bricks)).toEqual([grounded])
       expect(collapsed.bricks[floatA]).toBeUndefined()
       expect(collapsed.bricks[floatB]).toBeUndefined()
+      expect(playSoundEffect).toHaveBeenLastCalledWith('collapse')
       // Exactly one history entry was added (the graph subscription must not
       // record a second one, since connectionGraph is not partialized).
       expect(pastStateCount()).toBe(before + 1)
@@ -667,6 +678,7 @@ describe('useBuildStore', () => {
 
     it('is a no-op (no history entry) when nothing collapses', () => {
       placeBrick(sampleBrick)
+      vi.mocked(playSoundEffect).mockClear()
       const before = pastStateCount()
       const bricksRef = useBuildStore.getState().bricks
 
@@ -675,6 +687,7 @@ describe('useBuildStore', () => {
       expect(useBuildStore.getState().bricks).toBe(bricksRef)
       expect(pastStateCount()).toBe(before)
       expect(useBuildStore.getState().lastCollapse).toBeNull()
+      expect(playSoundEffect).not.toHaveBeenCalled()
     })
 
     it('labels the collapse and round-trips the label through undo/redo', () => {
