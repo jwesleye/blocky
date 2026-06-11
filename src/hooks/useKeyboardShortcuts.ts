@@ -5,6 +5,9 @@ interface ShortcutHandlers {
   redo?: () => void
   rotate?: () => void
   resetView?: () => void
+  setPlaceTool?: () => void
+  setPaintTool?: () => void
+  setEyedropperTool?: () => void
 }
 
 interface ShortcutOptions {
@@ -42,11 +45,17 @@ export const useKeyboardShortcuts = (
         } else if (key === 'y' && !event.shiftKey) {
           handler = handlers.redo
         }
-      } else if (!event.ctrlKey && !event.metaKey && !event.altKey) {
-        if (key === 'r' && !event.shiftKey) {
+      } else if (!event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey) {
+        if (key === 'r') {
           handler = handlers.rotate
-        } else if (event.key === 'Home' && !event.shiftKey) {
+        } else if (event.key === 'Home') {
           handler = handlers.resetView
+        } else if (key === 'p') {
+          handler = handlers.setPlaceTool
+        } else if (key === 'b') {
+          handler = handlers.setPaintTool
+        } else if (key === 'i') {
+          handler = handlers.setEyedropperTool
         }
       }
 

@@ -15,6 +15,7 @@ export const HUD: React.FC = () => {
   const undo = useBuildStore((state) => state.undo)
   const redo = useBuildStore((state) => state.redo)
   const rotateCursor = useCursorStore((state) => state.rotateCursor)
+  const setEditingTool = useCursorStore((state) => state.setEditingTool)
   const resetCamera = useCameraStore((state) => state.resetCamera)
 
   const shortcutHandlers = useMemo(
@@ -23,8 +24,11 @@ export const HUD: React.FC = () => {
       redo,
       rotate: rotateCursor,
       resetView: resetCamera,
+      setPlaceTool: () => setEditingTool('place'),
+      setPaintTool: () => setEditingTool('paint'),
+      setEyedropperTool: () => setEditingTool('eyedropper'),
     }),
-    [redo, resetCamera, rotateCursor, undo],
+    [redo, resetCamera, rotateCursor, setEditingTool, undo],
   )
 
   useKeyboardShortcuts(shortcutHandlers, { enabled: pendingAction === null })
