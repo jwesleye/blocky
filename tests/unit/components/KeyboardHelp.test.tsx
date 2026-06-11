@@ -21,6 +21,12 @@ describe('KeyboardHelp', () => {
     expect(screen.getByText('R')).toBeInTheDocument()
     expect(screen.getByText('Reset View')).toBeInTheDocument()
     expect(screen.getByText('Home')).toBeInTheDocument()
+    expect(screen.getByText('Place')).toBeInTheDocument()
+    expect(screen.getByText('P')).toBeInTheDocument()
+    expect(screen.getByText('Paint')).toBeInTheDocument()
+    expect(screen.getByText('B')).toBeInTheDocument()
+    expect(screen.getByText('Eyedropper')).toBeInTheDocument()
+    expect(screen.getByText('I')).toBeInTheDocument()
 
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

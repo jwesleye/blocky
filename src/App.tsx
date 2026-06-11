@@ -234,11 +234,16 @@ export function App() {
           >
             Transform
           </div>
-          <div style={{ padding: '4px 8px 4px', display: 'flex', gap: 4 }}>
+          <div
+            role="group"
+            aria-label="Mirror selection"
+            style={{ padding: '4px 8px 4px', display: 'flex', gap: 4 }}
+          >
             <button
               onClick={() => handleMirror('x')}
               disabled={selectionSize === 0}
               data-testid="mirror-x"
+              aria-label="Mirror along X axis"
               style={{ flex: 1, padding: '4px 0', cursor: 'pointer' }}
             >
               Mirror X
@@ -247,6 +252,7 @@ export function App() {
               onClick={() => handleMirror('z')}
               disabled={selectionSize === 0}
               data-testid="mirror-z"
+              aria-label="Mirror along Z axis"
               style={{ flex: 1, padding: '4px 0', cursor: 'pointer' }}
             >
               Mirror Z

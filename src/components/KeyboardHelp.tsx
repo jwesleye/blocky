@@ -8,6 +8,9 @@ const SHORTCUTS = [
   { action: 'Redo', keys: ['Ctrl+Y', 'Ctrl+Shift+Z'] },
   { action: 'Rotate', keys: ['R'] },
   { action: 'Reset View', keys: ['Home'] },
+  { action: 'Place', keys: ['P'] },
+  { action: 'Paint', keys: ['B'] },
+  { action: 'Eyedropper', keys: ['I'] },
 ]
 
 export const KeyboardHelp = () => {

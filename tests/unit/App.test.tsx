@@ -17,4 +17,17 @@ describe('App', () => {
     const { getByTestId } = render(<App />)
     expect(getByTestId('interactive-scene')).toBeTruthy()
   })
+
+  it('mirror controls have a labeled group and accessible button names', () => {
+    const { getByRole } = render(<App />)
+    expect(
+      getByRole('group', { name: 'Mirror selection' }),
+    ).toBeInTheDocument()
+    expect(
+      getByRole('button', { name: 'Mirror along X axis' }),
+    ).toBeInTheDocument()
+    expect(
+      getByRole('button', { name: 'Mirror along Z axis' }),
+    ).toBeInTheDocument()
+  })
 })
