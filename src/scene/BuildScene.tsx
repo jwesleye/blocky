@@ -18,14 +18,15 @@ import { useBuildStore } from '@/state/store'
 import { CameraControls } from './CameraControls'
 import { CameraRig } from './CameraRig'
 import { collapseDebug } from './collapseDebug'
+import {
+  DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
+  getSceneEnvironmentPreset,
+  type SceneEnvironmentPresetId,
+} from './environmentPresets'
 import type { RenderBrick } from './instancing'
 import { InstancedBricks } from './InstancedBricks'
-import { Lighting } from './Lighting'
-import {
-  BACKGROUND_COLOR,
-  CAMERA_DEFAULT_FOV,
-  CAMERA_DEFAULT_POSITION,
-} from './sceneConfig'
+import { SceneEnvironment } from './SceneEnvironment'
+import { CAMERA_DEFAULT_FOV, CAMERA_DEFAULT_POSITION } from './sceneConfig'
 
 const CollapseSimulation = lazy(() =>
   import('./CollapseSimulation').then((m) => ({
@@ -80,10 +81,12 @@ function GhostBrickMesh({
 
 function Baseplate({
   size,
+  color,
   onPointerPos,
   onPointerEnterEmpty,
 }: {
   size: number
+  color: string
   onPointerPos: (pos: GridCoord) => void
   onPointerEnterEmpty: () => void
 }) {
@@ -108,7 +111,7 @@ function Baseplate({
       onPointerDown={updateGhost}
     >
       <planeGeometry args={[sceneSize, sceneSize]} />
-      <meshStandardMaterial color="#5a7a5a" />
+      <meshStandardMaterial color={color} />
     </mesh>
   )
 }
@@ -170,7 +173,11 @@ function brickPointerToGhostGrid(
  * Renders the live build as static meshes, overlays the ghost placement cursor,
  * and runs the Rapier collapse simulation while a collapse is in flight.
  */
-export function BuildScene() {
+export function BuildScene({
+  presetId = DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
+}: {
+  presetId?: SceneEnvironmentPresetId
+}) {
   const bricks = useBuildStore((state) => state.bricks)
   const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const activeCollapse = useBuildStore((state) => state.activeCollapse)
@@ -194,6 +201,7 @@ export function BuildScene() {
   }, [activeCollapse])
 
   const placedBricks = useMemo(() => Object.values(bricks), [bricks])
+  const preset = getSceneEnvironmentPreset(presetId)
   const renderBricks = useMemo(
     () =>
       placedBricks.flatMap((brick) => {
@@ -263,13 +271,13 @@ export function BuildScene() {
       tabIndex={0}
       style={{ outline: 'none' }}
     >
-      <color attach="background" args={[BACKGROUND_COLOR]} />
-      <Lighting />
+      <SceneEnvironment presetId={presetId} />
       <CameraRig />
       <CameraControls />
       <ThreeDevExpose />
       <Baseplate
         size={baseplateSize}
+        color={preset.groundColor}
         onPointerPos={setGhostGrid}
         onPointerEnterEmpty={() => setHoveredBrickId(null)}
       />
