@@ -31,11 +31,8 @@ import '@/styles/pickers.css'
 import '@/styles/responsive.css'
 
 export function App() {
-  const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
-  const [galleryOpen, setGalleryOpen] = useState(false)
-  useScenePresetPreference()
-  const captureScreenshotRef = useRef<CaptureScreenshot | null>(null)
-  const [isCaptureReady, setIsCaptureReady] = useState(false)
+  const brickMap = useBuildStore((state) => state.bricks)
+  const bricks = Object.values(brickMap)
 
   const colorId = useCursorStore((s) => s.colorId)
   const partId = useCursorStore((s) => s.partId)

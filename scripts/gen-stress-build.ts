@@ -40,7 +40,7 @@ const COLORS = [
   'white',
   'black',
   'orange',
-  'gray',
+  'light-gray',
 ] as const
 
 function generateStressBuild(count: number): Build {
