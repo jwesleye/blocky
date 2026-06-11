@@ -18,6 +18,7 @@ interface SerializedBrick {
   z: number
   rot: number
   offset?: { x: number; z: number }
+  mount?: 'px' | 'nx' | 'pz' | 'nz'
 }
 
 interface StoredBrick extends SerializedBrick {
@@ -55,6 +56,16 @@ const classicBrick: SerializedBrick = {
   y: 0,
   z: 0,
   rot: 0,
+}
+
+const mountBrick: SerializedBrick = {
+  partId: 'brick-1x1',
+  color: 'blue',
+  x: 0,
+  y: 0,
+  z: 0,
+  rot: 0,
+  mount: 'px',
 }
 
 async function gotoWithStore(page: import('@playwright/test').Page) {
@@ -238,4 +249,100 @@ test('classic build (no offsets) round-trips as version 1', async ({
   )
   const restored = await currentBricks(page)
   expect(restored[0]).not.toHaveProperty('offset')
+})
+
+test('round-trips a SNOT (v3) build through export and import', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+  await seedBricks(page, [mountBrick])
+
+  const exported = await exportBuild(page)
+  const json = JSON.parse(exported) as {
+    version: number
+    bricks: SerializedBrick[]
+  }
+  expect(json.version).toBe(3)
+  expect(json.bricks[0].mount).toBe('px')
+
+  await seedBricks(page, [])
+  await importBuild(page, exported)
+  await page.waitForFunction(
+    () =>
+      Object.keys(
+        (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
+      ).length === 1,
+  )
+
+  const restored = await currentBricks(page)
+  expect(restored).toHaveLength(1)
+  expect(restored[0]).toMatchObject({
+    partId: 'brick-1x1',
+    color: 'blue',
+    x: 0,
+    y: 0,
+    z: 0,
+    rot: 0,
+    mount: 'px',
+  })
+})
+
+test('restores a SNOT (v3) build from persisted storage after reload', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+  await seedBricks(page, [mountBrick])
+  await waitForAutosave(page)
+
+  await page.reload()
+  await page.waitForFunction(
+    () =>
+      Object.keys(
+        (window as unknown as WindowWithStore).__blockyStore?.getState()
+          .bricks ?? {},
+      ).length === 1,
+  )
+  await expect(page.locator('.brick-count')).toHaveText('Bricks in build: 1')
+
+  const restored = await currentBricks(page)
+  expect(restored[0]).toMatchObject({
+    partId: 'brick-1x1',
+    color: 'blue',
+    x: 0,
+    y: 0,
+    z: 0,
+    rot: 0,
+    mount: 'px',
+  })
+})
+
+test('rejects mount in v1 envelope on import without dropping current build', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+  await seedBricks(page, [mountBrick])
+
+  const invalid = {
+    version: 1,
+    baseplate: { size: 32 },
+    bricks: [
+      {
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        mount: 'px',
+      },
+    ],
+  }
+
+  page.on('dialog', (dialog) => dialog.dismiss())
+  await importBuild(page, JSON.stringify(invalid))
+
+  // Current build (the SNOT brick) should remain intact.
+  const bricks = await currentBricks(page)
+  expect(bricks).toHaveLength(1)
+  expect(bricks[0]).toMatchObject({ color: 'blue', mount: 'px' })
 })

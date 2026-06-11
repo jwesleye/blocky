@@ -55,10 +55,34 @@ const offsetV2Build = (): Build => ({
   ],
 })
 
+/** SNOT build carrying a mount facing, serialized as v3. */
+const mountV3Build = (): Build => ({
+  version: 3,
+  baseplate: { size: BASEPLATE_SIZE_STUDS },
+  bricks: [
+    {
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    },
+  ],
+})
+
 describe('saveBuild / loadBuild', () => {
   it('round-trips a build (reload restores it)', () => {
     const storage = memoryStorage()
     const build = buildWith('red')
+    expect(saveBuild(build, storage)).toBe(true)
+    expect(loadBuild(storage)).toEqual(build)
+  })
+
+  it('round-trips a SNOT build (v3/mount)', () => {
+    const storage = memoryStorage()
+    const build = mountV3Build()
     expect(saveBuild(build, storage)).toBe(true)
     expect(loadBuild(storage)).toEqual(build)
   })
@@ -132,6 +156,30 @@ describe('saveBuild never corrupts an existing good save', () => {
     }
     expect(saveBuild(invalid as unknown as Build, storage)).toBe(false)
 
+    expect(loadBuild(storage)).toEqual(good)
+  })
+
+  it('refuses to persist a mount-bearing build whose version is too low', () => {
+    const storage = memoryStorage()
+    const good = buildWith('green')
+    saveBuild(good, storage)
+
+    const invalid = {
+      version: 1,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'blue',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'px',
+        },
+      ],
+    }
+    expect(saveBuild(invalid as unknown as Build, storage)).toBe(false)
     expect(loadBuild(storage)).toEqual(good)
   })
 
