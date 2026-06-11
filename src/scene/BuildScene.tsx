@@ -13,7 +13,7 @@ import { Vector3, type PerspectiveCamera } from 'three'
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
 import { getBrickColor } from '@/domain/model/colors'
-import type { PlacedBrick, HalfStudOffset } from '@/domain/model/types'
+import type { HalfStudOffset, PlacedBrick } from '@/domain/model/types'
 import {
   CATALOG_BY_ID as PART_CATALOG,
   getPart,
@@ -100,14 +100,15 @@ function GhostBrickMesh({
     <mesh
       name="ghost-brick"
       position={position}
+      rotation={[0, rot * (Math.PI / 2), 0]}
       raycast={() => null}
       scale={[0.97, 0.97, 0.97]}
     >
       <primitive
         object={getPartGeometry(partId, {
-          w: width,
+          w: part.width,
           h: part.height,
-          d: depth,
+          d: part.length,
         })}
         attach="geometry"
       />
@@ -216,10 +217,6 @@ interface BuildSceneProps {
   onCaptureFnReady?: (fn: CaptureScreenshot) => void
 }
 
-/**
- * Renders the live build as static meshes, overlays the ghost placement cursor,
- * and runs the Rapier collapse simulation while a collapse is in flight.
- */
 export function BuildScene({
   presetId = DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
   onCaptureFnReady,

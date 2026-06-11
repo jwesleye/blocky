@@ -1,8 +1,8 @@
 import ReactThreeTestRenderer from '@react-three/test-renderer'
 import { describe, expect, it } from 'vitest'
 
-import { BrickMesh } from '@/scene/BrickMesh'
 import type { PlacedBrick } from '@/domain/model/types'
+import { BrickMesh } from '@/scene/BrickMesh'
 
 function makeBrick(overrides: Partial<PlacedBrick> = {}): PlacedBrick {
   return {
@@ -23,13 +23,11 @@ describe('BrickMesh', () => {
       <BrickMesh brick={makeBrick({ partId: 'brick-1x1' })} />,
     )
 
-    // Studded geometry is a BufferGeometry (merged), not a named BoxGeometry
     const geomNodes = renderer.scene.findAll(
       (node) => node.props.object !== undefined,
     )
     expect(geomNodes.length).toBeGreaterThan(0)
-    const geom = geomNodes[0]?.props.object
-    expect(geom?.type).not.toBe('BoxGeometry')
+    expect(geomNodes[0]?.props.object?.type).not.toBe('BoxGeometry')
 
     await renderer.unmount()
   })
@@ -78,26 +76,52 @@ describe('BrickMesh', () => {
 
   it('positions the mesh at brick center with rot=0', async () => {
     const renderer = await ReactThreeTestRenderer.create(
-      <BrickMesh brick={makeBrick({ partId: 'brick-2x4', x: 2, y: 1, z: 3, rot: 0 })} />,
+      <BrickMesh
+        brick={makeBrick({ partId: 'brick-2x4', x: 2, y: 1, z: 3, rot: 0 })}
+      />,
     )
 
     const [mesh] = renderer.scene.findAll((node) => node.type === 'Mesh')
-    expect(mesh).toBeDefined()
-    // brick-2x4: width=2, length=4, height=3 → center at (2+1, 1+1.5, 3+2)
     expect(mesh?.props.position).toEqual([3, 2.5, 5])
+    expect(mesh?.props.rotation).toEqual([0, 0, 0])
 
     await renderer.unmount()
   })
 
-  it('swaps width and length for rot=1 (90° rotation)', async () => {
+  it('swaps footprint position and rotates the mesh for rot=1', async () => {
     const renderer = await ReactThreeTestRenderer.create(
-      <BrickMesh brick={makeBrick({ partId: 'brick-2x4', x: 0, y: 0, z: 0, rot: 1 })} />,
+      <BrickMesh
+        brick={makeBrick({ partId: 'brick-2x4', x: 0, y: 0, z: 0, rot: 1 })}
+      />,
     )
 
     const [mesh] = renderer.scene.findAll((node) => node.type === 'Mesh')
-    expect(mesh).toBeDefined()
-    // rot=1: w=length=4, l=width=2 → center at (0+2, 0+1.5, 0+1)
     expect(mesh?.props.position).toEqual([2, 1.5, 1])
+    expect(mesh?.props.rotation).toEqual([0, Math.PI / 2, 0])
+
+    await renderer.unmount()
+  })
+
+  it('keeps slope geometry in its base dimensions and rotates the preview mesh', async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <BrickMesh
+        brick={makeBrick({ partId: 'slope-2x1', x: 0, y: 0, z: 0, rot: 1 })}
+      />,
+    )
+
+    const [mesh] = renderer.scene.findAll((node) => node.type === 'Mesh')
+    const [geometryNode] = renderer.scene.findAll(
+      (node) => node.props.object !== undefined,
+    )
+
+    geometryNode?.props.object.computeBoundingBox()
+
+    expect(mesh?.props.position).toEqual([0.5, 1.5, 1])
+    expect(mesh?.props.rotation).toEqual([0, Math.PI / 2, 0])
+    expect(geometryNode?.props.object.boundingBox?.min.x).toBe(-1)
+    expect(geometryNode?.props.object.boundingBox?.max.x).toBe(1)
+    expect(geometryNode?.props.object.boundingBox?.min.z).toBe(-0.5)
+    expect(geometryNode?.props.object.boundingBox?.max.z).toBe(0.5)
 
     await renderer.unmount()
   })
@@ -105,13 +129,18 @@ describe('BrickMesh', () => {
   it('applies half-stud offset when offset is set', async () => {
     const renderer = await ReactThreeTestRenderer.create(
       <BrickMesh
-        brick={makeBrick({ partId: 'brick-1x1', x: 1, y: 0, z: 1, rot: 0, offset: { x: 1, z: 1 } })}
+        brick={makeBrick({
+          partId: 'brick-1x1',
+          x: 1,
+          y: 0,
+          z: 1,
+          rot: 0,
+          offset: { x: 1, z: 1 },
+        })}
       />,
     )
 
     const [mesh] = renderer.scene.findAll((node) => node.type === 'Mesh')
-    expect(mesh).toBeDefined()
-    // offsetX = 0.5, offsetZ = 0.5 → posX = 1+0.5+0.5=2, posY=1.5, posZ=1+0.5+0.5=2
     expect(mesh?.props.position).toEqual([2, 1.5, 2])
 
     await renderer.unmount()
@@ -122,7 +151,9 @@ describe('BrickMesh', () => {
       <BrickMesh brick={makeBrick({ partId: 'unknown-part' })} />,
     )
 
-    expect(renderer.scene.findAll((node) => node.type === 'Mesh')).toHaveLength(0)
+    expect(renderer.scene.findAll((node) => node.type === 'Mesh')).toHaveLength(
+      0,
+    )
 
     await renderer.unmount()
   })

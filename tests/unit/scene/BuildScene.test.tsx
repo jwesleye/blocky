@@ -151,6 +151,39 @@ describe('BuildScene', () => {
     await renderer.unmount()
   })
 
+  it('rotates slope ghost previews instead of swapping geometry dimensions', async () => {
+    useCursorStore.setState({ partId: 'slope-2x1', rot: 1, rotation: 90 })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: STUD, y: 0, z: 0 },
+      stopPropagation: () => {},
+    })
+
+    const [ghost] = renderer.scene.findAll(
+      (node) => node.props.name === 'ghost-brick',
+    )
+    const [geometryNode] = renderer.scene.findAll(
+      (node) => node.props.object !== undefined,
+    )
+
+    geometryNode?.props.object.computeBoundingBox()
+
+    expect(ghost?.props.position).toEqual([1.5, 1.5, 1])
+    expect(ghost?.props.rotation).toEqual([0, Math.PI / 2, 0])
+    expect(geometryNode?.props.object.boundingBox?.min.x).toBe(-1)
+    expect(geometryNode?.props.object.boundingBox?.max.x).toBe(1)
+    expect(geometryNode?.props.object.boundingBox?.min.z).toBe(-0.5)
+    expect(geometryNode?.props.object.boundingBox?.max.z).toBe(0.5)
+
+    await renderer.unmount()
+  })
+
   it('moves the ghost above a hovered placed brick top face', async () => {
     useBuildStore.setState({
       bricks: {
