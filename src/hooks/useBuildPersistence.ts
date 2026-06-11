@@ -6,6 +6,7 @@ import {
 } from '@/domain/model/build'
 import { assertSupportedBaseplateSize } from '@/domain/grid'
 import { createGalleryClient } from '@/domain/persistence/galleryClient'
+import { resolveGalleryBaseUrl } from '@/domain/persistence/galleryConfig'
 import type {
   GalleryPublishRequest,
   GalleryPublishResult,
@@ -15,11 +16,6 @@ import {
   loadBuildFromShareSearch,
 } from '@/domain/persistence/shareUrl'
 import { useBuildStore } from '@/state/store'
-
-const GALLERY_BASE_URL =
-  typeof import.meta.env !== 'undefined'
-    ? ((import.meta.env['VITE_GALLERY_URL'] as string | undefined) ?? '')
-    : ''
 
 export function useBuildPersistence() {
   const bricks = useBuildStore((state) => state.bricks)
@@ -105,7 +101,7 @@ export function useBuildPersistence() {
     ): Promise<GalleryPublishResult> => {
       assertSupportedBaseplateSize(baseplateSize)
       const build = bricksToBuild(Object.values(bricks), baseplateSize)
-      const client = createGalleryClient(GALLERY_BASE_URL)
+      const client = createGalleryClient(resolveGalleryBaseUrl())
       return client.publish({ build, gallery: meta })
     },
     [bricks, baseplateSize],

@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { buildToBricks, validateBuild } from '@/domain/model/build'
+import { type GalleryBuildSummary, type GalleryClient } from '@/domain/persistence/galleryClient'
 import {
-  createFixtureGalleryClient,
-  type GalleryBuildSummary,
-  type GalleryClient,
-} from '@/domain/persistence/galleryClient'
+  resolveDefaultGalleryClient,
+  type GalleryMode,
+} from '@/domain/persistence/galleryConfig'
 import { useBuildStore } from '@/state/store'
-
-const defaultGalleryClient = createFixtureGalleryClient()
 
 export interface GalleryState {
   builds: GalleryBuildSummary[]
   loading: boolean
   loadingBuildId: string | null
   error: string | null
+  mode: GalleryMode
   refresh: () => Promise<void>
   loadBuild: (buildId: string) => Promise<boolean>
 }
 
-export function useGallery(
-  client: GalleryClient = defaultGalleryClient,
-): GalleryState {
+export function useGallery(client?: GalleryClient): GalleryState {
+  const defaultGallery = resolveDefaultGalleryClient()
+  const resolvedClient = client ?? defaultGallery.client
+  const mode = client ? 'live' : defaultGallery.mode
   const [builds, setBuilds] = useState<GalleryBuildSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingBuildId, setLoadingBuildId] = useState<string | null>(null)
@@ -31,7 +31,7 @@ export function useGallery(
     setLoading(true)
     setError(null)
 
-    const result = await client.list()
+    const result = await resolvedClient.list()
     if (result.ok) {
       setBuilds(result.builds)
     } else {
@@ -40,14 +40,14 @@ export function useGallery(
     }
 
     setLoading(false)
-  }, [client])
+  }, [resolvedClient])
 
   const loadBuild = useCallback(
     async (buildId: string) => {
       setLoadingBuildId(buildId)
       setError(null)
 
-      const result = await client.load(buildId)
+      const result = await resolvedClient.load(buildId)
       if (!result.ok) {
         setError(result.message)
         setLoadingBuildId(null)
@@ -71,12 +71,12 @@ export function useGallery(
         return false
       }
     },
-    [client],
+    [resolvedClient],
   )
 
   useEffect(() => {
     void refresh()
   }, [refresh])
 
-  return { builds, loading, loadingBuildId, error, refresh, loadBuild }
+  return { builds, loading, loadingBuildId, error, mode, refresh, loadBuild }
 }

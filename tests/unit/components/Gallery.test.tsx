@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import Graph from 'graphology'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Gallery } from '@/components/Gallery'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
@@ -79,6 +79,9 @@ const resetStore = () => {
 
 describe('Gallery', () => {
   beforeEach(resetStore)
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
 
   it('renders published build metadata from the gallery client', async () => {
     render(<Gallery client={makeClient()} />)
@@ -158,5 +161,14 @@ describe('Gallery', () => {
     expect(
       await screen.findByText('No published builds yet.'),
     ).toBeInTheDocument()
+  })
+
+  it('shows a demo gallery label when no backend URL is configured', async () => {
+    vi.stubEnv('VITE_GALLERY_URL', '')
+
+    render(<Gallery />)
+
+    expect(await screen.findByText('Starter House')).toBeInTheDocument()
+    expect(screen.getByText('Demo gallery')).toBeInTheDocument()
   })
 })
