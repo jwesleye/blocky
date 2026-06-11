@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { generateStressBuildBricks, generateStressBuildPlacedBricks } from '@/testing/stressBuild'
+import {
+  generateStressBuildBricks,
+  generateStressBuildPlacedBricks,
+} from '@/testing/stressBuild'
 
 describe('stressBuild generator', () => {
   it('generates the requested brick count deterministically', () => {

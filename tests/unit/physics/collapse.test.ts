@@ -145,7 +145,15 @@ describe('selectCollapsingBricks', () => {
     // Without offset awareness: CoM_x = (0.5*3 + 1.0*6)/9 = 0.833 → inside [0,1] → no collapse.
     // With offset: CoM_x = (0.5*3 + 1.5*6)/9 = 1.167 → outside [0,1] → top shears off.
     const bricks: PlacedBrick[] = [
-      { id: 'base', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+      {
+        id: 'base',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      },
       {
         id: 'top',
         partId: 'brick-1x2',
