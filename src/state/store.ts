@@ -449,7 +449,8 @@ export const useBuildStore = create<BuildStore>()(
         },
         equality: (pastState, currentState) =>
           pastState.bricks === currentState.bricks &&
-          pastState.selection === currentState.selection,
+          pastState.selection === currentState.selection &&
+          pastState.baseplateSize === currentState.baseplateSize,
       },
     ),
   ),
