@@ -9,6 +9,31 @@ import {
   BUNDLE_CHUNK_WARNING_LIMIT_KIB,
 } from './tests/perf/budgets'
 
+export function getManualChunkName(id: string) {
+  if (
+    id.includes('node_modules/react') ||
+    id.includes('node_modules/react-dom')
+  ) {
+    return 'react-vendor'
+  }
+  if (
+    id.includes('node_modules/three') ||
+    id.includes('node_modules/@react-three/fiber') ||
+    id.includes('node_modules/@react-three/drei')
+  ) {
+    return 'three-vendor'
+  }
+  if (
+    id.includes('node_modules/@react-three/rapier') ||
+    id.includes('node_modules/@dimforge') ||
+    id.includes('node_modules/@pmndrs/rapier')
+  ) {
+    return 'physics-vendor'
+  }
+
+  return undefined
+}
+
 function enforceBundleBudget() {
   return {
     name: 'enforce-bundle-budget',
@@ -59,25 +84,7 @@ export default defineConfig({
     chunkSizeWarningLimit: BUNDLE_CHUNK_WARNING_LIMIT_KIB,
     rollupOptions: {
       output: {
-        manualChunks(id: string) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor'
-          }
-          if (
-            id.includes('node_modules/three') ||
-            id.includes('node_modules/@react-three/fiber') ||
-            id.includes('node_modules/@react-three/drei')
-          ) {
-            return 'three-vendor'
-          }
-          if (
-            id.includes('node_modules/@react-three/rapier') ||
-            id.includes('node_modules/@dimforge') ||
-            id.includes('node_modules/@pmndrs/rapier')
-          ) {
-            return 'physics-vendor'
-          }
-        },
+        manualChunks: getManualChunkName,
       },
     },
   },
