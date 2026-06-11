@@ -1,6 +1,7 @@
 import { getBrickColor } from '@/domain/model/colors'
 import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import type { PlacedBrick } from '@/domain/model/types'
+import { getPartGeometry } from './parts/geometries'
 
 interface Props {
   brick: PlacedBrick
@@ -27,7 +28,7 @@ export function BrickMesh({ brick }: Props) {
 
   return (
     <mesh position={[posX, posY, posZ]}>
-      <boxGeometry args={[w, h, l]} />
+      <primitive object={getPartGeometry(brick.partId, { w, h, d: l })} attach="geometry" />
       <meshStandardMaterial color={color} />
     </mesh>
   )

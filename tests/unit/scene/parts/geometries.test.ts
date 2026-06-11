@@ -1,6 +1,7 @@
 import { BoxGeometry, type BufferGeometry } from 'three'
 import { describe, expect, it } from 'vitest'
 
+import { PART_CATALOG } from '@/domain/parts/catalog'
 import { getPartGeometry } from '@/scene/parts/geometries'
 
 function geometrySize(geometry: BufferGeometry) {
@@ -164,5 +165,73 @@ describe('getPartGeometry', () => {
     )
     expect(cornerSlope.type).toBe('BoxGeometry')
     expect(invertedSlope.type).toBe('BoxGeometry')
+  })
+})
+
+describe('PART_CATALOG geometry coverage', () => {
+  const nonBaseplates = PART_CATALOG.filter((p) => p.category !== 'baseplate')
+
+  it('every non-baseplate catalog part maps to a geometry without throwing', () => {
+    for (const part of nonBaseplates) {
+      const dims = { w: part.widthX, h: part.heightY, d: part.widthZ }
+      expect(() => getPartGeometry(part.id, dims)).not.toThrow()
+    }
+  })
+
+  it('brick-* and plate-* parts produce studded geometry (more vertices than a plain box)', () => {
+    const studdedParts = nonBaseplates.filter(
+      (p) => p.category === 'brick' || p.category === 'plate',
+    )
+    for (const part of studdedParts) {
+      const dims = { w: part.widthX, h: part.heightY, d: part.widthZ }
+      const geo = getPartGeometry(part.id, dims)
+      const refBox = new BoxGeometry(dims.w, dims.h, dims.d)
+      expect(geo.getAttribute('position').count).toBeGreaterThan(
+        refBox.getAttribute('position').count,
+      )
+    }
+  })
+
+  it('tile-* parts produce smooth (studless) geometry matching a plain box vertex count', () => {
+    const tileParts = nonBaseplates.filter((p) => p.category === 'tile')
+    for (const part of tileParts) {
+      const dims = { w: part.widthX, h: part.heightY, d: part.widthZ }
+      const geo = getPartGeometry(part.id, dims)
+      const refBox = new BoxGeometry(dims.w, dims.h, dims.d)
+      expect(geo.getAttribute('position').count).toBe(
+        refBox.getAttribute('position').count,
+      )
+    }
+  })
+
+  it('round-brick-1x1 and round-plate-1x1 produce CylinderGeometry', () => {
+    for (const partId of ['round-brick-1x1', 'round-plate-1x1']) {
+      const part = nonBaseplates.find((p) => p.id === partId)!
+      const dims = { w: part.widthX, h: part.heightY, d: part.widthZ }
+      expect(getPartGeometry(partId, dims).type).toBe('CylinderGeometry')
+    }
+  })
+
+  it('cone-1x1 produces ConeGeometry', () => {
+    const part = nonBaseplates.find((p) => p.id === 'cone-1x1')!
+    const dims = { w: part.widthX, h: part.heightY, d: part.widthZ }
+    expect(getPartGeometry('cone-1x1', dims).type).toBe('ConeGeometry')
+  })
+
+  it('standard slope-2x1 and slope-2x2 produce non-box wedge geometry', () => {
+    for (const partId of ['slope-2x1', 'slope-2x2']) {
+      const part = nonBaseplates.find((p) => p.id === partId)!
+      const dims = { w: part.widthX, h: part.heightY, d: part.widthZ }
+      const geo = getPartGeometry(partId, dims)
+      expect(geo.type).not.toBe('BoxGeometry')
+    }
+  })
+
+  it('slope-corner and slope-inverted fall back to BoxGeometry (not yet custom-shaped)', () => {
+    for (const partId of ['slope-corner', 'slope-inverted']) {
+      const part = nonBaseplates.find((p) => p.id === partId)!
+      const dims = { w: part.widthX, h: part.heightY, d: part.widthZ }
+      expect(getPartGeometry(partId, dims).type).toBe('BoxGeometry')
+    }
   })
 })
