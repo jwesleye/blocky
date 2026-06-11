@@ -30,7 +30,7 @@ type FixtureBrick = {
  *
  * Loads a several-hundred-brick stress build through the real app state, invokes
  * the actual collapse trigger (selectCollapsingBricks via PART_CATALOG,
- * buildConnectionGraph, getFloatingBricks, getUnbalancedBricks), then drives the
+ * buildConnectionGraph, getFloatingBricks, findShearRegion), then drives the
  * full collapse animation pipeline (createCollapseTransaction,
  * advanceCollapseTransaction, createCollapseSceneBodies) while sampling RAF frame
  * deltas. Asserts:
@@ -45,7 +45,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   await page.goto('/')
 
   // Stress fixture: two bricks form an unbalanced tower (narrow 1×1 base with a
-  // wide 2×4 overhang) to exercise getUnbalancedBricks → computeSupportFootprint,
+  // wide 2x4 overhang) to exercise findShearRegion, computeSupportFootprint,
   // computeCoM, isBalanced, and the d3-polygon convex hull path.
   // The remaining bricks are floating (y=3, far from any y=0 brick) to exercise
   // buildConnectionGraph + getFloatingBricks BFS with mixed partIds and all four
@@ -185,7 +185,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
             // First RAF: invoke the real selectCollapsingBricks — exercises
             // PART_CATALOG, buildConnectionGraph (stud-connection geometry,
             // rotation-aware cell footprint), getFloatingBricks (BFS from y=0),
-            // and getUnbalancedBricks (connected components, convex hull, CoM).
+            // and findShearRegion (connected components, convex hull, CoM).
             // Any main-thread stall appears as an extended next-frame delta.
             const t0 = performance.now()
             const collapsingSet = selectCollapsingBricks(loadedBricks)

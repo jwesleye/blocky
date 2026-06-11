@@ -37,6 +37,7 @@ import {
 } from './environmentPresets'
 import type { RenderBrick } from './instancing'
 import { InstancedBricks } from './InstancedBricks'
+import { mountRotation } from './mountRotation'
 import { getPartGeometry } from './parts/geometries'
 import { SceneEnvironment } from './SceneEnvironment'
 import {
@@ -82,21 +83,6 @@ function isWithinRenderedBaseplate(brick: PlacedBrick, baseplateSize: number) {
   )
 }
 
-function ghostMountRotation(mount?: BrickMount): [number, number, number] {
-  switch (mount) {
-    case 'px':
-      return [0, 0, -Math.PI / 2]
-    case 'nx':
-      return [0, 0, Math.PI / 2]
-    case 'pz':
-      return [Math.PI / 2, 0, 0]
-    case 'nz':
-      return [-Math.PI / 2, 0, 0]
-    default:
-      return [0, 0, 0]
-  }
-}
-
 function GhostBrickMesh({
   grid,
   valid,
@@ -122,7 +108,7 @@ function GhostBrickMesh({
     grid.z + depth / 2 + (offset?.z ?? 0) * 0.5,
   ]
 
-  const [rx, , rz] = ghostMountRotation(mount)
+  const [rx, , rz] = mountRotation(mount)
 
   return (
     <mesh

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { HalfStudOffset, PlacedBrick } from '@/domain/model/types'
-import { findShearRegion, recursiveShear } from '@/domain/physics/shear'
+import { findShearRegion } from '@/domain/physics/shear'
 
 function brick(
   id: string,
@@ -89,63 +89,5 @@ describe('findShearRegion', () => {
       'tip-a',
     ])
     expect(component.map((candidate) => candidate.id)).toEqual(originalOrder)
-  })
-})
-
-describe('recursiveShear', () => {
-  it('performs a two-stage collapse', () => {
-    const bricks = [
-      brick('base', 'brick-1x1', 0, 0, 0),
-      brick('bridge', 'plate-1x4', 0, 3, 0, 1),
-      brick('tip', 'brick-1x2', 2, 4, 0, 1),
-    ]
-
-    const { collapsed, stable } = recursiveShear(bricks)
-
-    expect(collapsed.map((batch) => batch.map((b) => b.id))).toEqual([
-      ['tip'],
-      ['bridge'],
-    ])
-    expect(stable.map((b) => b.id)).toEqual(['base'])
-  })
-
-  it('returns empty collapsed array for already-stable input', () => {
-    const bricks = [brick('base', 'brick-1x1', 0, 0, 0)]
-
-    const { collapsed, stable } = recursiveShear(bricks)
-
-    expect(collapsed).toEqual([])
-    expect(stable.map((b) => b.id)).toEqual(['base'])
-  })
-
-  it('handles multi-component builds independently', () => {
-    const bricks = [
-      // Component 1: Stable
-      brick('c1-base', 'brick-1x1', 0, 0, 0),
-      // Component 2: Unstable cantilever
-      brick('c2-base', 'brick-1x1', 10, 0, 10),
-      brick('c2-overhang', 'plate-1x4', 10, 3, 10, 1),
-    ]
-
-    const { collapsed, stable } = recursiveShear(bricks)
-
-    expect(collapsed.map((batch) => batch.map((b) => b.id))).toEqual([
-      ['c2-overhang'],
-    ])
-    expect(stable.map((b) => b.id).sort()).toEqual(
-      ['c1-base', 'c2-base'].sort(),
-    )
-  })
-
-  it('is a pure function and does not mutate input', () => {
-    const bricks = [
-      brick('base', 'brick-1x1', 0, 0, 0),
-      brick('overhang', 'plate-1x4', 0, 3, 0, 1),
-    ]
-    const originalInput = JSON.stringify(bricks)
-
-    recursiveShear(bricks)
-
-    expect(JSON.stringify(bricks)).toBe(originalInput)
   })
 })

@@ -8,6 +8,7 @@ import {
   type PartDims,
   type RenderBrick,
 } from '@/scene/instancing'
+import { mountRotation } from '@/scene/mountRotation'
 
 const ONE_BY_ONE: PartDims = { w: 1, d: 1, h: 1 }
 const TWO_BY_FOUR: PartDims = { w: 2, d: 4, h: 3 }
@@ -243,4 +244,19 @@ describe('brickInstanceTransform', () => {
     expect(nz.rotation[0]).not.toBe(0)
     expect(nz.rotation[2]).toBe(0)
   })
+})
+
+describe('mountRotation', () => {
+  it.each([
+    [undefined, [0, 0, 0]],
+    ['px', [0, 0, -Math.PI / 2]],
+    ['nx', [0, 0, Math.PI / 2]],
+    ['pz', [Math.PI / 2, 0, 0]],
+    ['nz', [-Math.PI / 2, 0, 0]],
+  ] as const)(
+    'returns the expected Euler rotation for %s',
+    (mount, rotation) => {
+      expect(mountRotation(mount)).toEqual(rotation)
+    },
+  )
 })

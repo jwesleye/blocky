@@ -8,11 +8,8 @@ const resetCursor = () => {
     colorId: DEFAULT_COLOR_ID,
     partId: DEFAULT_PART_ID,
     rot: 0,
-    cursorBrick: {
-      partId: DEFAULT_PART_ID,
-      colorId: DEFAULT_COLOR_ID,
-      rot: 0,
-    },
+    offset: undefined,
+    mount: undefined,
     editingTool: 'place',
   })
 }
@@ -24,62 +21,49 @@ describe('useCursorStore', () => {
     const state = useCursorStore.getState()
     expect(state.colorId).toBe(DEFAULT_COLOR_ID)
     expect(state.partId).toBe(DEFAULT_PART_ID)
-    expect(state.cursorBrick).toEqual({
-      partId: DEFAULT_PART_ID,
-      colorId: DEFAULT_COLOR_ID,
-      rot: 0,
-    })
+    expect(state.offset).toBeUndefined()
+    expect(state.mount).toBeUndefined()
   })
 
   it('initializes rotation to 0', () => {
     const state = useCursorStore.getState()
     expect(state.rot).toBe(0)
-    expect(state.cursorBrick.rot).toBe(0)
   })
 
   it('rotateCursor() advances 0 -> 1 -> 2 -> 3 -> 0', () => {
     const { rotateCursor } = useCursorStore.getState()
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(1)
-    expect(useCursorStore.getState().cursorBrick.rot).toBe(1)
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(2)
-    expect(useCursorStore.getState().cursorBrick.rot).toBe(2)
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(3)
-    expect(useCursorStore.getState().cursorBrick.rot).toBe(3)
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(0)
-    expect(useCursorStore.getState().cursorBrick.rot).toBe(0)
   })
 
-  it('updates cursorBrick when color is changed', () => {
+  it('updates colorId when color is changed', () => {
     const { setColor } = useCursorStore.getState()
     setColor('blue')
     const state = useCursorStore.getState()
     expect(state.colorId).toBe('blue')
-    expect(state.cursorBrick.colorId).toBe('blue')
   })
 
-  it('updates cursorBrick when part is changed', () => {
+  it('updates partId when part is changed', () => {
     const { setPart } = useCursorStore.getState()
     setPart('plate-1x1')
     const state = useCursorStore.getState()
     expect(state.partId).toBe('plate-1x1')
-    expect(state.cursorBrick.partId).toBe('plate-1x1')
   })
 
-  it('exposes an offset that toggleOffset flips on/off and mirrors into cursorBrick', () => {
+  it('exposes an offset that toggleOffset flips on/off', () => {
     expect(useCursorStore.getState().offset).toBeUndefined()
-    expect(useCursorStore.getState().cursorBrick.offset).toBeUndefined()
 
     useCursorStore.getState().toggleOffset()
     expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
-    expect(useCursorStore.getState().cursorBrick.offset).toEqual({ x: 1, z: 0 })
 
     useCursorStore.getState().toggleOffset()
     expect(useCursorStore.getState().offset).toBeUndefined()
-    expect(useCursorStore.getState().cursorBrick.offset).toBeUndefined()
   })
 
   describe('editingTool', () => {
@@ -105,13 +89,12 @@ describe('useCursorStore', () => {
   })
 
   describe('cycleMount', () => {
-    it('advances undefined → px → nx → pz → nz → undefined and mirrors into cursorBrick', () => {
+    it('advances undefined -> px -> nx -> pz -> nz -> undefined', () => {
       const sequence = [undefined, 'px', 'nx', 'pz', 'nz', undefined] as const
       for (let i = 0; i < sequence.length - 1; i++) {
         useCursorStore.getState().cycleMount()
         const state = useCursorStore.getState()
         expect(state.mount).toBe(sequence[i + 1])
-        expect(state.cursorBrick.mount).toBe(sequence[i + 1])
       }
     })
   })
@@ -125,8 +108,6 @@ describe('useCursorStore', () => {
       const state = useCursorStore.getState()
       expect(state.partId).toBe('plate-1x1')
       expect(state.colorId).toBe('green')
-      expect(state.cursorBrick.partId).toBe('plate-1x1')
-      expect(state.cursorBrick.colorId).toBe('green')
       expect(state.rot).toBe(0)
     })
 
