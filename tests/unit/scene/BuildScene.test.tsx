@@ -104,13 +104,6 @@ const resetCursorStore = () => {
     rot: 0,
     offset: undefined,
     mount: undefined,
-    cursorBrick: {
-      partId: DEFAULT_PART_ID,
-      colorId: DEFAULT_COLOR_ID,
-      rot: 0,
-      offset: undefined,
-      mount: undefined,
-    },
     editingTool: 'place',
   })
 }
@@ -302,12 +295,6 @@ describe('BuildScene', () => {
   it('applies mount rotation to the ghost preview when cursor mount is set', async () => {
     useCursorStore.setState({
       mount: 'px',
-      cursorBrick: {
-        partId: DEFAULT_PART_ID,
-        colorId: DEFAULT_COLOR_ID,
-        rot: 0,
-        mount: 'px',
-      },
     })
 
     const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
@@ -334,12 +321,6 @@ describe('BuildScene', () => {
   it('commits a mounted brick from the baseplate-supported flow', async () => {
     useCursorStore.setState({
       mount: 'px',
-      cursorBrick: {
-        partId: DEFAULT_PART_ID,
-        colorId: DEFAULT_COLOR_ID,
-        rot: 0,
-        mount: 'px',
-      },
     })
 
     const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
@@ -429,12 +410,6 @@ describe('BuildScene', () => {
     })
     useCursorStore.setState({
       mount: 'px',
-      cursorBrick: {
-        partId: DEFAULT_PART_ID,
-        colorId: DEFAULT_COLOR_ID,
-        rot: 0,
-        mount: 'px',
-      },
     })
 
     const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
