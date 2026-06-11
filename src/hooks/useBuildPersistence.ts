@@ -11,10 +11,7 @@ import type {
   GalleryPublishRequest,
   GalleryPublishResult,
 } from '@/domain/persistence/galleryClient'
-import {
-  createShareUrl,
-  loadBuildFromShareSearch,
-} from '@/domain/persistence/shareUrl'
+import { createShareUrl } from '@/domain/persistence/shareUrl'
 import { useBuildStore } from '@/state/store'
 
 export function useBuildPersistence() {
@@ -79,19 +76,6 @@ export function useBuildPersistence() {
     return createShareUrl(build)
   }, [bricks, baseplateSize])
 
-  const loadFromShareUrl = useCallback((search?: string): boolean => {
-    const query =
-      search ?? (typeof window !== 'undefined' ? window.location.search : '')
-    const build = loadBuildFromShareSearch(query)
-    if (!build) return false
-    const newBricks = buildToBricks(build)
-    useBuildStore.setState({
-      bricks: Object.fromEntries(newBricks.map((brick) => [brick.id, brick])),
-      baseplateSize: build.baseplate.size,
-    })
-    return true
-  }, [])
-
   const publishToGallery = useCallback(
     async (
       meta: Pick<
@@ -111,7 +95,6 @@ export function useBuildPersistence() {
     exportToJSON,
     importFromJSON,
     createShareLink,
-    loadFromShareUrl,
     publishToGallery,
   }
 }

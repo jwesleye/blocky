@@ -1,18 +1,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { renderHook } from '@testing-library/react'
 import Graph from 'graphology'
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PersistenceControls } from '@/components/PersistenceControls'
-import { useBuildPersistence } from '@/hooks/useBuildPersistence'
-import {
-  SHARE_URL_PARAM,
-  createShareUrl,
-  decodeShareToken,
-} from '@/domain/persistence/shareUrl'
-import { BUILD_SCHEMA_VERSION } from '@/domain/model/build'
-import type { Build } from '@/domain/model/build'
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { SHARE_URL_PARAM, decodeShareToken } from '@/domain/persistence/shareUrl'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
 const resetStore = () => {
@@ -30,12 +21,6 @@ const resetStore = () => {
   temporal.clear()
   temporal.resume()
 }
-
-const sampleBuild = (color = 'green'): Build => ({
-  version: BUILD_SCHEMA_VERSION,
-  baseplate: { size: BASEPLATE_SIZE_STUDS },
-  bricks: [{ partId: 'brick-2x4', color, x: 2, y: 0, z: 3, rot: 1 }],
-})
 
 describe('PersistenceControls', () => {
   beforeEach(resetStore)
@@ -69,64 +54,6 @@ describe('PersistenceControls', () => {
       partId: placed[0].partId,
       color: placed[0].color,
     })
-  })
-})
-
-describe('useBuildPersistence.loadFromShareUrl', () => {
-  beforeEach(resetStore)
-
-  it('loads a build from a generated share URL with fresh runtime ids', () => {
-    const build = sampleBuild('blue')
-    const url = createShareUrl(build, 'https://example.com/')
-    const search = new URL(url).search
-
-    const { result } = renderHook(() => useBuildPersistence())
-
-    let applied = false
-    // renderHook callbacks are stable; invoke the load action with the search.
-    act(() => {
-      applied = result.current.loadFromShareUrl(search)
-    })
-    expect(applied).toBe(true)
-
-    const bricks = Object.values(useBuildStore.getState().bricks)
-    expect(bricks).toHaveLength(1)
-    expect(bricks[0]).toMatchObject({
-      partId: 'brick-2x4',
-      color: 'blue',
-      x: 2,
-      y: 0,
-      z: 3,
-      rot: 1,
-    })
-    // A runtime id was generated rather than carried in the payload.
-    expect(typeof bricks[0].id).toBe('string')
-    expect(bricks[0].id.length).toBeGreaterThan(0)
-  })
-
-  it('leaves the build untouched for a malformed share URL', () => {
-    const { result } = renderHook(() => useBuildPersistence())
-
-    let applied = false
-    act(() => {
-      applied = result.current.loadFromShareUrl(
-        `?${SHARE_URL_PARAM}=not-decompressible`,
-      )
-    })
-
-    expect(applied).toBe(false)
-    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(0)
-  })
-
-  it('returns false when the URL carries no share token', () => {
-    const { result } = renderHook(() => useBuildPersistence())
-
-    let applied = true
-    act(() => {
-      applied = result.current.loadFromShareUrl('?foo=bar')
-    })
-    expect(applied).toBe(false)
-    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(0)
   })
 })
 
