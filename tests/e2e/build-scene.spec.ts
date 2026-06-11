@@ -62,10 +62,11 @@ async function projectToCanvas(
 }
 
 async function getBrickCount(page: import('@playwright/test').Page) {
-  return page.evaluate(() =>
-    Object.keys(
-      (window as unknown as DevWindow).__blockyStore.getState().bricks,
-    ).length,
+  return page.evaluate(
+    () =>
+      Object.keys(
+        (window as unknown as DevWindow).__blockyStore.getState().bricks,
+      ).length,
   )
 }
 
@@ -406,7 +407,14 @@ test('right-click to delete: context-menu on a placed brick removes it from the 
   const brickId = await page.evaluate(() =>
     (window as unknown as DevWindow).__blockyStore
       .getState()
-      .placeBrick({ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 }),
+      .placeBrick({
+        partId: 'brick-2x4',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      }),
   )
   expect(brickId).toBeTruthy()
   expect(await getBrickCount(page)).toBe(1)
