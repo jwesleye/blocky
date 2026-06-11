@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import defaultConfig from '../../playwright.config'
@@ -7,6 +9,15 @@ import perfConfig from '../../playwright.perf.config'
 const LOAD_PERF_POSIX = 'tests/perf/load-perf.spec.ts'
 const LOAD_PERF_WIN = 'tests\\perf\\load-perf.spec.ts'
 const WEBGL2_E2E = 'tests/e2e/webgl2.spec.ts'
+
+type PackageJson = {
+  scripts?: Record<string, string>
+}
+
+const PACKAGE_PATH = join(process.cwd(), 'package.json')
+
+const readPackageJson = (): PackageJson =>
+  JSON.parse(readFileSync(PACKAGE_PATH, 'utf-8')) as PackageJson
 
 function matchesTestIgnore(testIgnore: unknown, path: string): boolean {
   if (testIgnore == null) return false
@@ -17,6 +28,25 @@ function matchesTestIgnore(testIgnore: unknown, path: string): boolean {
     return false
   })
 }
+
+describe('playwright e2e defaults (issue #191)', () => {
+  it('uses the preview server instead of the Vite dev server', () => {
+    expect(defaultConfig.workers).toBe(4)
+    expect(defaultConfig.use?.baseURL).toBe('http://127.0.0.1:4174')
+    expect(defaultConfig.webServer).toMatchObject({
+      command:
+        'npm run build -- --mode e2e && npm run preview -- --host 127.0.0.1 --port 4174',
+      url: 'http://127.0.0.1:4174',
+      timeout: 120_000,
+    })
+  })
+
+  it('installs Playwright browsers before test:e2e runs', () => {
+    const pkg = readPackageJson()
+    expect(pkg.scripts?.['pretest:e2e']).toBe('playwright install')
+    expect(pkg.scripts?.['test:e2e']).toBe('playwright test')
+  })
+})
 
 describe('playwright.config.ts default matrix', () => {
   it('defines chromium, firefox, webkit, and tablet projects', () => {

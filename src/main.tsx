@@ -7,6 +7,9 @@ import { collapseDebug } from './scene/collapseDebug'
 import { useBuildStore } from '@/state/store'
 import { useCursorStore } from '@/state/cursor'
 
+const shouldExposeTestHooks =
+  import.meta.env.DEV || import.meta.env.MODE === 'e2e'
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
@@ -15,7 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 // Expose the Zustand store on window during development so Playwright tests
 // can interact with the build state directly.
-if (import.meta.env.DEV) {
+if (shouldExposeTestHooks) {
   window.__blockyStore = useBuildStore
   window.__blockyCursorStore = useCursorStore
   window.__blockyCollapseDebug = collapseDebug

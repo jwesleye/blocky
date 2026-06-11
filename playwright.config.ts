@@ -11,11 +11,12 @@ export default defineConfig({
   testDir: './tests',
   testMatch: ['e2e/**/*.spec.ts', 'perf/**/*.spec.ts'],
   fullyParallel: true,
+  workers: 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:4174',
     trace: 'on-first-retry',
   },
   projects: [
@@ -37,8 +38,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command:
+      'npm run build -- --mode e2e && npm run preview -- --host 127.0.0.1 --port 4174',
+    cwd: process.cwd(),
+    url: 'http://127.0.0.1:4174',
     reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
   },
 })

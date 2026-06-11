@@ -266,7 +266,17 @@ describe('version/feature envelope compatibility', () => {
     const bad = JSON.stringify({
       version: 1,
       baseplate: { size: 32 },
-      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'px' }],
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'px',
+        },
+      ],
     })
     expect(safeParseBuild(bad)).toBeNull()
     expect(() => validateBuild(JSON.parse(bad))).toThrow()
@@ -276,7 +286,17 @@ describe('version/feature envelope compatibility', () => {
     const bad = JSON.stringify({
       version: 2,
       baseplate: { size: 32 },
-      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'nx' }],
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'nx',
+        },
+      ],
     })
     expect(safeParseBuild(bad)).toBeNull()
     expect(() => validateBuild(JSON.parse(bad))).toThrow()
@@ -286,7 +306,17 @@ describe('version/feature envelope compatibility', () => {
     const bad = JSON.stringify({
       version: 1,
       baseplate: { size: 32 },
-      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, offset: { x: 1, z: 0 } }],
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          offset: { x: 1, z: 0 },
+        },
+      ],
     })
     expect(safeParseBuild(bad)).toBeNull()
     expect(() => validateBuild(JSON.parse(bad))).toThrow()
@@ -296,7 +326,17 @@ describe('version/feature envelope compatibility', () => {
     const good = JSON.stringify({
       version: 2,
       baseplate: { size: 32 },
-      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, offset: { x: 1, z: 0 } }],
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          offset: { x: 1, z: 0 },
+        },
+      ],
     })
     expect(safeParseBuild(good)).not.toBeNull()
   })
@@ -305,7 +345,17 @@ describe('version/feature envelope compatibility', () => {
     const good = JSON.stringify({
       version: 3,
       baseplate: { size: 32 },
-      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'pz' }],
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'pz',
+        },
+      ],
     })
     expect(safeParseBuild(good)).not.toBeNull()
   })

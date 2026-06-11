@@ -174,7 +174,17 @@ describe('SNOT mount — gallery contract round-trip', () => {
       build: {
         version: 1,
         baseplate: { size: BASEPLATE_SIZE_STUDS },
-        bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'px' }],
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'red',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            mount: 'px',
+          },
+        ],
       },
     })
     expect(safeParseSharedBuildPayload(bad)).toBeNull()
