@@ -69,8 +69,14 @@ describe('getPartGeometry', () => {
     expect(roundPlate.type).toBe('CylinderGeometry')
     expect(geometrySize(roundBrick)).toEqual({ width: 1, height: 3, depth: 1 })
     expect(geometrySize(roundPlate)).toEqual({ width: 1, height: 1, depth: 1 })
-    expect((roundBrick as BoxGeometry & { parameters?: { radialSegments?: number } }).parameters?.radialSegments).toBe(16)
-    expect((roundPlate as BoxGeometry & { parameters?: { radialSegments?: number } }).parameters?.radialSegments).toBe(16)
+    expect(
+      (roundBrick as BoxGeometry & { parameters?: { radialSegments?: number } })
+        .parameters?.radialSegments,
+    ).toBe(16)
+    expect(
+      (roundPlate as BoxGeometry & { parameters?: { radialSegments?: number } })
+        .parameters?.radialSegments,
+    ).toBe(16)
   })
 
   it('builds cone geometry for cone-1x1', () => {
@@ -78,7 +84,10 @@ describe('getPartGeometry', () => {
 
     expect(cone.type).toBe('ConeGeometry')
     expect(geometrySize(cone)).toEqual({ width: 1, height: 3, depth: 1 })
-    expect((cone as BoxGeometry & { parameters?: { radialSegments?: number } }).parameters?.radialSegments).toBe(16)
+    expect(
+      (cone as BoxGeometry & { parameters?: { radialSegments?: number } })
+        .parameters?.radialSegments,
+    ).toBe(16)
   })
 
   it('falls back to a plain box for non-studded part types', () => {
@@ -147,11 +156,9 @@ describe('getPartGeometry', () => {
     ).toBe(false)
   })
 
-  it('routes standard slopes to wedge geometry without changing corner or inverted slopes yet', () => {
+  it('routes standard slopes to wedge geometry', () => {
     const slope2x1 = getPartGeometry('slope-2x1', { w: 2, d: 1, h: 3 })
     const slope2x2 = getPartGeometry('slope-2x2', { w: 2, d: 2, h: 3 })
-    const cornerSlope = getPartGeometry('slope-corner', { w: 2, d: 2, h: 3 })
-    const invertedSlope = getPartGeometry('slope-inverted', { w: 2, d: 1, h: 3 })
     const brickGeo = getPartGeometry('brick-2x4', { w: 2, d: 4, h: 3 })
 
     expect(geometrySize(slope2x1)).toEqual({ width: 2, height: 3, depth: 1 })
@@ -162,7 +169,52 @@ describe('getPartGeometry', () => {
     expect(slope2x2.getAttribute('position').count).not.toBe(
       brickGeo.getAttribute('position').count,
     )
-    expect(cornerSlope.type).toBe('BoxGeometry')
-    expect(invertedSlope.type).toBe('BoxGeometry')
+  })
+
+  it('builds a corner slope geometry with [2,3,2] bounding box and distinct profile', () => {
+    const geo = getPartGeometry('slope-corner', { w: 2, d: 2, h: 3 })
+    const slopeGeo = getPartGeometry('slope-2x2', { w: 2, d: 2, h: 3 })
+    const vertices = geometryVertices(geo)
+    const slopeVertices = geometryVertices(slopeGeo)
+
+    expect(geometrySize(geo)).toEqual({ width: 2, height: 3, depth: 2 })
+    expect(geo.type).not.toBe('BoxGeometry')
+    expect(vertices.length).not.toBe(slopeVertices.length)
+    expect(
+      vertices.some(
+        (v) =>
+          Math.abs(v.x + 1) < 1e-4 &&
+          Math.abs(v.z + 1) < 1e-4 &&
+          Math.abs(v.y - 1.5) < 1e-4,
+      ),
+    ).toBe(true)
+    expect(
+      vertices.some((v) => Math.abs(v.x - 1) < 1e-4 && Math.abs(v.y - 1.5) < 1e-4),
+    ).toBe(false)
+    expect(
+      vertices.some((v) => Math.abs(v.z - 1) < 1e-4 && Math.abs(v.y - 1.5) < 1e-4),
+    ).toBe(false)
+  })
+
+  it('builds an inverted slope geometry with [2,3,1] bounding box and distinct profile', () => {
+    const geo = getPartGeometry('slope-inverted', { w: 2, d: 1, h: 3 })
+    const slopeGeo = getPartGeometry('slope-2x1', { w: 2, d: 1, h: 3 })
+    const vertices = geometryVertices(geo)
+    const slopeVertices = geometryVertices(slopeGeo)
+
+    expect(geometrySize(geo)).toEqual({ width: 2, height: 3, depth: 1 })
+    expect(geo.type).not.toBe('BoxGeometry')
+    expect(
+      vertices.some((v) => Math.abs(v.x + 1) < 1e-4 && Math.abs(v.y - 1.5) < 1e-4),
+    ).toBe(true)
+    expect(
+      vertices.some((v) => Math.abs(v.x - 1) < 1e-4 && Math.abs(v.y - 1.5) < 1e-4),
+    ).toBe(true)
+    expect(
+      slopeVertices.some((v) => Math.abs(v.x - 1) < 1e-4 && Math.abs(v.y - 1.5) < 1e-4),
+    ).toBe(false)
+    expect(
+      vertices.some((v) => Math.abs(v.x - 1) < 1e-4 && Math.abs(v.y + 1.5) < 1e-4),
+    ).toBe(false)
   })
 })

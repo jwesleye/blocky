@@ -1,5 +1,6 @@
 import {
   BoxGeometry,
+  BufferAttribute,
   BufferGeometry,
   ConeGeometry,
   CylinderGeometry,
@@ -17,6 +18,8 @@ const STUD_SEGMENTS = 16
 const ROUND_SEGMENTS = 16
 const STANDARD_SLOPE_IDS = new Set(['slope-2x1', 'slope-2x2'])
 const ROUND_PART_IDS = new Set(['round-brick-1x1', 'round-plate-1x1'])
+const CORNER_SLOPE_IDS = new Set(['slope-corner'])
+const INVERTED_SLOPE_IDS = new Set(['slope-inverted'])
 
 const geometryCache = new Map<string, BufferGeometry>()
 
@@ -72,6 +75,42 @@ function createSlopeGeometry(dims: PartDims) {
   return geometry
 }
 
+function createCornerSlopeGeometry(dims: PartDims) {
+  const hw = dims.w / 2
+  const hh = dims.h / 2
+  const hd = dims.d / 2
+
+  const positions = new Float32Array([
+    -hw, -hh, -hd,  hw, -hh, -hd,  hw, -hh,  hd,
+    -hw, -hh, -hd,  hw, -hh,  hd, -hw, -hh,  hd,
+    -hw, -hh, -hd, -hw,  hh, -hd,  hw, -hh, -hd,
+    -hw, -hh, -hd, -hw, -hh,  hd, -hw,  hh, -hd,
+    -hw, -hh,  hd,  hw, -hh,  hd, -hw,  hh, -hd,
+     hw, -hh,  hd,  hw, -hh, -hd, -hw,  hh, -hd,
+  ])
+
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(positions, 3))
+  return geometry
+}
+
+function createInvertedSlopeGeometry(dims: PartDims) {
+  const profile = new Shape()
+  profile.moveTo(-dims.w / 2, -dims.h / 2)
+  profile.lineTo(-dims.w / 2, dims.h / 2)
+  profile.lineTo(dims.w / 2, dims.h / 2)
+  profile.lineTo(-dims.w / 2, -dims.h / 2)
+
+  const geometry = new ExtrudeGeometry(profile, {
+    depth: dims.d,
+    bevelEnabled: false,
+    curveSegments: 1,
+    steps: 1,
+  })
+  geometry.translate(0, 0, -dims.d / 2)
+  return geometry
+}
+
 function createGeometry(partId: string, dims: PartDims) {
   const part = getPartDef(partId)
   if (!part) {
@@ -99,6 +138,14 @@ function createGeometry(partId: string, dims: PartDims) {
     dims.h === 3
   ) {
     return createSlopeGeometry(dims)
+  }
+
+  if (part.category === 'slope' && CORNER_SLOPE_IDS.has(partId) && dims.h === 3) {
+    return createCornerSlopeGeometry(dims)
+  }
+
+  if (part.category === 'slope' && INVERTED_SLOPE_IDS.has(partId) && dims.h === 3) {
+    return createInvertedSlopeGeometry(dims)
   }
 
   return createBoxGeometry(dims)
