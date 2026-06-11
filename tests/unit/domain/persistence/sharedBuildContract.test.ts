@@ -167,4 +167,16 @@ describe('SNOT mount — gallery contract round-trip', () => {
     })
     expect(safeParseSharedBuildPayload(bad)).toBeNull()
   })
+
+  it('returns null via safeParseSharedBuildPayload for a payload with mount in a version 1 envelope', () => {
+    const bad = JSON.stringify({
+      ...makePayload(),
+      build: {
+        version: 1,
+        baseplate: { size: BASEPLATE_SIZE_STUDS },
+        bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'px' }],
+      },
+    })
+    expect(safeParseSharedBuildPayload(bad)).toBeNull()
+  })
 })

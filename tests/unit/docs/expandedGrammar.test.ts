@@ -67,4 +67,14 @@ describe('docs/PRD.md — expanded-grammar scope drift guard', () => {
       },
     )
   })
+
+  describe('stale non-goal language removed', () => {
+    it('does not contain the stale "Not SNOT" non-goal phrase', () => {
+      expect(doc()).not.toMatch(/not snot/i)
+    })
+
+    it('does not contain the stale "no sideways building" non-goal phrase', () => {
+      expect(doc()).not.toMatch(/no sideways building/i)
+    })
+  })
 })

@@ -261,6 +261,56 @@ describe('version 3 — SNOT mount', () => {
   })
 })
 
+describe('version/feature envelope compatibility', () => {
+  it('rejects mount on a version 1 envelope', () => {
+    const bad = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'px' }],
+    })
+    expect(safeParseBuild(bad)).toBeNull()
+    expect(() => validateBuild(JSON.parse(bad))).toThrow()
+  })
+
+  it('rejects mount on a version 2 envelope', () => {
+    const bad = JSON.stringify({
+      version: 2,
+      baseplate: { size: 32 },
+      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'nx' }],
+    })
+    expect(safeParseBuild(bad)).toBeNull()
+    expect(() => validateBuild(JSON.parse(bad))).toThrow()
+  })
+
+  it('rejects offset on a version 1 envelope', () => {
+    const bad = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, offset: { x: 1, z: 0 } }],
+    })
+    expect(safeParseBuild(bad)).toBeNull()
+    expect(() => validateBuild(JSON.parse(bad))).toThrow()
+  })
+
+  it('accepts offset on a version 2 envelope', () => {
+    const good = JSON.stringify({
+      version: 2,
+      baseplate: { size: 32 },
+      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, offset: { x: 1, z: 0 } }],
+    })
+    expect(safeParseBuild(good)).not.toBeNull()
+  })
+
+  it('accepts mount on a version 3 envelope', () => {
+    const good = JSON.stringify({
+      version: 3,
+      baseplate: { size: 32 },
+      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'pz' }],
+    })
+    expect(safeParseBuild(good)).not.toBeNull()
+  })
+})
+
 describe('createBrickId', () => {
   afterEach(() => {
     vi.unstubAllGlobals()

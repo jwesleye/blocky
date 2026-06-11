@@ -76,6 +76,22 @@ export const BuildSchema = z
           message: `z must be less than or equal to ${bounds.maxZ}`,
         })
       }
+
+      if (brick.offset !== undefined && build.version < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'offset'],
+          message: `offset requires version 2 or later; envelope is version ${build.version}`,
+        })
+      }
+
+      if (brick.mount !== undefined && build.version < 3) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'mount'],
+          message: `mount requires version 3; envelope is version ${build.version}`,
+        })
+      }
     }
   })
 
