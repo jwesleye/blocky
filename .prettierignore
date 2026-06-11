@@ -1,7 +1,12 @@
 dist
+build
 coverage
 playwright-report
 test-results
+.vite
+.cache
+logs
+tmp
 package-lock.json
 pnpm-lock.yaml
 # Exclude large minified test fixtures to prevent diff bloat
