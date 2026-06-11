@@ -1,74 +1,11 @@
 import { test, expect } from '@playwright/test'
-
-interface PlacedBrick {
-  id: string
-  partId: string
-  color: string
-  x: number
-  y: number
-  z: number
-  rot: number
-}
-
-interface DevStore {
-  getState: () => {
-    placeBrick: (b: object) => string | null
-    deleteBrick: (id: string) => void
-    bricks: Record<string, PlacedBrick>
-  }
-}
-
-interface DevCursorStore {
-  getState: () => {
-    rot: number
-    editingTool: string
-  }
-}
-
-interface DevWindow {
-  __blockyStore: DevStore
-  __blockyCursorStore: DevCursorStore
-  __blockyCamera: unknown
-  __blockyProjectToCanvas: (
-    worldX: number,
-    worldY: number,
-    worldZ: number,
-  ) => { x: number; y: number }
-}
-
-async function waitForStores(page: import('@playwright/test').Page) {
-  await page.waitForFunction(
-    () =>
-      (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCursorStore !==
-        undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCamera !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !==
-        undefined,
-  )
-}
-
-async function projectToCanvas(
-  page: import('@playwright/test').Page,
-  worldX: number,
-  worldY: number,
-  worldZ: number,
-): Promise<{ x: number; y: number }> {
-  return page.evaluate(
-    ([wx, wy, wz]) =>
-      (window as unknown as DevWindow).__blockyProjectToCanvas(wx, wy, wz),
-    [worldX, worldY, worldZ] as [number, number, number],
-  )
-}
-
-async function getBrickCount(page: import('@playwright/test').Page) {
-  return page.evaluate(
-    () =>
-      Object.keys(
-        (window as unknown as DevWindow).__blockyStore.getState().bricks,
-      ).length,
-  )
-}
+import {
+  waitForStores,
+  projectToCanvas,
+  getBrickCount,
+  type DevStore,
+  type DevWindow,
+} from './support/devWindow'
 
 test('seeded bricks render to nonblank canvas, Build Status absent', async ({
   page,
