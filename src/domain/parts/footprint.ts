@@ -95,5 +95,6 @@ export function toBrickFootprint(
     cells: getOccupiedCells(brick, def),
     hasTopStuds: def.hasTopStuds,
     offset: brick.offset,
+    mount: brick.mount,
   }
 }

@@ -236,6 +236,38 @@ describe('Balance primitives', () => {
       expect(isBalanced([], PART_CATALOG)).toBe(true)
     })
 
+    it('correctly evaluates balance for a mixed classic+SNOT component', () => {
+      // Standard brick-2x2 at (0,0,0) provides the support footprint (y=0).
+      // Mounted brick-1x1 at (3,1,0) is elevated (y=1) so does NOT widen the footprint
+      // but DOES contribute to CoM — its grid-cell center is at (3.5, 0.5).
+      //
+      // Standard: mass=4*3=12, CoM=(1,1). Mounted: mass=1*3=3, CoM=(3.5,0.5).
+      // Combined CoM: x=(12+10.5)/15=1.5, z=(12+1.5)/15=0.9
+      // Support hull: [0,2]×[0,2] (2x2 brick). CoM (1.5,0.9) is inside → balanced.
+      const bricks: PlacedBrick[] = [
+        {
+          id: 'std',
+          partId: 'brick-2x2',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        {
+          id: 'mnt',
+          partId: 'brick-1x1',
+          color: 'blue',
+          x: 3,
+          y: 1,
+          z: 0,
+          rot: 0,
+          mount: 'px' as const,
+        },
+      ]
+      expect(isBalanced(bricks, PART_CATALOG)).toBe(true)
+    })
+
     it('offset brick is balanced when its shifted CoM lands inside the support footprint', () => {
       // plate-1x1 (height=1) at x=2 gives support footprint X [2,3].
       // brick-1x1 (height=3) at x=1 with offset.x=1: true CoM_x = 1.5+0.5 = 2.0 → inside [2,3].

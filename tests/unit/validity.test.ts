@@ -168,13 +168,22 @@ describe('isValidPlacement', () => {
     expect(isValidPlacement(ghost, [])).toBe(true)
   })
 
-  it('rejects a mounted brick above the baseplate until mount physics ship', () => {
+  it('rejects a mounted brick with no lateral contact to any standard brick (floating)', () => {
+    // Mounted 'px' at x=0, y=3: anti-stud = 0.5 - 1.5 = -1.0 ≠ support.xHi (1.0) → no contact.
     const support = brick({ id: 'support' })
     const ghost = brick({
       y: 3,
       mount: 'px',
     })
     expect(isValidPlacement(ghost, [support])).toBe(false)
+  })
+
+  it('allows a valid lateral SNOT placement (mounted brick anti-stud contacts standard face)', () => {
+    // Standard at (0,0,0): xHi=1.0. Mounted 'px' at (2,1,0): anti-stud = 2.5-1.5 = 1.0 ✓
+    // Y overlap: mounted [2.0,3.0] vs standard [0,3] → grounded via lateral contact.
+    const support = brick({ id: 'support' })
+    const ghost = brick({ x: 2, y: 1, mount: 'px' })
+    expect(isValidPlacement(ghost, [support])).toBe(true)
   })
 
   it('rejects offset-plus-mount placements as unsupported', () => {

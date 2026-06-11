@@ -9,13 +9,7 @@ import { groundedIds } from './placement'
 import { BASEPLATE_SIZE_STUDS } from '../grid'
 
 function usesUnsupportedMountPlacement(brick: PlacedBrick): boolean {
-  if (brick.mount === undefined) {
-    return false
-  }
-
-  // Render-first SNOT in #365 supports baseplate-authored mounted bricks only.
-  // Mixed/elevated mount physics land in #366.
-  return brick.y !== 0 || brick.offset !== undefined
+  return brick.mount !== undefined && brick.offset !== undefined
 }
 
 /**
