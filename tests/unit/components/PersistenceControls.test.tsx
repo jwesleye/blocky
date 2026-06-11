@@ -3,7 +3,10 @@ import Graph from 'graphology'
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PersistenceControls } from '@/components/PersistenceControls'
-import { SHARE_URL_PARAM, decodeShareToken } from '@/domain/persistence/shareUrl'
+import {
+  SHARE_URL_PARAM,
+  decodeShareToken,
+} from '@/domain/persistence/shareUrl'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
 const resetStore = () => {
