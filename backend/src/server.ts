@@ -38,7 +38,7 @@ function sendJSON(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, x-user-id',
+    'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
   })
   res.end(payload)
@@ -84,7 +84,7 @@ export async function handler(
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, x-user-id',
+      'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     })
     res.end()
@@ -160,17 +160,14 @@ export async function handler(
 
   if (req.method === 'DELETE' && buildIdMatch) {
     const buildId = decodeURIComponent(buildIdMatch[1] ?? '')
-    const userId = req.headers['x-user-id']
-    if (!userId || Array.isArray(userId)) {
-      sendJSON(res, 400, { error: 'x-user-id header required' })
-      return
-    }
-    const result = deleteBuild(buildId, userId)
+    const result = deleteBuild(buildId)
     if (!result.success) {
       if (result.reason === 'not-found') {
         sendJSON(res, 404, { error: 'Build not found' })
       } else {
-        sendJSON(res, 403, { error: 'Unauthorized' })
+        sendJSON(res, 403, {
+          error: 'Deletion requires an authenticated principal',
+        })
       }
       return
     }

@@ -52,24 +52,27 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
   // Switch to paint via keyboard shortcut B
   await page.keyboard.press('b')
   const toolAfterB = await page.evaluate(() => {
-    return (window as unknown as WorkflowDevWindow).__blockyCursorStore.getState()
-      .editingTool
+    return (
+      window as unknown as WorkflowDevWindow
+    ).__blockyCursorStore.getState().editingTool
   })
   expect(toolAfterB).toBe('paint')
 
   // Switch to eyedropper via keyboard shortcut I
   await page.keyboard.press('i')
   const toolAfterI = await page.evaluate(() => {
-    return (window as unknown as WorkflowDevWindow).__blockyCursorStore.getState()
-      .editingTool
+    return (
+      window as unknown as WorkflowDevWindow
+    ).__blockyCursorStore.getState().editingTool
   })
   expect(toolAfterI).toBe('eyedropper')
 
   // Switch to place via keyboard shortcut P
   await page.keyboard.press('p')
   const toolAfterP = await page.evaluate(() => {
-    return (window as unknown as WorkflowDevWindow).__blockyCursorStore.getState()
-      .editingTool
+    return (
+      window as unknown as WorkflowDevWindow
+    ).__blockyCursorStore.getState().editingTool
   })
   expect(toolAfterP).toBe('place')
 
@@ -80,8 +83,9 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
     'true',
   )
   const toolAfterClick = await page.evaluate(() => {
-    return (window as unknown as WorkflowDevWindow).__blockyCursorStore.getState()
-      .editingTool
+    return (
+      window as unknown as WorkflowDevWindow
+    ).__blockyCursorStore.getState().editingTool
   })
   expect(toolAfterClick).toBe('paint')
 })
@@ -129,9 +133,8 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   }, ids)
 
   const selectionSize = await page.evaluate(() => {
-    return (
-      window as unknown as WorkflowDevWindow
-    ).__blockyStore.getState().selection.size
+    return (window as unknown as WorkflowDevWindow).__blockyStore.getState()
+      .selection.size
   })
   expect(selectionSize).toBe(2)
 
@@ -165,9 +168,8 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   }, ids)
 
   const colorAfterPaint = await page.evaluate((ids) => {
-    return (
-      window as unknown as WorkflowDevWindow
-    ).__blockyStore.getState().bricks[ids[0]].color
+    return (window as unknown as WorkflowDevWindow).__blockyStore.getState()
+      .bricks[ids[0]].color
   }, ids)
   expect(colorAfterPaint).toBe('green')
 
@@ -183,9 +185,8 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
     ;(window as unknown as WorkflowDevWindow).__blockyStore.getState().undo()
   })
   const colorAfterUndo1 = await page.evaluate((ids) => {
-    return (
-      window as unknown as WorkflowDevWindow
-    ).__blockyStore.getState().bricks[ids[0]].color
+    return (window as unknown as WorkflowDevWindow).__blockyStore.getState()
+      .bricks[ids[0]].color
   }, ids)
   expect(colorAfterUndo1).toBe('red')
 
@@ -220,9 +221,8 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
     ;(window as unknown as WorkflowDevWindow).__blockyStore.getState().redo()
   })
   const colorAfterRedo2 = await page.evaluate((ids) => {
-    return (
-      window as unknown as WorkflowDevWindow
-    ).__blockyStore.getState().bricks[ids[0]].color
+    return (window as unknown as WorkflowDevWindow).__blockyStore.getState()
+      .bricks[ids[0]].color
   }, ids)
   expect(colorAfterRedo2).toBe('green')
 })
