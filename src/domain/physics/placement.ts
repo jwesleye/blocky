@@ -13,9 +13,9 @@
  */
 import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
-import type { PlacedBrick } from '../model/types'
+import type { PlacedBrick, HalfStudOffset } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
-import { toBrickFootprint } from '../parts/footprint'
+import { toBrickFootprint, type FootprintRect, rectsOverlap } from '../parts/footprint'
 
 interface PlacementGraph {
   mergeNode: (id: string) => void
@@ -54,6 +54,11 @@ export interface BrickFootprint {
    * `true` for bricks and plates.
    */
   readonly hasTopStuds?: boolean
+  /**
+   * Optional half-stud body offset. `x: 1` means +0.5 stud shift along X;
+   * `z: 1` means +0.5 stud shift along Z. Absent/undefined is no shift.
+   */
+  readonly offset?: HalfStudOffset
 }
 
 /** Graph node id standing in for the baseplate (the ground). */
@@ -62,9 +67,20 @@ export const BASEPLATE = '__baseplate__'
 /** Y level (plate units) of the baseplate's top surface. */
 export const BASEPLATE_TOP_Y = 0
 
-/** Key identifying a stud cell at a specific Y boundary plane. */
-function faceKey(x: number, z: number, y: number): string {
-  return `${x}|${z}|${y}`
+function bfpToRect(fp: BrickFootprint): FootprintRect {
+  const ox = 0.5 * (fp.offset?.x ?? 0)
+  const oz = 0.5 * (fp.offset?.z ?? 0)
+  let xLo = Infinity,
+    xHi = -Infinity,
+    zLo = Infinity,
+    zHi = -Infinity
+  for (const c of fp.cells) {
+    if (c.x < xLo) xLo = c.x
+    if (c.x + 1 > xHi) xHi = c.x + 1
+    if (c.z < zLo) zLo = c.z
+    if (c.z + 1 > zHi) zHi = c.z + 1
+  }
+  return { xLo: xLo + ox, xHi: xHi + ox, zLo: zLo + oz, zHi: zHi + oz }
 }
 
 /**
@@ -73,7 +89,7 @@ function faceKey(x: number, z: number, y: number): string {
  * Nodes are brick ids plus the {@link BASEPLATE} node. An edge means a
  * physical coupling: either a brick resting on the baseplate (`bottomY === 0`)
  * or the studded top face of one brick meeting the anti-stud bottom face of
- * another at the same X/Z cell and Y plane.
+ * another with positive-area rectangle overlap at the shared Y plane.
  *
  * @throws RangeError if any brick has a non-positive height.
  */
@@ -84,11 +100,9 @@ export function buildConnectionGraph(
   const graph = new GraphCtor({ type: 'undirected', allowSelfLoops: false })
   graph.mergeNode(BASEPLATE)
 
-  // Index bottom (anti-stud) faces by cell + plane so each studded top face
-  // can find the bricks resting directly on it in one pass.
-  const bottomFaces = new Map<string, string[]>()
+  // Index bricks by bottomY so the coupling scan stays O(n²)-per-plane.
+  const byBottomY = new Map<number, BrickFootprint[]>()
 
-  // First pass: register nodes, ground baseplate-resting bricks, index bottoms.
   for (const b of all) {
     if (b.height < 1) {
       throw new RangeError(
@@ -99,23 +113,25 @@ export function buildConnectionGraph(
     if (b.bottomY === BASEPLATE_TOP_Y) {
       graph.mergeEdge(b.id, BASEPLATE)
     }
-    for (const cell of b.cells) {
-      const key = faceKey(cell.x, cell.z, b.bottomY)
-      const ids = bottomFaces.get(key)
-      if (ids) ids.push(b.id)
-      else bottomFaces.set(key, [b.id])
-    }
+    const bucket = byBottomY.get(b.bottomY)
+    if (bucket) bucket.push(b)
+    else byBottomY.set(b.bottomY, [b])
   }
 
-  // Second pass: couple each studded top face to the bottom faces above it.
+  // For each brick whose top exposes studs, couple it to every brick whose
+  // bottom sits at the same Y plane and whose footprint rect overlaps with
+  // positive area. This reproduces exact-cell coupling for integer-aligned
+  // bricks and additionally handles half-stud-offset (jumper) bricks.
   for (const b of all) {
     if (b.hasTopStuds === false) continue
     const topY = b.bottomY + b.height
-    for (const cell of b.cells) {
-      const above = bottomFaces.get(faceKey(cell.x, cell.z, topY))
-      if (!above) continue
-      for (const otherId of above) {
-        if (otherId !== b.id) graph.mergeEdge(b.id, otherId)
+    const candidates = byBottomY.get(topY)
+    if (!candidates) continue
+    const bRect = bfpToRect(b)
+    for (const other of candidates) {
+      if (other.id === b.id) continue
+      if (rectsOverlap(bRect, bfpToRect(other))) {
+        graph.mergeEdge(b.id, other.id)
       }
     }
   }

@@ -47,8 +47,15 @@ export function computeSupportFootprint(
     if (brick.y !== 0) continue
     const def = catalog[brick.partId]
     if (!def) continue
+    const ox = 0.5 * (brick.offset?.x ?? 0)
+    const oz = 0.5 * (brick.offset?.z ?? 0)
     for (const { x, z } of getOccupiedCells(brick, def)) {
-      supportCorners.push([x, z], [x + 1, z], [x, z + 1], [x + 1, z + 1])
+      supportCorners.push(
+        [x + ox, z + oz],
+        [x + 1 + ox, z + oz],
+        [x + ox, z + 1 + oz],
+        [x + 1 + ox, z + 1 + oz],
+      )
     }
   }
 
@@ -92,9 +99,10 @@ export function computeCoM(
     const cells = getOccupiedCells(brick, def)
     const mass = cells.length * def.height
 
-    // For x and z, it's the average of occupied cells' centers
-    const cx = cells.reduce((s, c) => s + c.x + 0.5, 0) / cells.length
-    const cz = cells.reduce((s, c) => s + c.z + 0.5, 0) / cells.length
+    const ox = 0.5 * (brick.offset?.x ?? 0)
+    const oz = 0.5 * (brick.offset?.z ?? 0)
+    const cx = cells.reduce((s, c) => s + c.x + 0.5, 0) / cells.length + ox
+    const cz = cells.reduce((s, c) => s + c.z + 0.5, 0) / cells.length + oz
 
     // For y, it's the vertical center of the brick
     const cy = brick.y + def.height / 2

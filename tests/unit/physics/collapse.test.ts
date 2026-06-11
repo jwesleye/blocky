@@ -139,6 +139,29 @@ describe('selectCollapsingBricks', () => {
     expect(selectCollapsingBricks(bricks)).toEqual(new Set())
   })
 
+  it('collapses an offset brick whose +0.5 shift pushes its component CoM outside the support', () => {
+    // base: brick-1x1 at (0,0,0) → support footprint X [0,1].
+    // top: brick-1x2 (rot=1, two cells in X: (0,0)&(1,0)) at (0,3,0) with offset.x=1.
+    // Without offset awareness: CoM_x = (0.5*3 + 1.0*6)/9 = 0.833 → inside [0,1] → no collapse.
+    // With offset: CoM_x = (0.5*3 + 1.5*6)/9 = 1.167 → outside [0,1] → top shears off.
+    const bricks: PlacedBrick[] = [
+      { id: 'base', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+      {
+        id: 'top',
+        partId: 'brick-1x2',
+        color: 'red',
+        x: 0,
+        y: 3,
+        z: 0,
+        rot: 1,
+        offset: { x: 1, z: 0 },
+      },
+    ]
+    const result = selectCollapsingBricks(bricks)
+    expect(result).toContain('top')
+    expect(result).not.toContain('base')
+  })
+
   it('treats a brick resting only on a tile (hasTopStuds=false) as floating', () => {
     // tile at y=0 is grounded but has no top studs — the plate above cannot couple
     // through it, so the plate has no path to the baseplate and must collapse.

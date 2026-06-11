@@ -8,6 +8,25 @@ export interface Cell {
   z: number
 }
 
+export interface FootprintRect {
+  xLo: number
+  xHi: number
+  zLo: number
+  zHi: number
+}
+
+export function getFootprintRect(brick: PlacedBrick, def: PartDef): FootprintRect {
+  const [W, L] =
+    brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
+  const xLo = brick.x + 0.5 * (brick.offset?.x ?? 0)
+  const zLo = brick.z + 0.5 * (brick.offset?.z ?? 0)
+  return { xLo, xHi: xLo + W, zLo, zHi: zLo + L }
+}
+
+export function rectsOverlap(a: FootprintRect, b: FootprintRect): boolean {
+  return a.xLo < b.xHi && a.xHi > b.xLo && a.zLo < b.zHi && a.zHi > b.zLo
+}
+
 /**
  * Returns the half-stud cells (X, Z) occupied by a placed brick.
  * Each stud spans 2x2 half-stud cells.
@@ -59,5 +78,6 @@ export function toBrickFootprint(
     height: def.height,
     cells: getOccupiedCells(brick, def),
     hasTopStuds: def.hasTopStuds,
+    offset: brick.offset,
   }
 }

@@ -126,4 +126,42 @@ describe('buildConnectionGraph', () => {
     const graph = buildConnectionGraph([tile, top], PART_CATALOG)
     expect(graph.hasEdge('tile', 'top')).toBe(false)
   })
+
+  it('couples a half-stud-offset (jumper) brick to all supporters it physically overlaps', () => {
+    // Two 1x1 supporters side by side in X at y=0.
+    // The top brick has offset.x=1 (+0.5 stud shift in X), so its footprint rect
+    // spans X [0.5, 1.5] at y=3 — physically overlapping BOTH supporters.
+    const left: PlacedBrick = {
+      id: 'left',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+    const right: PlacedBrick = {
+      id: 'right',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 1,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+    const top: PlacedBrick = {
+      id: 'top',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 0,
+      y: 3,
+      z: 0,
+      rot: 0,
+      offset: { x: 1, z: 0 },
+    }
+
+    const graph = buildConnectionGraph([left, right, top], PART_CATALOG)
+    expect(graph.hasEdge('top', 'left')).toBe(true)
+    expect(graph.hasEdge('top', 'right')).toBe(true)
+  })
 })
