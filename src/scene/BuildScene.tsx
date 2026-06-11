@@ -52,7 +52,7 @@ function GhostBrickMesh({
   ]
 
   return (
-    <mesh position={position} raycast={() => null}>
+    <mesh name="ghost-brick" position={position} raycast={() => null}>
       <boxGeometry args={[width * 0.97, part.height * 0.97, depth * 0.97]} />
       <meshStandardMaterial
         color={valid ? '#00ee55' : '#ff3333'}
