@@ -236,6 +236,26 @@ describe('Balance primitives', () => {
       expect(isBalanced([], PART_CATALOG)).toBe(true)
     })
 
+    it('offset brick is balanced when its shifted CoM lands inside the support footprint', () => {
+      // plate-1x1 (height=1) at x=2 gives support footprint X [2,3].
+      // brick-1x1 (height=3) at x=1 with offset.x=1: true CoM_x = 1.5+0.5 = 2.0 → inside [2,3].
+      // Without offset: CoM_x = 1.5, outside [2,3] → misjudged as unbalanced.
+      const bricks: PlacedBrick[] = [
+        { id: 'base', partId: 'plate-1x1', color: 'red', x: 2, y: 0, z: 0, rot: 0 },
+        {
+          id: 'top',
+          partId: 'brick-1x1',
+          color: 'blue',
+          x: 1,
+          y: 1,
+          z: 0,
+          rot: 0,
+          offset: { x: 1, z: 0 },
+        },
+      ]
+      expect(isBalanced(bricks, PART_CATALOG)).toBe(true)
+    })
+
     it('CoM on hull boundary is considered balanced', () => {
       // Grounded brick-1x1 at (0,0,0) gives support footprint [0,1]x[0,1].
       // Second brick-1x1 at (1,3,0) is not grounded so does not widen footprint.

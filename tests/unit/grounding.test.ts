@@ -120,6 +120,33 @@ describe('groundedIds / isGrounded', () => {
   })
 })
 
+describe('offset-aware grounding (placement path)', () => {
+  it('grounds an offset brick whose rect overlaps a supporter even when integer cells do not match', () => {
+    // Supporter at x=1, cells (1,0). Top brick at integer x=0 with offset.x=1:
+    // its footprint rect is X [0.5, 1.5], which overlaps the supporter rect [1, 2]
+    // with positive area. Integer cell matching (cells (0,0) vs (1,0)) produces no
+    // match, so the current code reports the top as floating — the rect-overlap
+    // fix is required for the correct grounded result.
+    const support: BrickFootprint = {
+      id: 'support',
+      bottomY: 0,
+      height: 3,
+      cells: [{ x: 1, z: 0 }],
+      hasTopStuds: true,
+    }
+    const top: BrickFootprint = {
+      id: 'top',
+      bottomY: 3,
+      height: 3,
+      cells: [{ x: 0, z: 0 }],
+      hasTopStuds: true,
+      offset: { x: 1, z: 0 },
+    }
+    expect(groundedIds([support, top])).toContain('top')
+    expect(floatingIds([support, top])).not.toContain('top')
+  })
+})
+
 describe('canPlace (anti-floating hard rule)', () => {
   it('allows a brick placed directly on the baseplate', () => {
     expect(canPlace(brick('new', 4, 4, 0), [])).toBe(true)
