@@ -105,10 +105,11 @@ export interface BuildStoreWithTemporal extends BuildStore {
   temporal: StoreApi<TemporalState<Partial<BuildState>>>
 }
 
-function usesUnsupportedMountPlacement(brick: Omit<PlacedBrick, 'id'>): boolean {
+function usesUnsupportedMountPlacement(
+  brick: Omit<PlacedBrick, 'id'>,
+): boolean {
   return (
-    brick.mount !== undefined &&
-    (brick.y !== 0 || brick.offset !== undefined)
+    brick.mount !== undefined && (brick.y !== 0 || brick.offset !== undefined)
   )
 }
 
