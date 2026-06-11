@@ -17,7 +17,6 @@ interface CursorState {
   colorId: string
   partId: string
   rot: 0 | 1 | 2 | 3
-  rotation: 0 | 90 | 180 | 270
   offset?: HalfStudOffset
   /**
    * Complete model for the ghost/preview brick being placed.
@@ -39,13 +38,10 @@ interface CursorState {
   sampleBrick: (brick: { partId: string; color: string }) => void
 }
 
-const nextRotation = (rot: 0 | 1 | 2 | 3) => (rot * 90) as 0 | 90 | 180 | 270
-
 export const useCursorStore = create<CursorState>()((set, get) => ({
   colorId: DEFAULT_COLOR_ID,
   partId: DEFAULT_PART_ID,
   rot: 0,
-  rotation: 0,
   offset: undefined,
   cursorBrick: {
     partId: DEFAULT_PART_ID,
@@ -70,7 +66,6 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
       const rot = ((state.rot + 1) % 4) as 0 | 1 | 2 | 3
       return {
         rot,
-        rotation: nextRotation(rot),
         cursorBrick: { ...state.cursorBrick, rot },
       }
     }),
