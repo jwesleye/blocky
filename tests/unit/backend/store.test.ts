@@ -1,7 +1,7 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { beforeEach, afterEach, describe, expect, it } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import {
   addReport,
   clearStore,
@@ -185,6 +185,29 @@ describe('gallery store durability', () => {
     expect(isBuildDeleted('missing-build')).toBe(false)
     expect(isBuildDeleted(anonymousPayload.buildId)).toBe(false)
     expect(isBuildDeleted(ownedPayload.buildId)).toBe(false)
+  })
+
+  it('starts from empty state when the persisted store file is malformed', () => {
+    const buildId = generateBuildId()
+    storeBuild(makePayload(buildId))
+    expect(listBuilds()).toHaveLength(1)
+
+    const dataDir = process.env['GALLERY_DATA_DIR'] as string
+    writeFileSync(join(dataDir, 'store.json'), '{ this is not valid json', 'utf8')
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      expect(() => reloadStore()).not.toThrow()
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[store] failed to parse store file'),
+        expect.anything(),
+      )
+    } finally {
+      errorSpy.mockRestore()
+    }
+
+    expect(listBuilds()).toEqual([])
+    expect(getBuild(buildId)).toBeUndefined()
   })
 
   it('persists reports beside build data without mutating the payload', () => {

@@ -87,8 +87,16 @@ export function reloadStore(): void {
     return
   }
 
-  const parsed = JSON.parse(readFileSync(storeFile, 'utf8')) as PersistedStore
-  hydrateStore(parsed)
+  try {
+    const parsed = JSON.parse(readFileSync(storeFile, 'utf8')) as PersistedStore
+    hydrateStore(parsed)
+  } catch (err) {
+    console.error(
+      '[store] failed to parse store file, starting with empty state:',
+      err,
+    )
+    emptyStore()
+  }
 }
 
 export function generateBuildId(): string {
