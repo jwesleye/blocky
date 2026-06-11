@@ -148,6 +148,119 @@ describe('bricksToBuild / buildToBricks', () => {
   })
 })
 
+describe('version 3 — SNOT mount', () => {
+  it('selects version 3 when any brick has a mount', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        mount: 'px',
+      },
+    ]
+    expect(bricksToBuild(bricks, 32).version).toBe(3)
+  })
+
+  it('selects version 2 when only offsets are present (no mount)', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        offset: { x: 1, z: 0 },
+      },
+    ]
+    expect(bricksToBuild(bricks, 32).version).toBe(2)
+  })
+
+  it('selects version 1 for a plain build (no offset, no mount)', () => {
+    const bricks: PlacedBrick[] = [
+      { id: '1', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+    ]
+    expect(bricksToBuild(bricks, 32).version).toBe(1)
+  })
+
+  it('round-trips a brick with mount through bricksToBuild → buildToBricks', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        mount: 'px',
+      },
+    ]
+    const restored = buildToBricks(bricksToBuild(bricks, 32))
+    expect(restored[0]).toMatchObject({ mount: 'px' })
+  })
+
+  it('round-trips a brick with mount through serializeBuild → parseBuild', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        mount: 'px',
+      },
+    ]
+    const build = bricksToBuild(bricks, 32)
+    const restored = parseBuild(serializeBuild(build))
+    expect(restored.version).toBe(3)
+    expect(restored.bricks[0]).toMatchObject({ mount: 'px' })
+  })
+
+  it('rejects an unknown mount value', () => {
+    const bad = JSON.stringify({
+      version: 3,
+      baseplate: { size: 32 },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'sideways',
+        },
+      ],
+    })
+    expect(safeParseBuild(bad)).toBeNull()
+    expect(() => validateBuild(JSON.parse(bad))).toThrow()
+  })
+
+  it('rejects version 4 (unsupported future version)', () => {
+    const bad = JSON.stringify({
+      version: 4,
+      baseplate: { size: 32 },
+      bricks: [],
+    })
+    expect(safeParseBuild(bad)).toBeNull()
+    expect(() => validateBuild(JSON.parse(bad))).toThrow()
+  })
+
+  it('preserves v1 classic builds as version 1 after bumping CURRENT_BUILD_VERSION', () => {
+    const build = createEmptyBuild()
+    expect(build.version).toBe(1)
+    expect(buildSchema.safeParse(build).success).toBe(true)
+  })
+})
+
 describe('createBrickId', () => {
   afterEach(() => {
     vi.unstubAllGlobals()

@@ -115,4 +115,24 @@ describe('useBuildPersistence.exportToJSON (issue #101)', () => {
     expect(build.version).toBe(1)
     expect(build.bricks[0]).not.toHaveProperty('offset')
   })
+
+  it('serializes a SNOT build as version 3 with the mount intact', () => {
+    const mountBrick: PlacedBrick = {
+      id: 'mounted',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 1,
+      y: 0,
+      z: 1,
+      rot: 0,
+      mount: 'px',
+    }
+    useBuildStore.setState({ bricks: { [mountBrick.id]: mountBrick } })
+    const { result } = renderHook(() => useBuildPersistence())
+
+    const build = exportedJSON(() => result.current.exportToJSON())
+
+    expect(build.version).toBe(3)
+    expect(build.bricks[0]).toMatchObject({ partId: 'brick-1x1', mount: 'px' })
+  })
 })

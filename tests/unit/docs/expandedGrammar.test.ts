@@ -4,13 +4,14 @@ import { join } from 'node:path'
 const DOC_PATH = join(process.cwd(), 'docs/PRD.md')
 
 /**
- * Drift guard (issue #101): the PRD must keep documenting the expanded-grammar
- * scope this slice hardens — half-stud (jumper) offsets, the v1↔v2 migration
- * guarantee, and the connection types that remain out of scope. If the doc
- * stops stating any of these, this test fails so the documented contract and
- * the shipped persistence behavior cannot silently diverge.
+ * Drift guard: the PRD must keep documenting the expanded-grammar scope —
+ * half-stud (jumper) offsets, SNOT (sideways building) as the first supported
+ * post-offset family, the v1↔v2↔v3 migration guarantee, and the connection
+ * types that remain out of scope. If the doc stops stating any of these, this
+ * test fails so the documented contract and shipped persistence behavior cannot
+ * silently diverge.
  */
-describe('docs/PRD.md — expanded-grammar scope drift guard (issue #101)', () => {
+describe('docs/PRD.md — expanded-grammar scope drift guard', () => {
   it('exists', () => {
     expect(existsSync(DOC_PATH), 'docs/PRD.md not found').toBe(true)
   })
@@ -29,7 +30,22 @@ describe('docs/PRD.md — expanded-grammar scope drift guard (issue #101)', () =
     })
   })
 
-  describe('v1 ↔ v2 migration guarantee', () => {
+  describe('supported SNOT (sideways building) scope', () => {
+    it('names SNOT as the first supported post-offset connection family', () => {
+      expect(doc()).toMatch(/snot/i)
+      expect(doc()).toMatch(/first supported post-offset/i)
+    })
+
+    it('states that a build with a mount brick serializes as version 3', () => {
+      expect(doc()).toMatch(/version:\s*3/i)
+    })
+
+    it('names the four mount facings', () => {
+      expect(doc()).toMatch(/px|nx|pz|nz/)
+    })
+  })
+
+  describe('v1 ↔ v2 ↔ v3 migration guarantee', () => {
     it('states a no-offset build stays version 1', () => {
       expect(doc()).toMatch(/version:\s*1/i)
     })
@@ -44,7 +60,7 @@ describe('docs/PRD.md — expanded-grammar scope drift guard (issue #101)', () =
   })
 
   describe('still-excluded connection types', () => {
-    it.each(['SNOT', 'hinge', 'Technic', 'angled'])(
+    it.each(['hinge', 'Technic', 'angled'])(
       'names %s as out of scope',
       (term) => {
         expect(doc()).toMatch(new RegExp(term, 'i'))

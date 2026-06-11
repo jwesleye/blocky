@@ -109,3 +109,55 @@ describe('loadBuildFromShareSearch', () => {
     ).toBeNull()
   })
 })
+
+describe('SNOT mount — share URL round-trip', () => {
+  it('round-trips a v3 build with a mount brick through encode → decode', () => {
+    const build: Build = {
+      version: 3,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'px',
+        },
+      ],
+    }
+    const token = encodeBuildToShareToken(build)
+    expect(decodeShareToken(token)).toEqual(build)
+  })
+
+  it('returns null for a token whose JSON carries an unknown mount value', () => {
+    const bad = JSON.stringify({
+      version: 3,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'bogus',
+        },
+      ],
+    })
+    const token = compressToEncodedURIComponent(bad)
+    expect(decodeShareToken(token)).toBeNull()
+  })
+
+  it('returns null for a token carrying version 4 (unsupported future grammar)', () => {
+    const bad = JSON.stringify({
+      version: 4,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [],
+    })
+    const token = compressToEncodedURIComponent(bad)
+    expect(decodeShareToken(token)).toBeNull()
+  })
+})

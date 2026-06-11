@@ -203,4 +203,37 @@ describe('useBuildPersistence', () => {
     expect(alertSpy.mock.calls[0]?.[0]).toMatch(/Invalid build file/)
     expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
   })
+
+  it('alerts and does not update store when build has unknown mount value', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    const unknownMount = JSON.stringify({
+      version: 3,
+      baseplate: { size: 32 },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'sideways',
+        },
+      ],
+    })
+
+    const { triggerChange } = makeMockInput()
+    const { result } = renderHook(() => useBuildPersistence())
+    let importPromise: Promise<void>
+    await act(async () => {
+      importPromise = result.current.importFromJSON()
+    })
+
+    await triggerChange(unknownMount)
+    await importPromise!
+
+    expect(alertSpy).toHaveBeenCalledOnce()
+    expect(alertSpy.mock.calls[0]?.[0]).toMatch(/Invalid build file/)
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
+  })
 })
