@@ -67,7 +67,7 @@ export function InstancedBricks({
           receiveShadow
         >
           <primitive
-            object={getPartGeometry(bucket.partType, {
+            object={getPartGeometry(bucket.partId, {
               w: bucket.size[0] / STUD_SCENE_UNIT,
               h: bucket.size[1] / PLATE_SCENE_UNIT,
               d: bucket.size[2] / STUD_SCENE_UNIT,
