@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 test('Export Screenshot downloads a non-empty PNG whose dimensions match the canvas drawing buffer', async ({
   page,
 }) => {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
 
   const canvas = page.locator('canvas')
   await expect(canvas).toBeVisible()
