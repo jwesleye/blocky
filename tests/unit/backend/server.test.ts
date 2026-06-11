@@ -208,20 +208,7 @@ describe('GET /builds/:id — load', () => {
     expect(res.status).toBe(404)
   })
 
-  it('returns 410 for a deleted build', async () => {
-    const payload = makeAuthored('user1')
-    storeBuild(payload)
-
-    await req(`/builds/${payload.buildId}`, {
-      method: 'DELETE',
-      headers: { 'x-user-id': 'user1' },
-    })
-
-    const res = await req(`/builds/${payload.buildId}`)
-    expect(res.status).toBe(410)
-  })
-
-  it('returns 410 for a deleted build after the store reloads', async () => {
+  it('returns 200 after a forged delete attempt leaves the build intact', async () => {
     const payload = makeAuthored('user1')
     storeBuild(payload)
 
@@ -229,45 +216,60 @@ describe('GET /builds/:id — load', () => {
       method: 'DELETE',
       headers: { 'x-user-id': 'user1' },
     })
-    expect(deleteRes.status).toBe(200)
+    expect(deleteRes.status).toBe(403)
+
+    const res = await req(`/builds/${payload.buildId}`)
+    expect(res.status).toBe(200)
+  })
+
+  it('keeps a forged-delete target loadable after the store reloads', async () => {
+    const payload = makeAuthored('user1')
+    storeBuild(payload)
+
+    const deleteRes = await req(`/builds/${payload.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'user1' },
+    })
+    expect(deleteRes.status).toBe(403)
 
     reloadStore()
 
     const res = await req(`/builds/${payload.buildId}`)
-    expect(res.status).toBe(410)
+    expect(res.status).toBe(200)
   })
 })
 
 describe('GET /builds — list', () => {
-  it('excludes deleted builds from the listing', async () => {
+  it('keeps builds listed when header-only deletion is rejected', async () => {
     const kept = makeAnonymous()
-    const toDelete = makeAuthored('owner1')
+    const blockedDelete = makeAuthored('owner1')
     storeBuild(kept)
-    storeBuild(toDelete)
+    storeBuild(blockedDelete)
 
-    await req(`/builds/${toDelete.buildId}`, {
+    const deleteRes = await req(`/builds/${blockedDelete.buildId}`, {
       method: 'DELETE',
       headers: { 'x-user-id': 'owner1' },
     })
+    expect(deleteRes.status).toBe(403)
 
     const res = await req('/builds')
     const body = (await res.json()) as { builds: SharedBuildPayload[] }
     const ids = body.builds.map((b) => b.buildId)
     expect(ids).toContain(kept.buildId)
-    expect(ids).not.toContain(toDelete.buildId)
+    expect(ids).toContain(blockedDelete.buildId)
   })
 
-  it('still excludes deleted builds after the store reloads', async () => {
+  it('still lists the build after a rejected delete and store reload', async () => {
     const kept = makeAnonymous()
-    const toDelete = makeAuthored('owner1')
+    const blockedDelete = makeAuthored('owner1')
     storeBuild(kept)
-    storeBuild(toDelete)
+    storeBuild(blockedDelete)
 
-    const deleteRes = await req(`/builds/${toDelete.buildId}`, {
+    const deleteRes = await req(`/builds/${blockedDelete.buildId}`, {
       method: 'DELETE',
       headers: { 'x-user-id': 'owner1' },
     })
-    expect(deleteRes.status).toBe(200)
+    expect(deleteRes.status).toBe(403)
 
     reloadStore()
 
@@ -275,7 +277,7 @@ describe('GET /builds — list', () => {
     const body = (await res.json()) as { builds: SharedBuildPayload[] }
     const ids = body.builds.map((b) => b.buildId)
     expect(ids).toContain(kept.buildId)
-    expect(ids).not.toContain(toDelete.buildId)
+    expect(ids).toContain(blockedDelete.buildId)
   })
 
   it('hides unlisted builds from the listing but keeps them loadable by id', async () => {
@@ -298,7 +300,7 @@ describe('GET /builds — list', () => {
 })
 
 describe('DELETE /builds/:id — delete', () => {
-  it('returns 200 when the authenticated owner deletes their build', async () => {
+  it('returns 403 when a forged header matches the authenticated owner', async () => {
     const payload = makeAuthored('owner1')
     storeBuild(payload)
 
@@ -306,10 +308,13 @@ describe('DELETE /builds/:id — delete', () => {
       method: 'DELETE',
       headers: { 'x-user-id': 'owner1' },
     })
-    expect(res.status).toBe(200)
+    expect(res.status).toBe(403)
+
+    const getRes = await req(`/builds/${payload.buildId}`)
+    expect(getRes.status).toBe(200)
   })
 
-  it('returns 403 when a different user attempts deletion', async () => {
+  it('returns 403 when a different forged user attempts deletion', async () => {
     const payload = makeAuthored('owner1')
     storeBuild(payload)
 
@@ -326,7 +331,6 @@ describe('DELETE /builds/:id — delete', () => {
 
     const res = await req(`/builds/${payload.buildId}`, {
       method: 'DELETE',
-      headers: { 'x-user-id': 'anyone' },
     })
     expect(res.status).toBe(403)
   })
@@ -334,19 +338,18 @@ describe('DELETE /builds/:id — delete', () => {
   it('returns 404 for an unknown build id', async () => {
     const res = await req('/builds/nonexistent', {
       method: 'DELETE',
-      headers: { 'x-user-id': 'user1' },
     })
     expect(res.status).toBe(404)
   })
 
-  it('returns 400 when x-user-id header is missing', async () => {
+  it('returns 403 when delete is attempted without an authenticated principal header', async () => {
     const payload = makeAuthored('owner1')
     storeBuild(payload)
 
     const res = await req(`/builds/${payload.buildId}`, {
       method: 'DELETE',
     })
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(403)
   })
 })
 

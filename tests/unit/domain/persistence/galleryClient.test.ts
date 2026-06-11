@@ -528,24 +528,23 @@ describe('galleryClient.deleteBuild', () => {
     )
 
     const client = createGalleryClient('http://localhost:4000')
-    const result = await client.deleteBuild('srv_abc123', { userId: 'user1' })
+    const result = await client.deleteBuild('srv_abc123')
 
     expect(result.ok).toBe(true)
   })
 
-  it('sends DELETE to /builds/:id with x-user-id header', async () => {
+  it('sends DELETE to /builds/:id without an x-user-id header', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify({ deleted: true }), { status: 200 }),
     )
 
     const client = createGalleryClient('http://localhost:4000')
-    await client.deleteBuild('srv_abc123', { userId: 'user1' })
+    await client.deleteBuild('srv_abc123')
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:4000/builds/srv_abc123',
       expect.objectContaining({
         method: 'DELETE',
-        headers: expect.objectContaining({ 'x-user-id': 'user1' }),
       }),
     )
   })
@@ -556,9 +555,7 @@ describe('galleryClient.deleteBuild', () => {
     )
 
     const client = createGalleryClient('http://localhost:4000')
-    const result = await client.deleteBuild('srv_abc123', {
-      userId: 'wrong_user',
-    })
+    const result = await client.deleteBuild('srv_abc123')
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
@@ -572,7 +569,7 @@ describe('galleryClient.deleteBuild', () => {
     )
 
     const client = createGalleryClient('http://localhost:4000')
-    const result = await client.deleteBuild('unknown', { userId: 'user1' })
+    const result = await client.deleteBuild('unknown')
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
@@ -584,7 +581,7 @@ describe('galleryClient.deleteBuild', () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
 
     const client = createGalleryClient('http://localhost:4000')
-    const result = await client.deleteBuild('srv_abc123', { userId: 'user1' })
+    const result = await client.deleteBuild('srv_abc123')
 
     expect(result.ok).toBe(false)
     if (!result.ok) {

@@ -136,15 +136,25 @@ export type DeleteResult =
   | { success: true }
   | { success: false; reason: 'not-found' | 'unauthorized' }
 
-export function deleteBuild(id: string, requesterUserId: string): DeleteResult {
+export interface AuthenticatedPrincipal {
+  userId: string
+}
+
+export function deleteBuild(
+  id: string,
+  principal?: AuthenticatedPrincipal,
+): DeleteResult {
   const payload = builds.get(id)
   if (!payload) {
     return { success: false, reason: 'not-found' }
   }
+  if (!principal) {
+    return { success: false, reason: 'unauthorized' }
+  }
   if (payload.gallery.author.identityMode !== 'authenticated') {
     return { success: false, reason: 'unauthorized' }
   }
-  if (payload.gallery.author.userId !== requesterUserId) {
+  if (payload.gallery.author.userId !== principal.userId) {
     return { success: false, reason: 'unauthorized' }
   }
   builds.delete(id)

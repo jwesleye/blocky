@@ -78,10 +78,6 @@ export type GalleryReportResult =
       message: string
     }
 
-export interface GalleryDeleteIdentity {
-  userId: string
-}
-
 export type GalleryDeleteResult =
   | { ok: true }
   | {
@@ -98,10 +94,7 @@ export interface GalleryClient {
     buildId: string,
     report: GalleryReportRequest,
   ): Promise<GalleryReportResult>
-  deleteBuild(
-    buildId: string,
-    identity: GalleryDeleteIdentity,
-  ): Promise<GalleryDeleteResult>
+  deleteBuild(buildId: string): Promise<GalleryDeleteResult>
 }
 
 const authorLabel = (author: SharedBuildAuthorIdentity): string => {
@@ -349,12 +342,11 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
       return { ok: true }
     },
 
-    async deleteBuild(buildId, identity) {
+    async deleteBuild(buildId) {
       let response: Response
       try {
         response = await fetch(url(`/builds/${encodeURIComponent(buildId)}`), {
           method: 'DELETE',
-          headers: { 'x-user-id': identity.userId },
         })
       } catch (err) {
         return {
@@ -372,7 +364,7 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
         return {
           ok: false,
           reason: 'unauthorized',
-          message: 'Unauthorized: not the build owner',
+          message: 'Deletion unavailable until authenticated ownership exists',
         }
       }
 

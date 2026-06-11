@@ -21,7 +21,6 @@ export {
 export type {
   GalleryBuildSummary,
   GalleryClient,
-  GalleryDeleteIdentity,
   GalleryDeleteResult,
   GalleryLoadResult,
   GalleryListResult,
