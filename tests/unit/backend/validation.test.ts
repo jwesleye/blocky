@@ -287,3 +287,60 @@ describe('backend PublishRequestSchema hinge contract', () => {
     expect(PublishRequestSchema.safeParse(request).success).toBe(false)
   })
 })
+
+describe('backend BuildSchema bounds', () => {
+  const validBrick = {
+    partId: 'brick-1x1',
+    color: 'blue',
+    x: 0,
+    y: 0,
+    z: 0,
+    rot: 0,
+  }
+  const BACKEND_MAX_BRICKS = 50_000
+  const BACKEND_MAX_STRING = 64
+
+  it('rejects a bricks array longer than the backend cap', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        bricks: Array(BACKEND_MAX_BRICKS + 1).fill(validBrick),
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects a brick with an over-length partId', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        bricks: [{ ...validBrick, partId: 'x'.repeat(BACKEND_MAX_STRING + 1) }],
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects a brick with an over-length color', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        bricks: [{ ...validBrick, color: 'x'.repeat(BACKEND_MAX_STRING + 1) }],
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('accepts a build at the cap boundary', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        bricks: Array(BACKEND_MAX_BRICKS).fill(validBrick),
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(true)
+  })
+})

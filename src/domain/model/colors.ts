@@ -16,3 +16,7 @@ export function getBrickColor(id: string): ColorDef | undefined {
 export function isValidColorId(id: string): boolean {
   return COLOR_PALETTE.some((c) => c.id === id)
 }
+
+export function resolveBrickColorHex(id: string): string {
+  return getBrickColor(id)?.hex ?? getBrickColor(DEFAULT_COLOR_ID)!.hex
+}

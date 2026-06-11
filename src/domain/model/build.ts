@@ -38,9 +38,12 @@ const brickMountSchema = z.union([
 
 const brickHingeSchema = z.union([z.literal('x'), z.literal('z')])
 
+export const MAX_BRICKS_PER_BUILD = 50_000
+export const MAX_BRICK_STRING_LENGTH = 64
+
 const buildBrickSchema = z.object({
-  partId: z.string(),
-  color: z.string(),
+  partId: z.string().max(MAX_BRICK_STRING_LENGTH),
+  color: z.string().max(MAX_BRICK_STRING_LENGTH),
   x: z.number().int().min(0),
   y: z.number().int().min(0),
   z: z.number().int().min(0),
@@ -63,7 +66,7 @@ export const BuildSchema = z
     baseplate: z.object({
       size: baseplateSizeSchema,
     }),
-    bricks: z.array(buildBrickSchema),
+    bricks: z.array(buildBrickSchema).max(MAX_BRICKS_PER_BUILD),
   })
   .superRefine((build, ctx) => {
     const bounds = boundsForSize(build.baseplate.size)

@@ -5,6 +5,7 @@ import {
   DEFAULT_COLOR_ID,
   getBrickColor,
   isValidColorId,
+  resolveBrickColorHex,
 } from '@/domain/model/colors'
 
 describe('BRICK_COLORS', () => {
@@ -66,5 +67,24 @@ describe('isValidColorId', () => {
 describe('DEFAULT_COLOR_ID', () => {
   it('is a valid palette id', () => {
     expect(isValidColorId(DEFAULT_COLOR_ID)).toBe(true)
+  })
+})
+
+describe('resolveBrickColorHex', () => {
+  it('returns the palette hex for a known color id', () => {
+    const expected = getBrickColor('blue')!.hex
+    expect(resolveBrickColorHex('blue')).toBe(expected)
+  })
+
+  it('returns the default color hex for an unknown id', () => {
+    const defaultHex = getBrickColor(DEFAULT_COLOR_ID)!.hex
+    expect(resolveBrickColorHex('neon-pink')).toBe(defaultHex)
+  })
+
+  it('returns the default color hex for an arbitrarily long string (never passes through raw)', () => {
+    const defaultHex = getBrickColor(DEFAULT_COLOR_ID)!.hex
+    const longString = 'x'.repeat(1000)
+    expect(resolveBrickColorHex(longString)).toBe(defaultHex)
+    expect(resolveBrickColorHex(longString)).not.toBe(longString)
   })
 })

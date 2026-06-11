@@ -1,4 +1,4 @@
-import { getBrickColor } from '../model/colors'
+import { resolveBrickColorHex } from '../model/colors'
 import type { BrickBodySnapshot, PlacedBrick } from '../model/types'
 import {
   CATALOG_BY_ID as PART_CATALOG,
@@ -33,7 +33,7 @@ export function brickToBodySnapshot(
   return {
     id: brick.id,
     partId: brick.partId,
-    color: getBrickColor(brick.color)?.hex ?? brick.color,
+    color: resolveBrickColorHex(brick.color),
     position: [
       brick.x + offsetX + width / 2,
       brick.y + height / 2,

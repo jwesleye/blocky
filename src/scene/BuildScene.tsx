@@ -13,7 +13,7 @@ import { Vector3, type PerspectiveCamera } from 'three'
 
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
-import { getBrickColor } from '@/domain/model/colors'
+import { resolveBrickColorHex } from '@/domain/model/colors'
 import type {
   BrickMount,
   HalfStudOffset,
@@ -431,7 +431,7 @@ export function BuildScene({
             h: part.height,
           }
         }}
-        getColor={(color) => getBrickColor(color)?.hex ?? color}
+        getColor={(color) => resolveBrickColorHex(color)}
         onInstanceClick={(brick, event) => {
           event.stopPropagation()
           if (brick.id) {
