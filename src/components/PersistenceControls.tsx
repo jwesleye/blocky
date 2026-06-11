@@ -107,7 +107,7 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
           disabled={publishStatus === 'publishing'}
         >
           {publishStatus === 'publishing'
-            ? 'Publishing…'
+            ? 'Publishing...'
             : 'Publish to Gallery'}
         </button>
       </div>
