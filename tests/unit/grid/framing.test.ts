@@ -29,4 +29,11 @@ describe('getBaseplateFraming', () => {
     expect(framing.cameraPosition).toHaveLength(3)
     expect(framing.cameraPosition.every(Number.isFinite)).toBe(true)
   })
+
+  it('rejects unsupported baseplate sizes with the canonical message', () => {
+    expect(() => getBaseplateFraming(24)).toThrow(RangeError)
+    expect(() => getBaseplateFraming(24)).toThrow(
+      'Unsupported baseplate size: 24. Supported sizes are 16, 32, 48, 64.',
+    )
+  })
 })
