@@ -80,7 +80,6 @@ const resetCursorStore = () => {
     colorId: DEFAULT_COLOR_ID,
     partId: DEFAULT_PART_ID,
     rot: 0,
-    rotation: 0,
     offset: undefined,
     cursorBrick: {
       partId: DEFAULT_PART_ID,
@@ -152,7 +151,7 @@ describe('BuildScene', () => {
   })
 
   it('rotates slope ghost previews instead of swapping geometry dimensions', async () => {
-    useCursorStore.setState({ partId: 'slope-2x1', rot: 1, rotation: 90 })
+    useCursorStore.setState({ partId: 'slope-2x1', rot: 1 })
 
     const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
     const [baseplate] = renderer.scene.findAll(

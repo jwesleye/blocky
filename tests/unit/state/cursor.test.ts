@@ -8,7 +8,6 @@ const resetCursor = () => {
     colorId: DEFAULT_COLOR_ID,
     partId: DEFAULT_PART_ID,
     rot: 0,
-    rotation: 0,
     cursorBrick: {
       partId: DEFAULT_PART_ID,
       colorId: DEFAULT_COLOR_ID,
@@ -35,27 +34,22 @@ describe('useCursorStore', () => {
   it('initializes rotation to 0', () => {
     const state = useCursorStore.getState()
     expect(state.rot).toBe(0)
-    expect(state.rotation).toBe(0)
     expect(state.cursorBrick.rot).toBe(0)
   })
 
-  it('rotateCursor() advances 0 -> 90 -> 180 -> 270 -> 0', () => {
+  it('rotateCursor() advances 0 -> 1 -> 2 -> 3 -> 0', () => {
     const { rotateCursor } = useCursorStore.getState()
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(1)
-    expect(useCursorStore.getState().rotation).toBe(90)
     expect(useCursorStore.getState().cursorBrick.rot).toBe(1)
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(2)
-    expect(useCursorStore.getState().rotation).toBe(180)
     expect(useCursorStore.getState().cursorBrick.rot).toBe(2)
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(3)
-    expect(useCursorStore.getState().rotation).toBe(270)
     expect(useCursorStore.getState().cursorBrick.rot).toBe(3)
     rotateCursor()
     expect(useCursorStore.getState().rot).toBe(0)
-    expect(useCursorStore.getState().rotation).toBe(0)
     expect(useCursorStore.getState().cursorBrick.rot).toBe(0)
   })
 
@@ -122,7 +116,6 @@ describe('useCursorStore', () => {
       expect(state.cursorBrick.partId).toBe('plate-1x1')
       expect(state.cursorBrick.colorId).toBe('green')
       expect(state.rot).toBe(0)
-      expect(state.rotation).toBe(0)
     })
 
     it('does not change editingTool when sampling', () => {
