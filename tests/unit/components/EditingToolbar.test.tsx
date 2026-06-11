@@ -13,9 +13,18 @@ describe('EditingToolbar', () => {
 
   it('sets aria-pressed=true only on the active tool', () => {
     render(<EditingToolbar activeTool="paint" onToolChange={() => undefined} />)
-    expect(screen.getByTestId('tool-paint')).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByTestId('tool-place')).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByTestId('tool-eyedropper')).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByTestId('tool-paint')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByTestId('tool-place')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(screen.getByTestId('tool-eyedropper')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 
   it('calls onToolChange with place when Place is clicked', () => {
@@ -40,9 +49,20 @@ describe('EditingToolbar', () => {
   })
 
   it('reflects eyedropper as active tool', () => {
-    render(<EditingToolbar activeTool="eyedropper" onToolChange={() => undefined} />)
-    expect(screen.getByTestId('tool-eyedropper')).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByTestId('tool-place')).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByTestId('tool-paint')).toHaveAttribute('aria-pressed', 'false')
+    render(
+      <EditingToolbar activeTool="eyedropper" onToolChange={() => undefined} />,
+    )
+    expect(screen.getByTestId('tool-eyedropper')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByTestId('tool-place')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(screen.getByTestId('tool-paint')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 })

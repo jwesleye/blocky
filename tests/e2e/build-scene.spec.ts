@@ -27,8 +27,10 @@ async function waitForSceneDebugHandles(page: import('@playwright/test').Page) {
   await page.waitForFunction(
     () =>
       (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCursorStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !== undefined,
+      (window as unknown as Partial<DevWindow>).__blockyCursorStore !==
+        undefined &&
+      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !==
+        undefined,
   )
 }
 
@@ -142,7 +144,10 @@ test('place mode deletes an existing brick on click and R rotates the cursor mod
 
   await page.waitForFunction(
     (id) =>
-      !(id as string in (window as unknown as DevWindow).__blockyStore.getState().bricks),
+      !(
+        (id as string) in
+        (window as unknown as DevWindow).__blockyStore.getState().bricks
+      ),
     brickId,
   )
 

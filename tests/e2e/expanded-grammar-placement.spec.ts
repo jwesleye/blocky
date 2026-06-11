@@ -33,17 +33,24 @@ async function placeBrick(
   brick: Omit<PlacedBrick, 'id'>,
 ) {
   await page.evaluate((b) => {
-    ;(window as unknown as WindowWithStore).__blockyStore.getState().placeBrick(b)
+    ;(window as unknown as WindowWithStore).__blockyStore
+      .getState()
+      .placeBrick(b)
   }, brick)
 }
 
 async function getBrickCount(page: import('@playwright/test').Page) {
-  return page.evaluate(() =>
-    Object.keys((window as unknown as WindowWithStore).__blockyStore.getState().bricks).length,
+  return page.evaluate(
+    () =>
+      Object.keys(
+        (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
+      ).length,
   )
 }
 
-test('places an offset brick and rejects overlapping offset placements', async ({ page }) => {
+test('places an offset brick and rejects overlapping offset placements', async ({
+  page,
+}) => {
   await gotoWithStore(page)
 
   // Place a valid offset brick on baseplate

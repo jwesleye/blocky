@@ -13,7 +13,10 @@ export interface Cell {
  * Each stud spans 2x2 half-stud cells.
  * Rotations 1 and 3 swap width and length.
  */
-export function getOccupiedHalfStudCells(brick: PlacedBrick, def: PartDef): Cell[] {
+export function getOccupiedHalfStudCells(
+  brick: PlacedBrick,
+  def: PartDef,
+): Cell[] {
   const [W, L] =
     brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
   const cells: Cell[] = []
