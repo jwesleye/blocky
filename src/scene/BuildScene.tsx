@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { Vector3, type PerspectiveCamera } from 'three'
@@ -21,6 +21,12 @@ import {
   CAMERA_DEFAULT_POSITION,
   CAMERA_DEFAULT_TARGET,
 } from './sceneConfig'
+import {
+  ScreenshotCaptureBridge,
+  type CaptureScreenshot,
+} from './ScreenshotCaptureBridge'
+
+export type { CaptureScreenshot }
 
 const CollapseSimulation = lazy(() =>
   import('./CollapseSimulation').then((m) => ({
@@ -121,11 +127,15 @@ function ThreeDevExpose() {
   return null
 }
 
+interface BuildSceneProps {
+  onCaptureFnReady?: (fn: CaptureScreenshot) => void
+}
+
 /**
  * Renders the live build as static meshes, overlays the ghost placement cursor,
  * and runs the Rapier collapse simulation while a collapse is in flight.
  */
-export function BuildScene() {
+export function BuildScene({ onCaptureFnReady }: BuildSceneProps = {}) {
   const bricks = useBuildStore((state) => state.bricks)
   const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const activeCollapse = useBuildStore((state) => state.activeCollapse)
@@ -190,6 +200,13 @@ export function BuildScene() {
     }
   }
 
+  const stableOnCaptureFnReady = useCallback(
+    (fn: CaptureScreenshot) => {
+      onCaptureFnReady?.(fn)
+    },
+    [onCaptureFnReady],
+  )
+
   return (
     <Canvas
       shadows
@@ -219,6 +236,9 @@ export function BuildScene() {
         target={CAMERA_DEFAULT_TARGET}
       />
       <ThreeDevExpose />
+      {onCaptureFnReady && (
+        <ScreenshotCaptureBridge onReady={stableOnCaptureFnReady} />
+      )}
       <Baseplate size={baseplateSize} onPointerMove={setGhostGrid} />
       <InstancedBricks
         bricks={placedBricks}
