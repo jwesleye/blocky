@@ -1,5 +1,6 @@
-import type { BrickMount, PlacedBrick } from '@/domain/model/types'
+import type { PlacedBrick } from '@/domain/model/types'
 import type { PartType } from '@/domain/parts/catalog'
+import { mountRotation } from './mountRotation'
 
 export const STUD_SCENE_UNIT = 1
 export const PLATE_SCENE_UNIT = 1
@@ -32,21 +33,6 @@ export interface InstanceBucket {
   color: string
   size: [number, number, number]
   instances: BrickInstance[]
-}
-
-function mountRotation(mount?: BrickMount): [number, number, number] {
-  switch (mount) {
-    case 'px':
-      return [0, 0, -Math.PI / 2]
-    case 'nx':
-      return [0, 0, Math.PI / 2]
-    case 'pz':
-      return [Math.PI / 2, 0, 0]
-    case 'nz':
-      return [-Math.PI / 2, 0, 0]
-    default:
-      return [0, 0, 0]
-  }
 }
 
 export function brickInstanceTransform(
