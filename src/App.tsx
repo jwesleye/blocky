@@ -16,9 +16,11 @@ import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { Scene } from '@/scene/Scene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
+import { TouchToolbar } from '@/components/TouchToolbar'
 import '@/styles/gallery.css'
 import '@/styles/hud.css'
 import '@/styles/pickers.css'
+import '@/styles/responsive.css'
 
 export function App() {
   const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
@@ -100,8 +102,8 @@ export function App() {
       }}
     >
       <aside
+        className="app-sidebar"
         style={{
-          width: 220,
           background: '#242424',
           borderRight: '1px solid #333',
           display: 'flex',
@@ -262,6 +264,7 @@ export function App() {
           <Scene />
           <ViewControls />
           <HUD />
+          <TouchToolbar />
         </div>
         <div style={{ padding: '1rem' }}>
           <PersistenceControls />

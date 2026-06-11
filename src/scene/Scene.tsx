@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import type { ThreeEvent } from '@react-three/fiber'
 import { Vector3, type PerspectiveCamera } from 'three'
 
 import type { GridCoord } from '@/domain/grid'
@@ -11,15 +11,16 @@ import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import { isValidPlacement } from '@/domain/physics/validity'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
+import { CameraControls } from './CameraControls'
 import { CameraRig } from './CameraRig'
 import { collapseDebug } from './collapseDebug'
+import type { RenderBrick } from './instancing'
 import { InstancedBricks } from './InstancedBricks'
 import { Lighting } from './Lighting'
 import {
   BACKGROUND_COLOR,
   CAMERA_DEFAULT_FOV,
   CAMERA_DEFAULT_POSITION,
-  CAMERA_DEFAULT_TARGET,
 } from './sceneConfig'
 
 const CollapseSimulation = lazy(() =>
@@ -66,26 +67,29 @@ function GhostBrickMesh({
 
 function Baseplate({
   size,
-  onPointerMove,
+  onPointerPos,
 }: {
   size: number
-  onPointerMove: (pos: GridCoord) => void
+  onPointerPos: (pos: GridCoord) => void
 }) {
   const sceneSize = size * STUD
+
+  const updateGhost = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation()
+    onPointerPos({
+      x: Math.round(event.point.x / STUD),
+      y: 0,
+      z: Math.round(event.point.z / STUD),
+    })
+  }
 
   return (
     <mesh
       position={[sceneSize / 2, 0, sceneSize / 2]}
       rotation={[-Math.PI / 2, 0, 0]}
       receiveShadow
-      onPointerMove={(event) => {
-        event.stopPropagation()
-        onPointerMove({
-          x: Math.round(event.point.x / STUD),
-          y: 0,
-          z: Math.round(event.point.z / STUD),
-        })
-      }}
+      onPointerMove={updateGhost}
+      onPointerDown={updateGhost}
     >
       <planeGeometry args={[sceneSize, sceneSize]} />
       <meshStandardMaterial color="#5a7a5a" />
@@ -121,6 +125,31 @@ function ThreeDevExpose() {
   return null
 }
 
+function brickPointerToGhostGrid(
+  brick: RenderBrick,
+  event: ThreeEvent<PointerEvent>,
+): GridCoord | null {
+  const part = PART_CATALOG[brick.partId]
+  if (!part) return null
+
+  const normal = event.face?.normal
+  if ((normal?.y ?? 0) > 0.9) {
+    return {
+      x: Math.round(event.point.x / STUD),
+      y: brick.y + part.height,
+      z: Math.round(event.point.z / STUD),
+    }
+  }
+
+  const offsetX = event.point.x + (normal?.x ?? 0) * STUD * 0.5
+  const offsetZ = event.point.z + (normal?.z ?? 0) * STUD * 0.5
+  return {
+    x: Math.round(offsetX / STUD),
+    y: brick.y,
+    z: Math.round(offsetZ / STUD),
+  }
+}
+
 /**
  * Renders the live build as static meshes, overlays the ghost placement cursor,
  * and runs the Rapier collapse simulation while a collapse is in flight.
@@ -139,6 +168,7 @@ export function Scene() {
   const offset = useCursorStore((state) => state.offset)
   const editingTool = useCursorStore((state) => state.editingTool)
   const sampleBrick = useCursorStore((state) => state.sampleBrick)
+  const setHoveredBrickId = useCursorStore((state) => state.setHoveredBrickId)
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
 
   useEffect(() => {
@@ -205,22 +235,19 @@ export function Scene() {
       }}
       gl={{ preserveDrawingBuffer: true }}
       onClick={handlePlace}
-      onPointerLeave={() => setGhostGrid(null)}
+      onPointerLeave={() => {
+        setGhostGrid(null)
+        setHoveredBrickId(null)
+      }}
       tabIndex={0}
       style={{ outline: 'none' }}
     >
       <color attach="background" args={[BACKGROUND_COLOR]} />
       <Lighting />
       <CameraRig />
-      <OrbitControls
-        makeDefault
-        enableRotate
-        enablePan
-        enableZoom
-        target={CAMERA_DEFAULT_TARGET}
-      />
+      <CameraControls />
       <ThreeDevExpose />
-      <Baseplate size={baseplateSize} onPointerMove={setGhostGrid} />
+      <Baseplate size={baseplateSize} onPointerPos={setGhostGrid} />
       <InstancedBricks
         bricks={placedBricks}
         getDims={(partId) => {
@@ -244,26 +271,15 @@ export function Scene() {
         }}
         onInstancePointerMove={(brick, event) => {
           event.stopPropagation()
-          const part = PART_CATALOG[brick.partId]
-          if (!part) return
-
-          const normal = event.face?.normal
-          if ((normal?.y ?? 0) > 0.9) {
-            setGhostGrid({
-              x: Math.round(event.point.x / STUD),
-              y: brick.y + part.height,
-              z: Math.round(event.point.z / STUD),
-            })
-            return
-          }
-
-          const offsetX = event.point.x + (normal?.x ?? 0) * STUD * 0.5
-          const offsetZ = event.point.z + (normal?.z ?? 0) * STUD * 0.5
-          setGhostGrid({
-            x: Math.round(offsetX / STUD),
-            y: brick.y,
-            z: Math.round(offsetZ / STUD),
-          })
+          if (brick.id) setHoveredBrickId(brick.id)
+          const grid = brickPointerToGhostGrid(brick, event)
+          if (grid) setGhostGrid(grid)
+        }}
+        onInstancePointerDown={(brick, event) => {
+          event.stopPropagation()
+          if (brick.id) setHoveredBrickId(brick.id)
+          const grid = brickPointerToGhostGrid(brick, event)
+          if (grid) setGhostGrid(grid)
         }}
         onInstanceContextMenu={(brick, event) => {
           event.stopPropagation()

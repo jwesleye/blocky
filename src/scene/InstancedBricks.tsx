@@ -18,7 +18,11 @@ export interface InstancedBricksProps {
   ) => void
   onInstancePointerMove?: (
     brick: RenderBrick,
-    event: ThreeEvent<MouseEvent>,
+    event: ThreeEvent<PointerEvent>,
+  ) => void
+  onInstancePointerDown?: (
+    brick: RenderBrick,
+    event: ThreeEvent<PointerEvent>,
   ) => void
   onInstanceContextMenu?: (
     brick: RenderBrick,
@@ -32,6 +36,7 @@ export function InstancedBricks({
   getColor,
   onInstanceClick,
   onInstancePointerMove,
+  onInstancePointerDown,
   onInstanceContextMenu,
 }: InstancedBricksProps) {
   const { buckets, sourceBricksByKey } = useMemo(() => {
@@ -74,6 +79,7 @@ export function InstancedBricks({
                 rotation={[0, instance.rotationY, 0]}
                 onClick={(event) => onInstanceClick?.(brick, event)}
                 onPointerMove={(event) => onInstancePointerMove?.(brick, event)}
+                onPointerDown={(event) => onInstancePointerDown?.(brick, event)}
                 onContextMenu={(event) => onInstanceContextMenu?.(brick, event)}
               />
             )
