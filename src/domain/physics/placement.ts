@@ -21,17 +21,6 @@ import {
   rectsOverlap,
 } from '../parts/footprint'
 
-interface PlacementGraph {
-  mergeNode: (id: string) => void
-  mergeEdge: (source: string, target: string) => void
-  hasNode: (id: string) => boolean
-  hasEdge: (source: string, target: string) => boolean
-}
-
-const GraphCtor = Graph as unknown as {
-  new (options?: { type?: string; allowSelfLoops?: boolean }): PlacementGraph
-}
-
 /** A single stud cell in the X/Z plane (integer stud coordinates). */
 export interface Cell {
   readonly x: number
@@ -97,11 +86,9 @@ function bfpToRect(fp: BrickFootprint): FootprintRect {
  *
  * @throws RangeError if any brick has a non-positive height.
  */
-export function buildConnectionGraph(
-  bricks: Iterable<BrickFootprint>,
-): PlacementGraph {
+export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   const all = [...bricks]
-  const graph = new GraphCtor({ type: 'undirected', allowSelfLoops: false })
+  const graph = new Graph({ type: 'undirected', allowSelfLoops: false })
   graph.mergeNode(BASEPLATE)
 
   // Index bricks by bottomY so the coupling scan stays O(n²)-per-plane.
@@ -151,7 +138,7 @@ export function buildConnectionGraph(
 export function groundedIds(bricks: Iterable<BrickFootprint>): Set<string> {
   const graph = buildConnectionGraph(bricks)
   const grounded = new Set<string>()
-  for (const component of connectedComponents(graph as never)) {
+  for (const component of connectedComponents(graph)) {
     if (!component.includes(BASEPLATE)) continue
     for (const id of component) {
       if (id !== BASEPLATE) grounded.add(id)
