@@ -122,6 +122,45 @@ describe('useBuildStore', () => {
     expect(restored.bricks[top]).toBeDefined()
   })
 
+  it('placeBrick collapses orphaned bricks in the same undoable edit', () => {
+    const orphanId = 'orphan'
+    useBuildStore.setState({
+      bricks: {
+        [orphanId]: {
+          id: orphanId,
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 10,
+          y: 3,
+          z: 10,
+          rot: 0,
+        },
+      },
+    })
+
+    const placed = placeBrick({
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+
+    const collapsed = useBuildStore.getState()
+    expect(collapsed.bricks[placed]).toBeDefined()
+    expect(collapsed.bricks[orphanId]).toBeUndefined()
+    expect(collapsed.lastCollapse).toEqual({
+      count: 1,
+      label: 'Undo collapse',
+    })
+
+    useBuildStore.getState().undo()
+    const restored = useBuildStore.getState()
+    expect(restored.bricks[orphanId]).toBeDefined()
+    expect(restored.bricks[placed]).toBeUndefined()
+  })
+
   it('undo/redo reverses and reapplies placeBrick', () => {
     const id = placeBrick(sampleBrick)
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
