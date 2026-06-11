@@ -18,6 +18,7 @@ import {
   loadBuild,
   loadBuildFromShareSearch,
 } from '@/domain/persistence'
+import { BuildScene } from '@/scene/BuildScene'
 import { useScenePresetPreference } from '@/hooks/useScenePresetPreference'
 import { BuildScene, type CaptureScreenshot } from '@/scene/BuildScene'
 import { downloadScreenshot } from '@/lib/screenshotExport'
@@ -25,6 +26,7 @@ import { useCursorStore } from '@/state/cursor'
 import { useSceneSettingsStore } from '@/state/sceneSettings'
 import { useBuildStore } from '@/state/store'
 import { TouchToolbar } from '@/components/TouchToolbar'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
 import '@/styles/gallery.css'
 import '@/styles/hud.css'
 import '@/styles/pickers.css'
@@ -85,6 +87,8 @@ export function App() {
     }
   }, [])
 
+  const currentColor = getBrickColor(colorId)
+  const currentPart = getPart(partId)
   const handleCaptureFnReady = useCallback((fn: CaptureScreenshot) => {
     captureScreenshotRef.current = fn
     setIsCaptureReady(true)
