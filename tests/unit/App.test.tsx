@@ -59,6 +59,7 @@ describe('App', () => {
     resetBuildStore()
     localStorage.clear()
     window.history.replaceState({}, '', '/')
+    vi.restoreAllMocks()
   })
 
   it('mounts the interactive scene inside the app shell', () => {
@@ -133,6 +134,107 @@ describe('App', () => {
       )
       expect(loadBuild()?.baseplate.size).toBe(48)
     })
+  })
+
+  it('discards an invalid shared-URL build and falls back to the autosave', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    const autosavedBuild = seedBuild(
+      {
+        partId: 'brick-2x4',
+        color: 'green',
+        x: 2,
+        y: 0,
+        z: 1,
+        rot: 2,
+      },
+      48,
+    )
+    // A floating brick (y=30, unconnected) — valid schema, invalid structure.
+    const invalidSharedBuild: Build = {
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [
+        { partId: 'brick-1x1', color: 'blue', x: 5, y: 30, z: 5, rot: 0 },
+      ],
+    }
+
+    saveBuild(autosavedBuild)
+    const shareSearch = new URL(
+      createShareUrl(invalidSharedBuild, window.location.href),
+    ).search
+    window.history.replaceState({}, '', `/${shareSearch}`)
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(Object.values(useBuildStore.getState().bricks)).toEqual([
+        expect.objectContaining({
+          partId: 'brick-2x4',
+          color: 'green',
+          x: 2,
+          y: 0,
+          z: 1,
+          rot: 2,
+        }),
+      ])
+      expect(useBuildStore.getState().baseplateSize).toBe(48)
+    })
+    expect(alertSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Invalid build file: build violates structural invariants: 1 floating brick(s) not connected to the baseplate',
+      ),
+    )
+  })
+
+  it('discards an overlapping shared-URL build, alerts, and preserves the autosave', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    const autosavedBuild = seedBuild(
+      {
+        partId: 'brick-2x4',
+        color: 'yellow',
+        x: 3,
+        y: 0,
+        z: 2,
+        rot: 1,
+      },
+      48,
+    )
+    const invalidSharedBuild: Build = {
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [
+        { partId: 'brick-1x1', color: 'blue', x: 4, y: 0, z: 4, rot: 0 },
+        { partId: 'brick-1x1', color: 'red', x: 4, y: 0, z: 4, rot: 0 },
+      ],
+    }
+
+    saveBuild(autosavedBuild)
+    const shareSearch = new URL(
+      createShareUrl(invalidSharedBuild, window.location.href),
+    ).search
+    window.history.replaceState({}, '', `/${shareSearch}`)
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(Object.values(useBuildStore.getState().bricks)).toEqual([
+        expect.objectContaining({
+          partId: 'brick-2x4',
+          color: 'yellow',
+          x: 3,
+          y: 0,
+          z: 2,
+          rot: 1,
+        }),
+      ])
+      expect(useBuildStore.getState().baseplateSize).toBe(48)
+    })
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Invalid build file: build violates structural invariants: 2 overlapping brick(s)',
+      ),
+    )
   })
 
   it('falls back to the autosaved build when no share URL is present', async () => {

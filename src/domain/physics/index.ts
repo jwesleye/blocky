@@ -2,6 +2,8 @@ export * from './collapseSimulation'
 export { selectCollapsingBricks } from './collapse'
 export { buildConnectionGraph } from './graph'
 export { getFloatingBricks } from './grounding'
+export { findBuildInvariantViolations } from './buildInvariants'
+export type { BuildInvariantViolations } from './buildInvariants'
 export {
   getUnbalancedBricks,
   computeSupportFootprint,
