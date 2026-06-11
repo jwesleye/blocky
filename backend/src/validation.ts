@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const buildVersionSchema = z.union([z.literal(1), z.literal(2)])
+const buildVersionSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
 
 const rotationSchema = z.union([
   z.literal(0),
@@ -14,6 +14,13 @@ const halfStudOffsetSchema = z.object({
   z: z.union([z.literal(0), z.literal(1)]),
 })
 
+const brickMountSchema = z.union([
+  z.literal('px'),
+  z.literal('nx'),
+  z.literal('pz'),
+  z.literal('nz'),
+])
+
 const serializedBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
@@ -22,6 +29,7 @@ const serializedBrickSchema = z.object({
   z: z.number().int(),
   rot: rotationSchema,
   offset: halfStudOffsetSchema.optional(),
+  mount: brickMountSchema.optional(),
 })
 
 // Must match SUPPORTED_BASEPLATE_SIZES from the frontend contract.
@@ -75,6 +83,22 @@ const BuildSchema = z
           code: z.ZodIssueCode.custom,
           path: ['bricks', index, 'z'],
           message: `z must be less than or equal to ${maxCoordinate}`,
+        })
+      }
+
+      if (brick.offset !== undefined && build.version < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'offset'],
+          message: `offset requires version 2 or later; envelope is version ${build.version}`,
+        })
+      }
+
+      if (brick.mount !== undefined && build.version < 3) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'mount'],
+          message: `mount requires version 3; envelope is version ${build.version}`,
         })
       }
     }

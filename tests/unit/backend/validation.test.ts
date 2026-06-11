@@ -14,6 +14,78 @@ const validRequest = {
   },
 }
 
+describe('backend PublishRequestSchema mount contract', () => {
+  it('accepts a v3 build with a valid mount value', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 3 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 0, y: 0, z: 0, rot: 0 as const, mount: 'px' },
+        ],
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(true)
+  })
+
+  it('rejects a v3 build with an unknown mount value', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 3 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 0, y: 0, z: 0, rot: 0 as const, mount: 'bogus' },
+        ],
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects a v1 build whose brick has a mount field', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 1 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 0, y: 0, z: 0, rot: 0 as const, mount: 'px' },
+        ],
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects a v2 build whose brick has a mount field', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 2 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 0, y: 0, z: 0, rot: 0 as const, mount: 'px' },
+        ],
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects a v1 build whose brick has an offset field', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 1 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          { partId: 'brick-1x1', color: 'blue', x: 0, y: 0, z: 0, rot: 0 as const, offset: { x: 1, z: 0 } },
+        ],
+      },
+    }
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+})
+
 describe('backend PublishRequestSchema baseplate contract', () => {
   it('accepts a build with the contract baseplate size (32)', () => {
     expect(PublishRequestSchema.safeParse(validRequest).success).toBe(true)
