@@ -40,9 +40,11 @@ async function waitForStores(page: import('@playwright/test').Page) {
   await page.waitForFunction(
     () =>
       (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCursorStore !== undefined &&
+      (window as unknown as Partial<DevWindow>).__blockyCursorStore !==
+        undefined &&
       (window as unknown as Partial<DevWindow>).__blockyCamera !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !== undefined,
+      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !==
+        undefined,
   )
 }
 
@@ -60,10 +62,11 @@ async function projectToCanvas(
 }
 
 async function getBrickCount(page: import('@playwright/test').Page) {
-  return page.evaluate(() =>
-    Object.keys(
-      (window as unknown as DevWindow).__blockyStore.getState().bricks,
-    ).length,
+  return page.evaluate(
+    () =>
+      Object.keys(
+        (window as unknown as DevWindow).__blockyStore.getState().bricks,
+      ).length,
   )
 }
 
@@ -152,7 +155,10 @@ test('ghost click-to-place: hovering baseplate and clicking places exactly one b
 
   // Explicitly activate place mode via the toolbar (also serves as a warm-up interaction)
   await page.click('[data-testid="tool-place"]')
-  await expect(page.locator('[data-testid="tool-place"]')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('[data-testid="tool-place"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
 
   expect(await getBrickCount(page)).toBe(0)
 
@@ -183,7 +189,10 @@ test('ghost click-to-place: clicking in paint mode does not add a brick', async 
 
   // Switch to paint mode via the UI toolbar button
   await page.click('[data-testid="tool-paint"]')
-  await expect(page.locator('[data-testid="tool-paint"]')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('[data-testid="tool-paint"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
 
   const pos = await projectToCanvas(page, 3, 0, 3)
   await page.mouse.move(pos.x, pos.y)
@@ -203,8 +212,7 @@ test('R-rotate: pressing R increments cursor rotation mod 4', async ({
   await waitForStores(page)
 
   const initialRot = await page.evaluate(
-    () =>
-      (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
+    () => (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
   )
   expect(initialRot).toBe(0)
 
@@ -213,8 +221,7 @@ test('R-rotate: pressing R increments cursor rotation mod 4', async ({
   await page.keyboard.press('r')
 
   const rot1 = await page.evaluate(
-    () =>
-      (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
+    () => (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
   )
   expect(rot1).toBe(1)
 
@@ -223,8 +230,7 @@ test('R-rotate: pressing R increments cursor rotation mod 4', async ({
   await page.keyboard.press('r')
 
   const rot4 = await page.evaluate(
-    () =>
-      (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
+    () => (window as unknown as DevWindow).__blockyCursorStore.getState().rot,
   )
   expect(rot4).toBe(0)
 })
@@ -238,7 +244,14 @@ test('right-click to delete: context-menu on a placed brick removes it from the 
   const brickId = await page.evaluate(() =>
     (window as unknown as DevWindow).__blockyStore
       .getState()
-      .placeBrick({ partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 }),
+      .placeBrick({
+        partId: 'brick-2x4',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      }),
   )
   expect(brickId).toBeTruthy()
   expect(await getBrickCount(page)).toBe(1)

@@ -1,6 +1,10 @@
 import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
-import { toBrickFootprint, getOccupiedCells, getOccupiedHalfStudCells } from '../parts/footprint'
+import {
+  toBrickFootprint,
+  getOccupiedCells,
+  getOccupiedHalfStudCells,
+} from '../parts/footprint'
 import { groundedIds } from './placement'
 import { BASEPLATE_SIZE_STUDS } from '../grid'
 

@@ -11,9 +11,16 @@ const TOOLS: { id: EditingTool; label: string }[] = [
   { id: 'eyedropper', label: 'Eyedropper' },
 ]
 
-export function EditingToolbar({ activeTool, onToolChange }: EditingToolbarProps) {
+export function EditingToolbar({
+  activeTool,
+  onToolChange,
+}: EditingToolbarProps) {
   return (
-    <div role="toolbar" aria-label="Editing tools" style={{ display: 'flex', gap: 4 }}>
+    <div
+      role="toolbar"
+      aria-label="Editing tools"
+      style={{ display: 'flex', gap: 4 }}
+    >
       {TOOLS.map(({ id, label }) => (
         <button
           key={id}

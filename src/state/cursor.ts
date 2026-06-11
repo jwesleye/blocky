@@ -73,7 +73,9 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
   rotateCursor: () => get().rotate(),
   toggleOffset: () =>
     set((state) => {
-      const newOffset = state.offset ? undefined : { x: 1, z: 0 } as HalfStudOffset
+      const newOffset = state.offset
+        ? undefined
+        : ({ x: 1, z: 0 } as HalfStudOffset)
       return {
         offset: newOffset,
         cursorBrick: { ...state.cursorBrick, offset: newOffset },

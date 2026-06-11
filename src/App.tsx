@@ -211,7 +211,10 @@ export function App() {
             Mode
           </div>
           <div style={{ padding: '4px 8px 4px' }}>
-            <EditingToolbar activeTool={editingTool} onToolChange={setEditingTool} />
+            <EditingToolbar
+              activeTool={editingTool}
+              onToolChange={setEditingTool}
+            />
           </div>
         </div>
 
