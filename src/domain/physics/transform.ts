@@ -8,6 +8,16 @@ import {
 import { groundedIds } from './placement'
 import { BASEPLATE_SIZE_STUDS } from '../grid'
 
+function usesUnsupportedMountPlacement(brick: PlacedBrick): boolean {
+  if (brick.mount === undefined) {
+    return false
+  }
+
+  // Render-first SNOT in #365 supports baseplate-authored mounted bricks only.
+  // Mixed/elevated mount physics land in #366.
+  return brick.y !== 0 || brick.offset !== undefined
+}
+
 /**
  * Mirrors a set of bricks across the selection's bounding-box midline.
  * axis='x' reflects X coordinates; axis='z' reflects Z coordinates.
@@ -145,6 +155,10 @@ export function canPlaceGroup(
 
   // 2. Bounds check
   for (const brick of moved) {
+    if (usesUnsupportedMountPlacement(brick)) {
+      return false
+    }
+
     const def = catalog[brick.partId]
     if (!def) continue
     const cells = getOccupiedHalfStudCells(brick, def)

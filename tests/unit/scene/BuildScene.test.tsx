@@ -20,7 +20,16 @@ vi.mock('@react-three/fiber', async () => {
 
   return {
     ...actual,
-    Canvas: ({ children }: { children: ReactNode }) => <>{children}</>,
+    Canvas: ({
+      children,
+      onClick,
+    }: {
+      children: ReactNode
+      onClick?: () => void
+    }) => {
+      lastCanvasOnClick = onClick
+      return <>{children}</>
+    },
     useThree: () => ({
       camera: {} as PerspectiveCamera,
       gl: {
@@ -46,6 +55,7 @@ vi.mock('@/scene/CameraRig', () => ({
 }))
 
 let lastInstancedBricksProps: InstancedBricksProps | null = null
+let lastCanvasOnClick: (() => void) | undefined = undefined
 
 vi.mock('@/scene/InstancedBricks', () => ({
   InstancedBricks: (props: InstancedBricksProps) => {
@@ -81,11 +91,13 @@ const resetCursorStore = () => {
     partId: DEFAULT_PART_ID,
     rot: 0,
     offset: undefined,
+    mount: undefined,
     cursorBrick: {
       partId: DEFAULT_PART_ID,
       colorId: DEFAULT_COLOR_ID,
       rot: 0,
       offset: undefined,
+      mount: undefined,
     },
     editingTool: 'place',
   })
@@ -97,6 +109,7 @@ describe('BuildScene', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true
     lastInstancedBricksProps = null
+    lastCanvasOnClick = undefined
     resetBuildStore()
     resetCursorStore()
   })
@@ -268,6 +281,134 @@ describe('BuildScene', () => {
     const brick2 = bricks.find((b) => b.id === 'brick2')
     expect(brick1?.color).toBe('red')
     expect(brick2?.color).toBe('blue')
+
+    await renderer.unmount()
+  })
+
+  it('applies mount rotation to the ghost preview when cursor mount is set', async () => {
+    useCursorStore.setState({
+      mount: 'px',
+      cursorBrick: {
+        partId: DEFAULT_PART_ID,
+        colorId: DEFAULT_COLOR_ID,
+        rot: 0,
+        mount: 'px',
+      },
+    })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+      stopPropagation: () => {},
+    })
+
+    const [ghost] = renderer.scene.findAll(
+      (node) => node.props.name === 'ghost-brick',
+    )
+    const rotation = ghost?.props.rotation as [number, number, number]
+    expect(rotation[2]).not.toBe(0)
+
+    await renderer.unmount()
+  })
+
+  it('commits a mounted brick from the baseplate-supported flow', async () => {
+    useCursorStore.setState({
+      mount: 'px',
+      cursorBrick: {
+        partId: DEFAULT_PART_ID,
+        colorId: DEFAULT_COLOR_ID,
+        rot: 0,
+        mount: 'px',
+      },
+    })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+      stopPropagation: () => {},
+    })
+
+    lastCanvasOnClick?.()
+
+    const bricks = Object.values(useBuildStore.getState().bricks)
+    expect(bricks).toHaveLength(1)
+    expect(bricks[0]?.mount).toBe('px')
+
+    await renderer.unmount()
+  })
+
+  it('renders the ghost red for an unsupported elevated mounted placement', async () => {
+    useBuildStore.setState({
+      bricks: {
+        existing: {
+          id: 'existing',
+          partId: DEFAULT_PART_ID,
+          color: DEFAULT_COLOR_ID,
+          x: 2,
+          y: 0,
+          z: 3,
+          rot: 0,
+        },
+      },
+    })
+    useCursorStore.setState({
+      mount: 'px',
+      cursorBrick: {
+        partId: DEFAULT_PART_ID,
+        colorId: DEFAULT_COLOR_ID,
+        rot: 0,
+        mount: 'px',
+      },
+    })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    expect(lastInstancedBricksProps).not.toBeNull()
+
+    await ReactThreeTestRenderer.act(async () => {
+      await lastInstancedBricksProps?.onInstancePointerMove?.(
+        {
+          id: 'existing',
+          partId: DEFAULT_PART_ID,
+          partType: 'brick',
+          color: DEFAULT_COLOR_ID,
+          x: 2,
+          y: 0,
+          z: 3,
+          rot: 0,
+        },
+        {
+          face: { normal: { x: 0, y: 1, z: 0 } },
+          point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+          stopPropagation: () => {},
+        } as never,
+      )
+    })
+
+    const ghosts = renderer.scene.findAll(
+      (node) => node.props.name === 'ghost-brick',
+    )
+    expect(ghosts).toHaveLength(1)
+
+    const redMaterial = renderer.scene.findAll(
+      (node) => node.props.color === '#ff3333',
+    )
+    expect(redMaterial.length).toBeGreaterThan(0)
+
+    lastCanvasOnClick?.()
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(1)
 
     await renderer.unmount()
   })

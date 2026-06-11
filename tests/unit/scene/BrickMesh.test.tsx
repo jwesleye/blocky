@@ -146,6 +146,29 @@ describe('BrickMesh', () => {
     await renderer.unmount()
   })
 
+  it('applies non-zero X/Z rotation for a mounted brick (mount: px)', async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <BrickMesh brick={makeBrick({ mount: 'px' })} />,
+    )
+
+    const [mesh] = renderer.scene.findAll((node) => node.type === 'Mesh')
+    const rotation = mesh?.props.rotation as [number, number, number]
+    expect(rotation[2]).not.toBe(0)
+
+    await renderer.unmount()
+  })
+
+  it('keeps rotation [0, 0, 0] for a brick with no mount and rot 0', async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <BrickMesh brick={makeBrick()} />,
+    )
+
+    const [mesh] = renderer.scene.findAll((node) => node.type === 'Mesh')
+    expect(mesh?.props.rotation).toEqual([0, 0, 0])
+
+    await renderer.unmount()
+  })
+
   it('returns null for an unknown partId', async () => {
     const renderer = await ReactThreeTestRenderer.create(
       <BrickMesh brick={makeBrick({ partId: 'unknown-part' })} />,

@@ -168,6 +168,23 @@ describe('isValidPlacement', () => {
     expect(isValidPlacement(ghost, [])).toBe(true)
   })
 
+  it('rejects a mounted brick above the baseplate until mount physics ship', () => {
+    const support = brick({ id: 'support' })
+    const ghost = brick({
+      y: 3,
+      mount: 'px',
+    })
+    expect(isValidPlacement(ghost, [support])).toBe(false)
+  })
+
+  it('rejects offset-plus-mount placements as unsupported', () => {
+    const ghost = brick({
+      mount: 'px',
+      offset: { x: 1, z: 0 },
+    })
+    expect(isValidPlacement(ghost, [])).toBe(false)
+  })
+
   it('allows a valid jumper interlock', () => {
     const support1 = brick({ id: 's1', partId: 'brick-1x1', x: 2, z: 3 })
     const support2 = brick({ id: 's2', partId: 'brick-1x1', x: 3, z: 3 })

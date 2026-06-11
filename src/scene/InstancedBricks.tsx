@@ -83,7 +83,7 @@ export function InstancedBricks({
               <Instance
                 key={brick.id ?? index}
                 position={instance.position}
-                rotation={[0, instance.rotationY, 0]}
+                rotation={instance.rotation}
                 onClick={(event) => onInstanceClick?.(brick, event)}
                 onPointerMove={(event) => onInstancePointerMove?.(brick, event)}
                 onPointerDown={(event) => onInstancePointerDown?.(brick, event)}

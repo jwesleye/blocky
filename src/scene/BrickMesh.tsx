@@ -1,10 +1,25 @@
 import { getBrickColor } from '@/domain/model/colors'
 import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
-import type { PlacedBrick } from '@/domain/model/types'
+import type { BrickMount, PlacedBrick } from '@/domain/model/types'
 import { getPartGeometry } from './parts/geometries'
 
 interface Props {
   brick: PlacedBrick
+}
+
+function mountRotation(mount?: BrickMount): [number, number, number] {
+  switch (mount) {
+    case 'px':
+      return [0, 0, -Math.PI / 2]
+    case 'nx':
+      return [0, 0, Math.PI / 2]
+    case 'pz':
+      return [Math.PI / 2, 0, 0]
+    case 'nz':
+      return [-Math.PI / 2, 0, 0]
+    default:
+      return [0, 0, 0]
+  }
 }
 
 export function BrickMesh({ brick }: Props) {
@@ -24,10 +39,12 @@ export function BrickMesh({ brick }: Props) {
   const posZ = brick.z + offsetZ + rotatedL / 2
   const color = getBrickColor(brick.color)?.hex ?? '#888888'
 
+  const [rx, , rz] = mountRotation(brick.mount)
+
   return (
     <mesh
       position={[posX, posY, posZ]}
-      rotation={[0, brick.rot * (Math.PI / 2), 0]}
+      rotation={[rx, brick.rot * (Math.PI / 2), rz]}
     >
       <primitive
         object={getPartGeometry(brick.partId, { w, h, d: l })}
