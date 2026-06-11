@@ -1,5 +1,15 @@
 # Contributing
 
+## Running e2e tests
+
+Before running `npm run test:e2e` for the first time, install the Playwright browser binaries:
+
+```sh
+npx playwright install
+```
+
+This is a one-time step per machine. Without it, WebKit (and potentially other browsers) will fail to launch.
+
 ## Required validation
 
 Pull requests must keep the app within the documented load budget.

@@ -4,7 +4,8 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './tests',
   testMatch: ['e2e/**/*.spec.ts', 'perf/**/*.spec.ts'],
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: 'html',
@@ -13,10 +14,26 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'tablet', use: { ...devices['iPad (gen 7)'] } },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: ['**/perf/load-perf.spec.ts'],
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testIgnore: ['**/perf/**/*.spec.ts'],
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testIgnore: ['**/perf/**/*.spec.ts'],
+    },
+    {
+      name: 'tablet',
+      use: { ...devices['iPad (gen 7)'] },
+      testIgnore: ['**/perf/**/*.spec.ts'],
+    },
   ],
   webServer: {
     command: 'npm run dev',
