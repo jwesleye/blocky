@@ -1,17 +1,24 @@
-import { BoxGeometry, BufferGeometry, CylinderGeometry } from 'three'
+import {
+  BoxGeometry,
+  BufferGeometry,
+  CylinderGeometry,
+  ExtrudeGeometry,
+  Shape,
+} from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-import type { PartType } from '@/domain/parts/catalog'
+import { getPartDef } from '@/domain/parts'
 import type { PartDims } from '@/scene/instancing'
 
 const STUD_HEIGHT = 0.18
 const STUD_RADIUS = 0.3
 const STUD_SEGMENTS = 16
+const STANDARD_SLOPE_IDS = new Set(['slope-2x1', 'slope-2x2'])
 
 const geometryCache = new Map<string, BufferGeometry>()
 
-function cacheKey(partType: PartType, dims: PartDims) {
-  return `${partType}::${dims.w}::${dims.h}::${dims.d}`
+function cacheKey(partId: string, dims: PartDims) {
+  return `${partId}::${dims.w}::${dims.h}::${dims.d}`
 }
 
 function createBoxGeometry(dims: PartDims) {
@@ -45,18 +52,53 @@ function createStuddedGeometry(dims: PartDims) {
   return mergeGeometries(geometries, false) ?? createBoxGeometry(dims)
 }
 
-export function getPartGeometry(partType: PartType, dims: PartDims) {
-  const key = cacheKey(partType, dims)
+function createSlopeGeometry(dims: PartDims) {
+  const profile = new Shape()
+  profile.moveTo(-dims.w / 2, -dims.h / 2)
+  profile.lineTo(-dims.w / 2, dims.h / 2)
+  profile.lineTo(dims.w / 2, -dims.h / 2)
+  profile.lineTo(-dims.w / 2, -dims.h / 2)
+
+  const geometry = new ExtrudeGeometry(profile, {
+    depth: dims.d,
+    bevelEnabled: false,
+    curveSegments: 1,
+    steps: 1,
+  })
+  geometry.translate(0, 0, -dims.d / 2)
+  return geometry
+}
+
+function createGeometry(partId: string, dims: PartDims) {
+  const part = getPartDef(partId)
+  if (!part) {
+    return createBoxGeometry(dims)
+  }
+
+  if (part.category === 'brick' || part.category === 'plate') {
+    return createStuddedGeometry(dims)
+  }
+
+  if (
+    part.category === 'slope' &&
+    STANDARD_SLOPE_IDS.has(partId) &&
+    dims.w === 2 &&
+    dims.h === 3
+  ) {
+    return createSlopeGeometry(dims)
+  }
+
+  return createBoxGeometry(dims)
+}
+
+export function getPartGeometry(partId: string, dims: PartDims) {
+  const key = cacheKey(partId, dims)
   const cached = geometryCache.get(key)
   if (cached) {
     return cached
   }
 
-  const geometry =
-    partType === 'brick' || partType === 'plate'
-      ? createStuddedGeometry(dims)
-      : createBoxGeometry(dims)
-
+  const geometry = createGeometry(partId, dims)
   geometry.computeVertexNormals()
   geometryCache.set(key, geometry)
   return geometry
