@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import {
   waitForStores,
   projectToCanvas,
@@ -6,6 +6,14 @@ import {
   type DevStore,
   type DevWindow,
 } from './support/devWindow'
+
+async function waitForGhostGrid(page: Page) {
+  await page.waitForFunction(
+    () => (window as unknown as Partial<DevWindow>).__blockyGhostGrid != null,
+    undefined,
+    { timeout: 5000 },
+  )
+}
 
 test('seeded bricks render to nonblank canvas, Build Status absent', async ({
   page,
@@ -82,7 +90,7 @@ test('canvas click places brick on a valid baseplate position', async ({
 
   const baseplatePos = await projectToCanvas(page, 4, 0, 4)
   await page.mouse.move(baseplatePos.x, baseplatePos.y)
-  await page.waitForTimeout(200)
+  await waitForGhostGrid(page)
   await page.mouse.click(baseplatePos.x, baseplatePos.y)
 
   await page.waitForFunction(
@@ -206,7 +214,7 @@ test('ghost click-to-place: hovering baseplate and clicking places exactly one b
 
   const pos = await projectToCanvas(page, 4, 0, 4)
   await page.mouse.move(pos.x, pos.y)
-  await page.waitForTimeout(200)
+  await waitForGhostGrid(page)
   await page.mouse.click(pos.x, pos.y)
 
   await page.waitForFunction(
@@ -235,9 +243,8 @@ test('ghost click-to-place: clicking in paint mode does not add a brick', async 
 
   const pos = await projectToCanvas(page, 3, 0, 3)
   await page.mouse.move(pos.x, pos.y)
+  await waitForGhostGrid(page)
   await page.mouse.click(pos.x, pos.y)
-
-  await page.waitForTimeout(500)
 
   const count = await getBrickCount(page)
   expect(count).toBe(0)

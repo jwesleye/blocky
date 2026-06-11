@@ -275,6 +275,18 @@ export function BuildScene({
       : 0
   }, [activeCollapse])
 
+  useEffect(() => {
+    if (shouldExposeTestHooks) {
+      window.__blockyGhostGrid = ghostGrid
+    }
+
+    return () => {
+      if (shouldExposeTestHooks) {
+        delete window.__blockyGhostGrid
+      }
+    }
+  }, [ghostGrid])
+
   const placedBricks = useMemo(() => Object.values(bricks), [bricks])
   const preset = getSceneEnvironmentPreset(presetId)
   const renderBricks = useMemo(
