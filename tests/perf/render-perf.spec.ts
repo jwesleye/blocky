@@ -35,7 +35,7 @@ const COLORS = [
   'white',
   'black',
   'orange',
-  'gray',
+  'light-gray',
 ] as const
 
 interface SerializedBrick {
