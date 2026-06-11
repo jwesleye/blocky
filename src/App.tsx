@@ -1,13 +1,116 @@
-import { PersistenceControls } from './components/PersistenceControls'
-import { useUndoRedo } from './hooks/useUndoRedo'
-import { useBuildStore } from './state/store'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BaseplateSizePicker } from '@/components/BaseplateSizePicker'
+import { ColorPicker } from '@/components/ColorPicker'
+import { EditingToolbar } from '@/components/EditingToolbar'
+import { EnvironmentPresetPicker } from '@/components/EnvironmentPresetPicker'
+import { Gallery } from '@/components/Gallery'
+import { HUD } from '@/components/HUD'
+import { PartPicker } from '@/components/PartPicker'
+import { PersistenceControls } from '@/components/PersistenceControls'
+import { SoundToggle } from '@/components/SoundToggle'
+import { ViewControls } from '@/components/ViewControls'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
+import { bricksToBuild, buildToBricks } from '@/domain/model/build'
+import { getBrickColor } from '@/domain/model/colors'
+import { getPart } from '@/domain/parts/catalog'
+import {
+  createAutosaver,
+  loadBuild,
+  loadBuildFromShareSearch,
+} from '@/domain/persistence'
+import { useScenePresetPreference } from '@/hooks/useScenePresetPreference'
+import { BuildScene, type CaptureScreenshot } from '@/scene/BuildScene'
+import { downloadScreenshot } from '@/lib/screenshotExport'
+import { useCursorStore } from '@/state/cursor'
+import { useSceneSettingsStore } from '@/state/sceneSettings'
+import { useBuildStore } from '@/state/store'
+import { TouchToolbar } from '@/components/TouchToolbar'
+import '@/styles/gallery.css'
+import '@/styles/hud.css'
+import '@/styles/pickers.css'
+import '@/styles/responsive.css'
 
 export function App() {
   const brickMap = useBuildStore((state) => state.bricks)
   const bricks = Object.values(brickMap)
 
-  // Enable Ctrl/Cmd+Z (undo) and Ctrl/Cmd+Y (redo) keyboard shortcuts.
-  useUndoRedo()
+  const colorId = useCursorStore((s) => s.colorId)
+  const partId = useCursorStore((s) => s.partId)
+  const setColor = useCursorStore((s) => s.setColor)
+  const setPart = useCursorStore((s) => s.setPart)
+  const editingTool = useCursorStore((s) => s.editingTool)
+  const setEditingTool = useCursorStore((s) => s.setEditingTool)
+
+  const bricksById = useBuildStore((state) => state.bricks)
+  const bricks = Object.values(bricksById)
+  const baseplateSize = useBuildStore((state) => state.baseplateSize)
+  const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
+  const selectionSize = useBuildStore((s) => s.selection.size)
+  const selectedPresetId = useSceneSettingsStore((s) => s.selectedPresetId)
+  const autosaverRef = useRef(createAutosaver())
+  const [hasHydratedPersistence, setHasHydratedPersistence] = useState(false)
+
+  useEffect(() => {
+    const sharedBuild =
+      typeof window === 'undefined'
+        ? null
+        : loadBuildFromShareSearch(window.location.search)
+    const initialBuild = sharedBuild ?? loadBuild()
+
+    if (initialBuild) {
+      const restoredBricks = buildToBricks(initialBuild)
+      useBuildStore.setState({
+        bricks: Object.fromEntries(
+          restoredBricks.map((brick) => [brick.id, brick]),
+        ),
+        selection: new Set(),
+        lastCollapse: null,
+        baseplateSize: initialBuild.baseplate.size,
+      })
+    }
+    setHasHydratedPersistence(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hasHydratedPersistence) return
+    assertSupportedBaseplateSize(baseplateSize)
+    autosaverRef.current.schedule(bricksToBuild(bricks, baseplateSize))
+  }, [baseplateSize, bricks, hasHydratedPersistence])
+
+  useEffect(() => {
+    const autosaver = autosaverRef.current
+    return () => {
+      autosaver.flush()
+      autosaver.cancel()
+    }
+  }, [])
+
+  const handleCaptureFnReady = useCallback((fn: CaptureScreenshot) => {
+    captureScreenshotRef.current = fn
+    setIsCaptureReady(true)
+  }, [])
+
+  const handleExportScreenshot = isCaptureReady
+    ? async () => {
+        const capture = captureScreenshotRef.current
+        if (!capture) return
+        const blob = await capture()
+        await downloadScreenshot(blob)
+      }
+    : undefined
+
+  const currentColor = getBrickColor(colorId)
+  const currentPart = getPart(partId)
+
+  const handleMirror = (axis: 'x' | 'z') => {
+    const ok = mirrorSelection(axis)
+    if (!ok) {
+      setMirrorFeedback(`Cannot mirror along ${axis.toUpperCase()} axis`)
+      setTimeout(() => setMirrorFeedback(null), 3000)
+    } else {
+      setMirrorFeedback(null)
+    }
+  }
 
   return (
     <div
@@ -220,7 +323,10 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <BuildScene presetId={selectedPresetId} onCaptureFnReady={handleCaptureFnReady} />
+          <BuildScene
+            presetId={selectedPresetId}
+            onCaptureFnReady={handleCaptureFnReady}
+          />
           <ViewControls />
           <HUD />
           <TouchToolbar />
