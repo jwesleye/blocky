@@ -11,7 +11,9 @@ export function resolveGalleryBaseUrl(): string {
     return ''
   }
 
-  return ((import.meta.env['VITE_GALLERY_URL'] as string | undefined) ?? '').trim()
+  return (
+    (import.meta.env['VITE_GALLERY_URL'] as string | undefined) ?? ''
+  ).trim()
 }
 
 export function isGalleryBackendConfigured(): boolean {
