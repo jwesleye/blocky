@@ -10,7 +10,7 @@ import {
 import { createBrickId } from '@/domain/model/ids'
 import type { PlacedBrick } from './types'
 
-const buildVersionSchema = z.union([z.literal(1), z.literal(2)])
+const buildVersionSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
 
 const rotationSchema = z.union([
   z.literal(0),
@@ -24,6 +24,13 @@ const halfStudOffsetSchema = z.object({
   z: z.union([z.literal(0), z.literal(1)]),
 })
 
+const brickMountSchema = z.union([
+  z.literal('px'),
+  z.literal('nx'),
+  z.literal('pz'),
+  z.literal('nz'),
+])
+
 const buildBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
@@ -32,6 +39,7 @@ const buildBrickSchema = z.object({
   z: z.number().int().min(0),
   rot: rotationSchema,
   offset: halfStudOffsetSchema.optional(),
+  mount: brickMountSchema.optional(),
 })
 
 export type SerializedBrick = z.infer<typeof buildBrickSchema>
@@ -75,19 +83,21 @@ export const buildSchema = BuildSchema
 
 export type Build = z.infer<typeof BuildSchema>
 
-export const CURRENT_BUILD_VERSION = 2
+export const CURRENT_BUILD_VERSION = 3
 export const BUILD_SCHEMA_VERSION = CURRENT_BUILD_VERSION
 
 export function bricksToBuild(
   bricks: PlacedBrick[],
   baseplateSize: BaseplateSize,
 ): Build {
+  const hasMount = bricks.some((brick) => brick.mount !== undefined)
   const hasOffset = bricks.some((brick) => brick.offset !== undefined)
+  const version = hasMount ? 3 : hasOffset ? 2 : 1
 
   return {
-    version: hasOffset ? CURRENT_BUILD_VERSION : 1,
+    version,
     baseplate: { size: baseplateSize },
-    bricks: bricks.map(({ partId, color, x, y, z, rot, offset }) => ({
+    bricks: bricks.map(({ partId, color, x, y, z, rot, offset, mount }) => ({
       partId,
       color,
       x,
@@ -95,6 +105,7 @@ export function bricksToBuild(
       z,
       rot,
       ...(offset ? { offset } : {}),
+      ...(mount ? { mount } : {}),
     })),
   }
 }

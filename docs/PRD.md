@@ -193,8 +193,15 @@ the chosen end-state behavior.
   - A build with no offsets remains byte-for-byte compatible with v1 and
     serializes as `version: 1`; a build with one or more offsets serializes as
     `version: 2`.
-- **Still out of scope:** SNOT (sideways building), hinges, Technic pins, and
-  angled connections. These remain major future grammar expansions.
+- **First supported post-offset slice:** SNOT (sideways / studs-not-on-top building).
+  - A brick gains an optional `mount` facing that encodes which Y-perpendicular
+    face carries studs sideways: `px` (positive X), `nx` (negative X),
+    `pz` (positive Z), or `nz` (negative Z). Absent `mount` = classic studs-up.
+  - A build with any `mount` brick serializes as `version: 3`; builds with only
+    offsets stay `version: 2`; plain classic builds stay `version: 1`. No user
+    migration is required for existing v1 or v2 builds.
+- **Still out of scope:** hinges, Technic pins, and angled connections. These
+  remain deferred grammar expansions.
 
 ---
 
@@ -353,14 +360,15 @@ Build {
     x: int, y: int, z: int   // y in plate units
     rot: 0 | 1 | 2 | 3       // 90° steps about Y
     offset?: { x: 0 | 1, z: 0 | 1 }  // optional +0.5 stud jumper shift per axis
+    mount?: 'px' | 'nx' | 'pz' | 'nz'  // optional SNOT facing; absent = classic studs-up
   }>
 }
 ```
 
-Serialized to compact JSON; `version: 1` remains the classic stud-stacked
-envelope, while `version: 2` adds optional half-stud offsets without changing
-legacy integer anchor semantics. URL-sharing uses a compressed encoding of
-this.
+Serialized to compact JSON. `version: 1` is the classic stud-stacked envelope;
+`version: 2` adds optional half-stud offsets; `version: 3` adds optional SNOT
+`mount` facings — all preserving legacy integer-anchor semantics. URL-sharing
+uses a compressed encoding of this.
 
 Future gallery publishing/loading must reuse this exact `Build` payload inside a
 versioned shared-build contract rather than forking the build schema. The
@@ -409,7 +417,7 @@ visibility, author identity mode) plus server-owned identifiers and timestamps.
 
 ### Later / maybe
 
-- SNOT and additional connection types (major scope expansion).
+- Hinges, Technic pins, and angled connections (deferred grammar expansions).
 - Build gallery / community sharing after an explicit backend path is added,
   using the shared-build contract while leaving v1 local-only persistence
   unchanged.
