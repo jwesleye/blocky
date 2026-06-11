@@ -159,6 +159,13 @@ export function deleteBuild(
   }
   builds.delete(id)
   deleted.add(id)
+  while (deleted.size > MAX_STORED_BUILDS) {
+    const oldestDeletedId = deleted.values().next().value
+    if (oldestDeletedId === undefined) {
+      break
+    }
+    deleted.delete(oldestDeletedId)
+  }
   persistStore()
   return { success: true }
 }
