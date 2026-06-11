@@ -21,7 +21,7 @@ const readPackageJson = (): PackageJson =>
 function matchesTestIgnore(testIgnore: unknown, path: string): boolean {
   if (testIgnore == null) return false
   const patterns = Array.isArray(testIgnore) ? testIgnore : [testIgnore]
-  return patterns.some(p => {
+  return patterns.some((p) => {
     if (p instanceof RegExp) return p.test(path)
     if (typeof p === 'string') return p === path
     return false
@@ -49,7 +49,7 @@ describe('playwright e2e defaults (issue #191)', () => {
 
 describe('playwright.config.ts default matrix', () => {
   it('defines chromium, firefox, webkit, and tablet projects', () => {
-    const names = playwrightConfig.projects?.map(p => p.name) ?? []
+    const names = playwrightConfig.projects?.map((p) => p.name) ?? []
     expect(names).toContain('chromium')
     expect(names).toContain('firefox')
     expect(names).toContain('webkit')
@@ -57,7 +57,9 @@ describe('playwright.config.ts default matrix', () => {
   })
 
   it('chromium project does not exclude load-perf.spec.ts', () => {
-    const chromium = playwrightConfig.projects?.find(p => p.name === 'chromium')
+    const chromium = playwrightConfig.projects?.find(
+      (p) => p.name === 'chromium',
+    )
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_POSIX)).toBe(false)
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_WIN)).toBe(false)
   })
@@ -67,19 +69,27 @@ describe('playwright.config.ts default matrix', () => {
 
     for (const projectName of nonChromiumProjects) {
       it(`${projectName}: testIgnore matches POSIX path ${LOAD_PERF_POSIX}`, () => {
-        const project = playwrightConfig.projects?.find(p => p.name === projectName)
+        const project = playwrightConfig.projects?.find(
+          (p) => p.name === projectName,
+        )
         expect(project, `project "${projectName}" not found`).toBeDefined()
-        expect(matchesTestIgnore(project!.testIgnore, LOAD_PERF_POSIX)).toBe(true)
+        expect(matchesTestIgnore(project!.testIgnore, LOAD_PERF_POSIX)).toBe(
+          true,
+        )
       })
 
       it(`${projectName}: testIgnore matches Windows path ${LOAD_PERF_WIN}`, () => {
-        const project = playwrightConfig.projects?.find(p => p.name === projectName)
+        const project = playwrightConfig.projects?.find(
+          (p) => p.name === projectName,
+        )
         expect(project, `project "${projectName}" not found`).toBeDefined()
         expect(matchesTestIgnore(project!.testIgnore, LOAD_PERF_WIN)).toBe(true)
       })
 
       it(`${projectName}: testIgnore does not suppress E2E spec ${WEBGL2_E2E}`, () => {
-        const project = playwrightConfig.projects?.find(p => p.name === projectName)
+        const project = playwrightConfig.projects?.find(
+          (p) => p.name === projectName,
+        )
         expect(matchesTestIgnore(project?.testIgnore, WEBGL2_E2E)).toBe(false)
       })
     }

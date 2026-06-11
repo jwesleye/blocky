@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { buildToBricks, validateBuild } from '@/domain/model/build'
-import { type GalleryBuildSummary, type GalleryClient } from '@/domain/persistence/galleryClient'
+import {
+  type GalleryBuildSummary,
+  type GalleryClient,
+} from '@/domain/persistence/galleryClient'
 import {
   resolveDefaultGalleryClient,
   type GalleryMode,

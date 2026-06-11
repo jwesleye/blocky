@@ -181,9 +181,7 @@ test('restores a half-stud (v2) build from persisted storage after reload', asyn
           .bricks ?? {},
       ).length === 1,
   )
-  await expect(page.locator('.brick-count')).toHaveText(
-    'Bricks in build: 1',
-  )
+  await expect(page.locator('.brick-count')).toHaveText('Bricks in build: 1')
 
   const restored = await currentBricks(page)
   expect(restored[0]).toMatchObject({
