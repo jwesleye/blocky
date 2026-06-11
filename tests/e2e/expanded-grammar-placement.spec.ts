@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { getBrickCount } from './support/devWindow'
 
 interface PlacedBrick {
   partId: string
@@ -40,14 +41,6 @@ async function placeBrick(
   }, brick)
 }
 
-async function getBrickCount(page: import('@playwright/test').Page) {
-  return page.evaluate(
-    () =>
-      Object.keys(
-        (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
-      ).length,
-  )
-}
 
 test('places a baseplate-mounted brick and rejects an elevated mounted placement', async ({
   page,

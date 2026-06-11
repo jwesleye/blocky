@@ -1,4 +1,10 @@
 import { test, expect } from '@playwright/test'
+import {
+  getBrickCount,
+  projectToCanvas,
+  waitForDevWindow,
+  type DevWindow,
+} from './support/devWindow'
 
 interface DevStore {
   getState: () => {
@@ -7,23 +13,8 @@ interface DevStore {
   }
 }
 
-interface DevWindow {
+type TouchPlacementWindow = Omit<DevWindow, '__blockyStore'> & {
   __blockyStore: DevStore
-  __blockyProjectToCanvas: (
-    worldX: number,
-    worldY: number,
-    worldZ: number,
-  ) => { x: number; y: number }
-}
-
-async function waitForSceneHandles(page: import('@playwright/test').Page) {
-  await page.waitForFunction(
-    () =>
-      (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !==
-        undefined,
-    { timeout: 10000 },
-  )
 }
 
 test.describe('touch placement flow', () => {
@@ -31,19 +22,16 @@ test.describe('touch placement flow', () => {
 
   test('tap on baseplate places a brick', async ({ page }) => {
     await page.goto('/')
-    await waitForSceneHandles(page)
+    await waitForDevWindow(page, {
+      requireCursorStore: false,
+      requireProjectToCanvas: true,
+      timeout: 10000,
+    })
 
-    const countBefore = await page.evaluate(
-      () =>
-        Object.keys(
-          (window as unknown as DevWindow).__blockyStore.getState().bricks,
-        ).length,
-    )
+    const countBefore = await getBrickCount(page)
 
     // Get canvas coordinates for a world point on the baseplate
-    const pos = await page.evaluate(() =>
-      (window as unknown as DevWindow).__blockyProjectToCanvas(8, 0, 8),
-    )
+    const pos = await projectToCanvas(page, 8, 0, 8)
 
     // Use touchscreen.tap which fires pointerdown (sets ghost) then click (places)
     await page.touchscreen.tap(pos.x, pos.y)
@@ -52,31 +40,26 @@ test.describe('touch placement flow', () => {
     await page.waitForFunction(
       (expectedCount) =>
         Object.keys(
-          (window as unknown as DevWindow).__blockyStore.getState().bricks,
+          (window as unknown as TouchPlacementWindow).__blockyStore.getState()
+            .bricks,
         ).length > expectedCount,
       countBefore,
       { timeout: 3000 },
     )
 
-    const countAfter = await page.evaluate(
-      () =>
-        Object.keys(
-          (window as unknown as DevWindow).__blockyStore.getState().bricks,
-        ).length,
-    )
+    const countAfter = await getBrickCount(page)
     expect(countAfter).toBe(countBefore + 1)
   })
 
   test('drag on canvas does not place a brick', async ({ page }) => {
     await page.goto('/')
-    await waitForSceneHandles(page)
+    await waitForDevWindow(page, {
+      requireCursorStore: false,
+      requireProjectToCanvas: true,
+      timeout: 10000,
+    })
 
-    const countBefore = await page.evaluate(
-      () =>
-        Object.keys(
-          (window as unknown as DevWindow).__blockyStore.getState().bricks,
-        ).length,
-    )
+    const countBefore = await getBrickCount(page)
 
     const canvas = page.locator('canvas')
     const box = await canvas.boundingBox()
@@ -92,12 +75,7 @@ test.describe('touch placement flow', () => {
 
     await page.waitForTimeout(200)
 
-    const countAfter = await page.evaluate(
-      () =>
-        Object.keys(
-          (window as unknown as DevWindow).__blockyStore.getState().bricks,
-        ).length,
-    )
+    const countAfter = await getBrickCount(page)
     expect(countAfter).toBe(countBefore)
   })
 
@@ -105,10 +83,14 @@ test.describe('touch placement flow', () => {
     page,
   }) => {
     await page.goto('/')
-    await waitForSceneHandles(page)
+    await waitForDevWindow(page, {
+      requireCursorStore: false,
+      requireProjectToCanvas: true,
+      timeout: 10000,
+    })
 
     const brickId = await page.evaluate(() => {
-      return (window as unknown as DevWindow).__blockyStore
+      return (window as unknown as TouchPlacementWindow).__blockyStore
         .getState()
         .placeBrick({
           partId: 'brick-2x4',
@@ -121,22 +103,16 @@ test.describe('touch placement flow', () => {
     })
     expect(brickId).toBeTruthy()
 
-    const countBefore = await page.evaluate(
-      () =>
-        Object.keys(
-          (window as unknown as DevWindow).__blockyStore.getState().bricks,
-        ).length,
-    )
+    const countBefore = await getBrickCount(page)
 
-    const brickPos = await page.evaluate(() =>
-      (window as unknown as DevWindow).__blockyProjectToCanvas(5, 1.5, 6),
-    )
+    const brickPos = await projectToCanvas(page, 5, 1.5, 6)
     await page.touchscreen.tap(brickPos.x, brickPos.y)
     await page.waitForTimeout(200)
 
     const result = await page.evaluate((id) => {
-      const bricks = (window as unknown as DevWindow).__blockyStore.getState()
-        .bricks
+      const bricks = (
+        window as unknown as TouchPlacementWindow
+      ).__blockyStore.getState().bricks
       return {
         count: Object.keys(bricks).length,
         exists: (id as string) in bricks,

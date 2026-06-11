@@ -1,73 +1,9 @@
 import { expect, test } from '@playwright/test'
-
-interface DevBuildStore {
-  getState: () => {
-    placeBrick: (b: object) => string | null
-    undo: () => void
-    redo: () => void
-    bricks: Record<
-      string,
-      {
-        id: string
-        partId: string
-        color: string
-        x: number
-        y: number
-        z: number
-      }
-    >
-  }
-}
-
-interface DevCursorStore {
-  getState: () => {
-    editingTool: string
-    colorId: string
-    partId: string
-    setColor: (id: string) => void
-  }
-}
-
-interface DevWindow {
-  __blockyStore: DevBuildStore
-  __blockyCursorStore: DevCursorStore
-  __blockyCamera: unknown
-  __blockyProjectToCanvas: (
-    worldX: number,
-    worldY: number,
-    worldZ: number,
-  ) => { x: number; y: number }
-}
-
-async function projectToCanvas(
-  page: import('@playwright/test').Page,
-  worldX: number,
-  worldY: number,
-  worldZ: number,
-): Promise<{ x: number; y: number }> {
-  return page.evaluate(
-    ([wx, wy, wz]) => {
-      return (window as unknown as DevWindow).__blockyProjectToCanvas(
-        wx,
-        wy,
-        wz,
-      )
-    },
-    [worldX, worldY, worldZ] as [number, number, number],
-  )
-}
-
-async function waitForStores(page: import('@playwright/test').Page) {
-  await page.waitForFunction(
-    () =>
-      (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCursorStore !==
-        undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCamera !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !==
-        undefined,
-  )
-}
+import {
+  waitForStores,
+  projectToCanvas,
+  type DevWindow,
+} from './support/devWindow'
 
 test('paint mode recolors a placed brick and undo restores the original color', async ({
   page,
@@ -77,7 +13,7 @@ test('paint mode recolors a placed brick and undo restores the original color', 
 
   const brickId = await page.evaluate(() => {
     const store = (
-      window as unknown as { __blockyStore: DevBuildStore }
+      window as unknown as DevWindow
     ).__blockyStore.getState()
     return store.placeBrick({
       partId: 'brick-2x4',
@@ -92,7 +28,7 @@ test('paint mode recolors a placed brick and undo restores the original color', 
 
   await page.evaluate(() => {
     const cursor = (
-      window as unknown as { __blockyCursorStore: DevCursorStore }
+      window as unknown as DevWindow
     ).__blockyCursorStore.getState()
     cursor.setColor('blue')
   })
@@ -105,7 +41,7 @@ test('paint mode recolors a placed brick and undo restores the original color', 
 
   const activeTool = await page.evaluate(() => {
     return (
-      window as unknown as { __blockyCursorStore: DevCursorStore }
+      window as unknown as DevWindow
     ).__blockyCursorStore.getState().editingTool
   })
   expect(activeTool).toBe('paint')
@@ -119,7 +55,7 @@ test('paint mode recolors a placed brick and undo restores the original color', 
   await page.waitForFunction(
     (id) => {
       const bricks = (
-        window as unknown as { __blockyStore: DevBuildStore }
+        window as unknown as DevWindow
       ).__blockyStore.getState().bricks
       return (
         bricks[id as string]?.color === 'blue' &&
@@ -132,33 +68,33 @@ test('paint mode recolors a placed brick and undo restores the original color', 
 
   const colorAfterPaint = await page.evaluate((id) => {
     return (
-      window as unknown as { __blockyStore: DevBuildStore }
+      window as unknown as DevWindow
     ).__blockyStore.getState().bricks[id as string]?.color
   }, brickId)
   expect(colorAfterPaint).toBe('blue')
 
   await page.evaluate(() => {
-    ;(window as unknown as { __blockyStore: DevBuildStore }).__blockyStore
+    ;(window as unknown as DevWindow).__blockyStore
       .getState()
       .undo()
   })
 
   const colorAfterUndo = await page.evaluate((id) => {
     return (
-      window as unknown as { __blockyStore: DevBuildStore }
+      window as unknown as DevWindow
     ).__blockyStore.getState().bricks[id as string]?.color
   }, brickId)
   expect(colorAfterUndo).toBe('red')
 
   await page.evaluate(() => {
-    ;(window as unknown as { __blockyStore: DevBuildStore }).__blockyStore
+    ;(window as unknown as DevWindow).__blockyStore
       .getState()
       .redo()
   })
 
   const colorAfterRedo = await page.evaluate((id) => {
     return (
-      window as unknown as { __blockyStore: DevBuildStore }
+      window as unknown as DevWindow
     ).__blockyStore.getState().bricks[id as string]?.color
   }, brickId)
   expect(colorAfterRedo).toBe('blue')
@@ -172,7 +108,7 @@ test('eyedropper samples a placed brick into the active cursor', async ({
 
   await page.evaluate(() => {
     const store = (
-      window as unknown as { __blockyStore: DevBuildStore }
+      window as unknown as DevWindow
     ).__blockyStore.getState()
     store.placeBrick({
       partId: 'brick-2x4',
@@ -200,7 +136,7 @@ test('eyedropper samples a placed brick into the active cursor', async ({
 
   const toolAfterClick = await page.evaluate(() => {
     return (
-      window as unknown as { __blockyCursorStore: DevCursorStore }
+      window as unknown as DevWindow
     ).__blockyCursorStore.getState().editingTool
   })
   expect(toolAfterClick).toBe('eyedropper')
@@ -214,10 +150,10 @@ test('eyedropper samples a placed brick into the active cursor', async ({
   await page.waitForFunction(
     () => {
       const cursor = (
-        window as unknown as { __blockyCursorStore: DevCursorStore }
+        window as unknown as DevWindow
       ).__blockyCursorStore.getState()
       const bricks = (
-        window as unknown as { __blockyStore: DevBuildStore }
+        window as unknown as DevWindow
       ).__blockyStore.getState().bricks
       return (
         cursor.colorId === 'green' &&
@@ -231,7 +167,7 @@ test('eyedropper samples a placed brick into the active cursor', async ({
 
   const { colorId, partId } = await page.evaluate(() => {
     const state = (
-      window as unknown as { __blockyCursorStore: DevCursorStore }
+      window as unknown as DevWindow
     ).__blockyCursorStore.getState()
     return { colorId: state.colorId, partId: state.partId }
   })
@@ -241,7 +177,7 @@ test('eyedropper samples a placed brick into the active cursor', async ({
   const brickCount = await page.evaluate(() => {
     return Object.keys(
       (
-        window as unknown as { __blockyStore: DevBuildStore }
+        window as unknown as DevWindow
       ).__blockyStore.getState().bricks,
     ).length
   })
@@ -256,7 +192,7 @@ test('switching back to place mode allows normal placement after eyedropper', as
 
   await page.evaluate(() => {
     const store = (
-      window as unknown as { __blockyStore: DevBuildStore }
+      window as unknown as DevWindow
     ).__blockyStore.getState()
     store.placeBrick({
       partId: 'brick-2x4',
@@ -285,7 +221,7 @@ test('switching back to place mode allows normal placement after eyedropper', as
 
   const activeTool = await page.evaluate(() => {
     return (
-      window as unknown as { __blockyCursorStore: DevCursorStore }
+      window as unknown as DevWindow
     ).__blockyCursorStore.getState().editingTool
   })
   expect(activeTool).toBe('place')
@@ -298,7 +234,7 @@ test('switching back to place mode allows normal placement after eyedropper', as
     () =>
       Object.keys(
         (
-          window as unknown as { __blockyStore: DevBuildStore }
+          window as unknown as DevWindow
         ).__blockyStore.getState().bricks,
       ).length === 2,
     undefined,
@@ -308,7 +244,7 @@ test('switching back to place mode allows normal placement after eyedropper', as
   const brickCount = await page.evaluate(() => {
     return Object.keys(
       (
-        window as unknown as { __blockyStore: DevBuildStore }
+        window as unknown as DevWindow
       ).__blockyStore.getState().bricks,
     ).length
   })
