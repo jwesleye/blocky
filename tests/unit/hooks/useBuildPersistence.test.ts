@@ -204,6 +204,82 @@ describe('useBuildPersistence', () => {
     expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
   })
 
+  it('alerts and does not update store when imported build has a floating brick', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    // A brick hovering at y=30 with no path to the baseplate.
+    const floating = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 5, y: 30, z: 5, rot: 0 },
+      ],
+    })
+
+    const { triggerChange } = makeMockInput()
+    const { result } = renderHook(() => useBuildPersistence())
+    let importPromise: Promise<void>
+    await act(async () => {
+      importPromise = result.current.importFromJSON()
+    })
+
+    await triggerChange(floating)
+    await importPromise!
+
+    expect(alertSpy).toHaveBeenCalledOnce()
+    expect(alertSpy.mock.calls[0]?.[0]).toMatch(/Invalid build file/)
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
+  })
+
+  it('alerts and does not update store when imported build has overlapping bricks', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    // Two bricks occupying the same cell.
+    const overlapping = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+        { partId: 'brick-1x1', color: 'blue', x: 0, y: 0, z: 0, rot: 0 },
+      ],
+    })
+
+    const { triggerChange } = makeMockInput()
+    const { result } = renderHook(() => useBuildPersistence())
+    let importPromise: Promise<void>
+    await act(async () => {
+      importPromise = result.current.importFromJSON()
+    })
+
+    await triggerChange(overlapping)
+    await importPromise!
+
+    expect(alertSpy).toHaveBeenCalledOnce()
+    expect(alertSpy.mock.calls[0]?.[0]).toMatch(/Invalid build file/)
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
+  })
+
+  it('imports a valid grounded build that satisfies the invariants', async () => {
+    const valid = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [
+        { partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+        { partId: 'brick-1x1', color: 'blue', x: 0, y: 3, z: 0, rot: 0 },
+      ],
+    })
+
+    const { triggerChange } = makeMockInput()
+    const { result } = renderHook(() => useBuildPersistence())
+    let importPromise: Promise<void>
+    await act(async () => {
+      importPromise = result.current.importFromJSON()
+    })
+
+    await triggerChange(valid)
+    await importPromise!
+
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(2)
+  })
+
   it('alerts and does not update store when build has unknown mount value', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
     const unknownMount = JSON.stringify({

@@ -13,6 +13,8 @@ import { assertSupportedBaseplateSize } from '@/domain/grid'
 import { bricksToBuild, buildToBricks } from '@/domain/model/build'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
+import { findBuildInvariantViolations } from '@/domain/physics'
+import type { Build } from '@/domain/model/build'
 import {
   createAutosaver,
   loadBuild,
@@ -29,6 +31,18 @@ import '@/styles/gallery.css'
 import '@/styles/hud.css'
 import '@/styles/pickers.css'
 import '@/styles/responsive.css'
+
+/**
+ * True when a build satisfies the §5.1 grounding and no-overlap invariants.
+ * `null` (no shared build) is treated as not-applicable, never as valid.
+ */
+function isStructurallyValid(build: Build | null): build is Build {
+  if (!build) return false
+  const { floating, colliding } = findBuildInvariantViolations(
+    buildToBricks(build),
+  )
+  return floating.length === 0 && colliding.length === 0
+}
 
 export function App() {
   const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
@@ -58,7 +72,14 @@ export function App() {
       typeof window === 'undefined'
         ? null
         : loadBuildFromShareSearch(window.location.search)
-    const initialBuild = sharedBuild ?? loadBuild()
+    // A shared-URL build is untrusted input: enforce the §5.1 grounding and
+    // no-overlap invariants before adopting it, falling back to the local
+    // autosave when it would load a physically-invalid (floating/overlapping)
+    // structure (PRD §10).
+    const usableSharedBuild = isStructurallyValid(sharedBuild)
+      ? sharedBuild
+      : null
+    const initialBuild = usableSharedBuild ?? loadBuild()
 
     if (initialBuild) {
       const restoredBricks = buildToBricks(initialBuild)
