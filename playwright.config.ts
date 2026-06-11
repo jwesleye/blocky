@@ -42,7 +42,7 @@ export default defineConfig({
       'npm run build -- --mode e2e && npm run preview -- --host 127.0.0.1 --port 4174',
     cwd: process.cwd(),
     url: 'http://127.0.0.1:4174',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 })
