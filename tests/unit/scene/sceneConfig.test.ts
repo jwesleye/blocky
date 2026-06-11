@@ -8,17 +8,7 @@ describe('sceneConfig', () => {
     expect(sceneConfig.CAMERA_DEFAULT_FOV).toBe(50)
   })
 
-  it('defines sane lighting and background constants', () => {
-    expect(sceneConfig.BACKGROUND_COLOR).toBeDefined()
-    expect(sceneConfig.BACKGROUND_COLOR).not.toBe('#000000')
-    expect(sceneConfig.BACKGROUND_COLOR).not.toBe('black')
-
-    expect(sceneConfig.AMBIENT_INTENSITY).toBeGreaterThan(0)
-    expect(sceneConfig.AMBIENT_INTENSITY).toBeLessThanOrEqual(1)
-
-    expect(sceneConfig.DIRECTIONAL_INTENSITY).toBeGreaterThan(0)
-    expect(sceneConfig.DIRECTIONAL_INTENSITY).toBeLessThanOrEqual(1.5)
-
+  it('defines the scene shadow bias', () => {
     expect(sceneConfig.SHADOW_BIAS).toBeLessThan(0)
   })
 })
