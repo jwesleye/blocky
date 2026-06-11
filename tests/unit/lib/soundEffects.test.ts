@@ -18,9 +18,7 @@ function createFakeAudioParam(): FakeAudioParam {
     setValueAtTime: vi.fn<(value: number, startTime: number) => void>(),
     exponentialRampToValueAtTime:
       vi.fn<(value: number, endTime: number) => void>(),
-    linearRampToValueAtTime: vi.fn<
-      (value: number, endTime: number) => void
-    >(),
+    linearRampToValueAtTime: vi.fn<(value: number, endTime: number) => void>(),
   }
 }
 

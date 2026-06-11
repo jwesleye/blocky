@@ -9,12 +9,18 @@ test.describe('touch camera controls', () => {
 
     // Wait for the dev camera handle to be available
     await page.waitForFunction(
-      () => (window as unknown as { __blockyCamera?: unknown }).__blockyCamera !== undefined,
+      () =>
+        (window as unknown as { __blockyCamera?: unknown }).__blockyCamera !==
+        undefined,
       { timeout: 10000 },
     )
 
     const before = await page.evaluate(() => {
-      const cam = (window as unknown as { __blockyCamera: { position: { x: number; y: number; z: number } } }).__blockyCamera
+      const cam = (
+        window as unknown as {
+          __blockyCamera: { position: { x: number; y: number; z: number } }
+        }
+      ).__blockyCamera
       return { x: cam.position.x, y: cam.position.y, z: cam.position.z }
     })
 
@@ -34,7 +40,11 @@ test.describe('touch camera controls', () => {
     await page.waitForTimeout(150)
 
     const after = await page.evaluate(() => {
-      const cam = (window as unknown as { __blockyCamera: { position: { x: number; y: number; z: number } } }).__blockyCamera
+      const cam = (
+        window as unknown as {
+          __blockyCamera: { position: { x: number; y: number; z: number } }
+        }
+      ).__blockyCamera
       return { x: cam.position.x, y: cam.position.y, z: cam.position.z }
     })
 
