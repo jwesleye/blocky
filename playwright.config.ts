@@ -11,6 +11,7 @@ export default defineConfig({
   testDir: './tests',
   testMatch: ['e2e/**/*.spec.ts', 'perf/**/*.spec.ts'],
   fullyParallel: true,
+  workers: 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: 'html',

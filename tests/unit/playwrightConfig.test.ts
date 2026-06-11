@@ -31,6 +31,7 @@ function matchesTestIgnore(testIgnore: unknown, path: string): boolean {
 
 describe('playwright e2e defaults (issue #191)', () => {
   it('uses the preview server instead of the Vite dev server', () => {
+    expect(defaultConfig.workers).toBe(4)
     expect(defaultConfig.use?.baseURL).toBe('http://127.0.0.1:4174')
     expect(defaultConfig.webServer).toMatchObject({
       command:
