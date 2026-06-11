@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from 'react'
+import { BrickWall } from 'lucide-react'
 import {
   PART_CATALOG,
   PART_TYPE_LABELS,
@@ -16,6 +17,18 @@ const PART_TYPE_ORDER: PartType[] = ['brick', 'plate', 'tile', 'slope', 'round']
 const INVENTORY_PARTS = PART_CATALOG.filter(
   (p): p is PartDef => p.category !== 'baseplate',
 )
+
+const COMPACT_PART_LABELS: Partial<Record<string, string>> = {
+  'slope-corner': 'Cnr',
+  'slope-inverted': 'Inv',
+  'round-brick-1x1': 'B 1x1',
+  'round-plate-1x1': 'P 1x1',
+  'cone-1x1': 'Cone',
+}
+
+function getCompactPartLabel(part: PartDef): string {
+  return COMPACT_PART_LABELS[part.id] ?? `${part.widthX}x${part.widthZ}`
+}
 
 export function PartPicker({ selected, onSelect }: PartPickerProps) {
   const handleKeyDown = (
@@ -73,7 +86,16 @@ export function PartPicker({ selected, onSelect }: PartPickerProps) {
                   onClick={() => onSelect(part.id)}
                   onKeyDown={(e) => handleKeyDown(e, index, parts)}
                 >
-                  {part.label}
+                  <BrickWall
+                    className="part-btn__icon"
+                    size={14}
+                    aria-hidden={true}
+                    focusable={false}
+                  />
+                  <span className="part-btn__label">{part.label}</span>
+                  <span className="part-btn__compact" aria-hidden={true}>
+                    {getCompactPartLabel(part)}
+                  </span>
                 </button>
               ))}
             </div>

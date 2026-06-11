@@ -56,6 +56,13 @@ describe('BaseplateSizePicker', () => {
     }
   })
 
+  it('renders a decorative svg icon inside the 32 × 32 radio button', () => {
+    render(<BaseplateSizePicker />)
+    const btn = screen.getByRole('radio', { name: '32 × 32' })
+    const icon = btn.querySelector('svg[aria-hidden="true"]')
+    expect(icon).not.toBeNull()
+  })
+
   it('marks the active baseplate size as checked', () => {
     render(<BaseplateSizePicker />)
     expect(screen.getByRole('radio', { name: '32 × 32' })).toHaveAttribute(

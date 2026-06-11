@@ -60,6 +60,9 @@
 }
 
 .part-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   padding: 4px 8px;
   border: 1px solid #555;
@@ -68,6 +71,16 @@
   color: #e0e0e0;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.part-btn__icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.part-btn__compact {
+  display: none;
 }
 
 .part-btn:hover {
@@ -89,6 +102,9 @@
 }
 
 .baseplate-size-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   padding: 4px 8px;
   border: 1px solid #555;
@@ -97,6 +113,16 @@
   color: #e0e0e0;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.baseplate-size-btn__icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.baseplate-size-btn__compact {
+  display: none;
 }
 
 .baseplate-size-btn:hover {

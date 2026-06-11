@@ -15,11 +15,24 @@
     overflow: hidden;
   }
 
-  /* Hide text labels in the sidebar at narrow widths; icons remain. */
-  .app-sidebar .part-btn,
-  .app-sidebar .baseplate-size-btn,
+  /* Collapse verbose labels while keeping a visible per-option token. */
+  .app-sidebar .part-btn__label,
+  .app-sidebar .baseplate-size-btn__label,
   .app-sidebar .color-swatch__label {
     font-size: 0;
+  }
+
+  .app-sidebar .part-btn,
+  .app-sidebar .baseplate-size-btn {
+    gap: 2px;
+    padding: 4px 5px;
+    font-size: 10px;
+  }
+
+  .app-sidebar .part-btn__compact,
+  .app-sidebar .baseplate-size-btn__compact {
+    display: inline;
+    line-height: 1;
   }
 }
 
