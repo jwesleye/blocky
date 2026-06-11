@@ -8,6 +8,7 @@ interface PlacedBrick {
   z: number
   rot: number
   offset?: { x: number; z: number }
+  mount?: 'px' | 'nx' | 'pz' | 'nz'
 }
 
 interface DevStore {
@@ -47,6 +48,43 @@ async function getBrickCount(page: import('@playwright/test').Page) {
       ).length,
   )
 }
+
+test('places a baseplate-mounted brick and rejects an elevated mounted placement', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+
+  // Place the supported render-first mounted flow: px brick on the baseplate.
+  await placeBrick(page, {
+    partId: 'brick-1x1',
+    color: 'blue',
+    x: 10,
+    y: 0,
+    z: 10,
+    rot: 0,
+    mount: 'px',
+  })
+
+  let count = await getBrickCount(page)
+  expect(count).toBe(1)
+
+  await expect(page.locator('canvas')).toBeVisible()
+
+  // Elevated mounted placement is still unsupported until mount-aware physics land.
+  await placeBrick(page, {
+    partId: 'brick-1x1',
+    color: 'red',
+    x: 10,
+    y: 3,
+    z: 10,
+    rot: 0,
+    mount: 'px',
+  })
+
+  // It should be rejected (count remains 1).
+  count = await getBrickCount(page)
+  expect(count).toBe(1)
+})
 
 test('places an offset brick and rejects overlapping offset placements', async ({
   page,

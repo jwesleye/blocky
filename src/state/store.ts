@@ -105,6 +105,13 @@ export interface BuildStoreWithTemporal extends BuildStore {
   temporal: StoreApi<TemporalState<Partial<BuildState>>>
 }
 
+function usesUnsupportedMountPlacement(brick: Omit<PlacedBrick, 'id'>): boolean {
+  return (
+    brick.mount !== undefined &&
+    (brick.y !== 0 || brick.offset !== undefined)
+  )
+}
+
 function applyCollapse(
   allBricks: PlacedBrick[],
   selection: Set<string>,
@@ -161,6 +168,10 @@ export const useBuildStore = create<BuildStore>()(
         activeCollapse: null,
 
         placeBrick: (brick) => {
+          if (usesUnsupportedMountPlacement(brick)) {
+            return null
+          }
+
           const id = createBrickId()
           const candidate = { id, ...brick }
 

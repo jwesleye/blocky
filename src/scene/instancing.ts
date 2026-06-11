@@ -1,4 +1,4 @@
-import type { PlacedBrick } from '@/domain/model/types'
+import type { BrickMount, PlacedBrick } from '@/domain/model/types'
 import type { PartType } from '@/domain/parts/catalog'
 
 export const STUD_SCENE_UNIT = 1
@@ -14,7 +14,7 @@ export type RenderBrick = Pick<
   PlacedBrick,
   'partId' | 'color' | 'x' | 'y' | 'z' | 'rot'
 > &
-  Partial<Pick<PlacedBrick, 'id'>> & {
+  Partial<Pick<PlacedBrick, 'id' | 'mount'>> & {
     partType: PartType
   }
 
@@ -22,7 +22,7 @@ export type PartDimsResolver = (partId: string) => PartDims
 
 export interface BrickInstance {
   position: [number, number, number]
-  rotationY: number
+  rotation: [number, number, number]
 }
 
 export interface InstanceBucket {
@@ -34,6 +34,21 @@ export interface InstanceBucket {
   instances: BrickInstance[]
 }
 
+function mountRotation(mount?: BrickMount): [number, number, number] {
+  switch (mount) {
+    case 'px':
+      return [0, 0, -Math.PI / 2]
+    case 'nx':
+      return [0, 0, Math.PI / 2]
+    case 'pz':
+      return [Math.PI / 2, 0, 0]
+    case 'nz':
+      return [-Math.PI / 2, 0, 0]
+    default:
+      return [0, 0, 0]
+  }
+}
+
 export function brickInstanceTransform(
   brick: RenderBrick,
   dims: PartDims,
@@ -41,13 +56,15 @@ export function brickInstanceTransform(
   const [effectiveW, effectiveD] =
     brick.rot % 2 === 0 ? [dims.w, dims.d] : [dims.d, dims.w]
 
+  const [rx, , rz] = mountRotation(brick.mount)
+
   return {
     position: [
       (brick.x + effectiveW / 2) * STUD_SCENE_UNIT,
       (brick.y + dims.h / 2) * PLATE_SCENE_UNIT,
       (brick.z + effectiveD / 2) * STUD_SCENE_UNIT,
     ],
-    rotationY: brick.rot * (Math.PI / 2),
+    rotation: [rx, brick.rot * (Math.PI / 2), rz],
   }
 }
 

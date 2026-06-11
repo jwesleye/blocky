@@ -13,7 +13,7 @@ import { Vector3, type PerspectiveCamera } from 'three'
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
 import { getBrickColor } from '@/domain/model/colors'
-import type { HalfStudOffset, PlacedBrick } from '@/domain/model/types'
+import type { BrickMount, HalfStudOffset, PlacedBrick } from '@/domain/model/types'
 import {
   CATALOG_BY_ID as PART_CATALOG,
   getPart,
@@ -76,18 +76,35 @@ function isWithinRenderedBaseplate(brick: PlacedBrick, baseplateSize: number) {
   )
 }
 
+function ghostMountRotation(mount?: BrickMount): [number, number, number] {
+  switch (mount) {
+    case 'px':
+      return [0, 0, -Math.PI / 2]
+    case 'nx':
+      return [0, 0, Math.PI / 2]
+    case 'pz':
+      return [Math.PI / 2, 0, 0]
+    case 'nz':
+      return [-Math.PI / 2, 0, 0]
+    default:
+      return [0, 0, 0]
+  }
+}
+
 function GhostBrickMesh({
   grid,
   valid,
   partId,
   rot,
   offset,
+  mount,
 }: {
   grid: GridCoord
   valid: boolean
   partId: string
   rot: 0 | 1 | 2 | 3
   offset?: HalfStudOffset
+  mount?: BrickMount
 }) {
   const part = PART_CATALOG[partId]
   if (!part) return null
@@ -99,11 +116,13 @@ function GhostBrickMesh({
     grid.z + depth / 2 + (offset?.z ?? 0) * 0.5,
   ]
 
+  const [rx, , rz] = ghostMountRotation(mount)
+
   return (
     <mesh
       name="ghost-brick"
       position={position}
-      rotation={[0, rot * (Math.PI / 2), 0]}
+      rotation={[rx, rot * (Math.PI / 2), rz]}
       raycast={() => null}
       scale={[0.97, 0.97, 0.97]}
     >
@@ -235,6 +254,7 @@ export function BuildScene({
   const colorId = useCursorStore((state) => state.colorId)
   const rot = useCursorStore((state) => state.rot)
   const offset = useCursorStore((state) => state.offset)
+  const mount = useCursorStore((state) => state.mount)
   const editingTool = useCursorStore((state) => state.editingTool)
   const sampleBrick = useCursorStore((state) => state.sampleBrick)
   const setHoveredBrickId = useCursorStore((state) => state.setHoveredBrickId)
@@ -273,9 +293,10 @@ export function BuildScene({
       z: ghostGrid.z,
       rot,
       offset,
+      mount,
     }
     return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
-  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot, offset])
+  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot, offset, mount])
 
   const handlePlace = () => {
     if (editingTool !== 'place') return
@@ -288,6 +309,7 @@ export function BuildScene({
       z: ghostGrid.z,
       rot,
       offset,
+      mount,
     })
   }
 
@@ -384,6 +406,7 @@ export function BuildScene({
           partId={partId}
           rot={rot}
           offset={offset}
+          mount={mount}
         />
       )}
       {activeCollapse && (

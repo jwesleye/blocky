@@ -155,7 +155,7 @@ describe('brickInstanceTransform', () => {
         0.5 * PLATE_SCENE_UNIT,
         0.5 * STUD_SCENE_UNIT,
       ],
-      rotationY: 0,
+      rotation: [0, 0, 0],
     })
   })
 
@@ -176,7 +176,7 @@ describe('brickInstanceTransform', () => {
         1.5 * PLATE_SCENE_UNIT,
         1 * STUD_SCENE_UNIT,
       ],
-      rotationY: Math.PI / 2,
+      rotation: [0, Math.PI / 2, 0],
     })
   })
 
@@ -197,7 +197,50 @@ describe('brickInstanceTransform', () => {
         1.5 * PLATE_SCENE_UNIT,
         2 * STUD_SCENE_UNIT,
       ],
-      rotationY: 0,
+      rotation: [0, 0, 0],
     })
+  })
+
+  it('returns rotation [0, rotY, 0] when mount is absent', () => {
+    const brick: RenderBrick = {
+      partId: 'brick-1x1',
+      partType: 'brick',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 1,
+    }
+
+    const result = brickInstanceTransform(brick, ONE_BY_ONE)
+    expect(result.rotation).toEqual([0, Math.PI / 2, 0])
+  })
+
+  it('returns non-zero X/Z rotation for each mount facing', () => {
+    const base: RenderBrick = {
+      partId: 'brick-1x1',
+      partType: 'brick',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+
+    const px = brickInstanceTransform({ ...base, mount: 'px' }, ONE_BY_ONE)
+    expect(px.rotation[2]).not.toBe(0)
+    expect(px.rotation[0]).toBe(0)
+
+    const nx = brickInstanceTransform({ ...base, mount: 'nx' }, ONE_BY_ONE)
+    expect(nx.rotation[2]).not.toBe(0)
+    expect(nx.rotation[0]).toBe(0)
+
+    const pz = brickInstanceTransform({ ...base, mount: 'pz' }, ONE_BY_ONE)
+    expect(pz.rotation[0]).not.toBe(0)
+    expect(pz.rotation[2]).toBe(0)
+
+    const nz = brickInstanceTransform({ ...base, mount: 'nz' }, ONE_BY_ONE)
+    expect(nz.rotation[0]).not.toBe(0)
+    expect(nz.rotation[2]).toBe(0)
   })
 })

@@ -2,15 +2,24 @@ import { create } from 'zustand'
 
 import { DEFAULT_COLOR_ID } from '@/domain/model/colors'
 import { DEFAULT_PART_ID } from '@/domain/parts/catalog'
-import type { HalfStudOffset } from '@/domain/model/types'
+import type { BrickMount, HalfStudOffset } from '@/domain/model/types'
 
 export type EditingTool = 'place' | 'paint' | 'eyedropper'
+
+const MOUNT_CYCLE: (BrickMount | undefined)[] = [
+  undefined,
+  'px',
+  'nx',
+  'pz',
+  'nz',
+]
 
 export interface CursorBrick {
   partId: string
   colorId: string
   rot: 0 | 1 | 2 | 3
   offset?: HalfStudOffset
+  mount?: BrickMount
 }
 
 interface CursorState {
@@ -18,6 +27,7 @@ interface CursorState {
   partId: string
   rot: 0 | 1 | 2 | 3
   offset?: HalfStudOffset
+  mount?: BrickMount
   /**
    * Complete model for the ghost/preview brick being placed.
    * Derived from the selected scalars but provided as a single object
@@ -32,6 +42,7 @@ interface CursorState {
   rotate: () => void
   rotateCursor: () => void
   toggleOffset: () => void
+  cycleMount: () => void
   setEditingTool: (tool: EditingTool) => void
   setHoveredBrickId: (id: string | null) => void
   /** Copies a placed brick's partId and color into the cursor without mutating the build. */
@@ -43,11 +54,13 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
   partId: DEFAULT_PART_ID,
   rot: 0,
   offset: undefined,
+  mount: undefined,
   cursorBrick: {
     partId: DEFAULT_PART_ID,
     colorId: DEFAULT_COLOR_ID,
     rot: 0,
     offset: undefined,
+    mount: undefined,
   },
   editingTool: 'place',
   hoveredBrickId: null,
@@ -78,6 +91,15 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
       return {
         offset: newOffset,
         cursorBrick: { ...state.cursorBrick, offset: newOffset },
+      }
+    }),
+  cycleMount: () =>
+    set((state) => {
+      const idx = MOUNT_CYCLE.indexOf(state.mount)
+      const newMount = MOUNT_CYCLE[(idx + 1) % MOUNT_CYCLE.length]
+      return {
+        mount: newMount,
+        cursorBrick: { ...state.cursorBrick, mount: newMount },
       }
     }),
   setEditingTool: (tool) => set({ editingTool: tool }),

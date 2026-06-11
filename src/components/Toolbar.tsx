@@ -13,6 +13,7 @@ import {
   Trash2,
   Undo2,
   ArrowRightToLine,
+  FlipHorizontal2,
 } from 'lucide-react'
 import { KeyboardHelp } from '@/components/KeyboardHelp'
 
@@ -38,6 +39,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const temporal = (useBuildStore as unknown as BuildStoreWithTemporal).temporal
   const toggleOffset = useCursorStore((state) => state.toggleOffset)
   const isOffset = useCursorStore((state) => state.offset !== undefined)
+  const cycleMount = useCursorStore((state) => state.cycleMount)
+  const isMount = useCursorStore((state) => state.mount !== undefined)
   const [, setRefresh] = useState(0)
 
   useEffect(() => {
@@ -71,6 +74,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         className={isOffset ? 'active' : ''}
       >
         <ArrowRightToLine size={20} />
+      </button>
+      <button
+        type="button"
+        aria-label="Cycle SNOT Mount"
+        data-testid="cycle-mount"
+        onClick={cycleMount}
+        className={isMount ? 'active' : ''}
+      >
+        <FlipHorizontal2 size={20} />
       </button>
       <button
         type="button"

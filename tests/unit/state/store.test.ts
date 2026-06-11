@@ -686,6 +686,32 @@ describe('useBuildStore', () => {
       expect(useBuildStore.getState().bricks).toBe(initialBricks)
       expect(Object.keys(useBuildStore.getState().bricks)).toEqual([tile])
     })
+
+    it('rejects an elevated mounted placement and leaves bricks unchanged', () => {
+      const anchor = placeBrick({
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+      const initialBricks = useBuildStore.getState().bricks
+
+      const rejected = useBuildStore.getState().placeBrick({
+        partId: 'brick-1x1',
+        color: 'blue',
+        x: 0,
+        y: 3,
+        z: 0,
+        rot: 0,
+        mount: 'px',
+      })
+
+      expect(rejected).toBeNull()
+      expect(useBuildStore.getState().bricks).toBe(initialBricks)
+      expect(Object.keys(useBuildStore.getState().bricks)).toEqual([anchor])
+    })
   })
 
   describe('triggerCollapse', () => {

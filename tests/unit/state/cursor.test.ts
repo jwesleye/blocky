@@ -104,6 +104,18 @@ describe('useCursorStore', () => {
     })
   })
 
+  describe('cycleMount', () => {
+    it('advances undefined → px → nx → pz → nz → undefined and mirrors into cursorBrick', () => {
+      const sequence = [undefined, 'px', 'nx', 'pz', 'nz', undefined] as const
+      for (let i = 0; i < sequence.length - 1; i++) {
+        useCursorStore.getState().cycleMount()
+        const state = useCursorStore.getState()
+        expect(state.mount).toBe(sequence[i + 1])
+        expect(state.cursorBrick.mount).toBe(sequence[i + 1])
+      }
+    })
+  })
+
   describe('sampleBrick', () => {
     it('copies partId and color into cursor state without changing rot', () => {
       useCursorStore.getState().sampleBrick({
