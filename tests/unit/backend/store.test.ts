@@ -145,10 +145,15 @@ describe('gallery store durability', () => {
     const firstId = generateBuildId()
     storeBuild(makePayload(firstId))
 
+    const parseCounter = (id: string) =>
+      Number.parseInt(id.split('_').at(-1) ?? '', 36)
+    const firstCounter = parseCounter(firstId)
+
     reloadStore()
     const secondId = generateBuildId()
+    const secondCounter = parseCounter(secondId)
 
-    expect(secondId).not.toBe(firstId)
+    expect(secondCounter).toBe(firstCounter + 1)
   })
 
   it('keeps builds intact when delete lacks an authenticated principal', () => {
