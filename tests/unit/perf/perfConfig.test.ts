@@ -26,4 +26,17 @@ describe('playwright.perf.config.ts', () => {
     expect(webServer?.cwd).toBeDefined()
     expect(path.resolve(webServer?.cwd ?? '')).toBe(path.resolve(repoRoot))
   })
+
+  it('builds before previewing so the perf gate cannot measure a stale bundle', async () => {
+    vi.resetModules()
+
+    const imported = await import('../../../playwright.perf.config')
+    const webServer = Array.isArray(imported.default.webServer)
+      ? imported.default.webServer[0]
+      : imported.default.webServer
+
+    expect(webServer?.command).toBe(
+      'npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
+    )
+  })
 })
