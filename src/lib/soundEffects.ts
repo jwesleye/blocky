@@ -58,9 +58,24 @@ export type SoundEffectsController = {
 }
 
 const SOUND_PROFILES: Record<SoundEffectName, SoundProfile> = {
-  place: { frequency: 660, durationMs: 0.06 * 1000, gain: 0.035, type: 'triangle' },
-  delete: { frequency: 220, durationMs: 0.09 * 1000, gain: 0.04, type: 'sawtooth' },
-  collapse: { frequency: 140, durationMs: 0.18 * 1000, gain: 0.05, type: 'square' },
+  place: {
+    frequency: 660,
+    durationMs: 0.06 * 1000,
+    gain: 0.035,
+    type: 'triangle',
+  },
+  delete: {
+    frequency: 220,
+    durationMs: 0.09 * 1000,
+    gain: 0.04,
+    type: 'sawtooth',
+  },
+  collapse: {
+    frequency: 140,
+    durationMs: 0.18 * 1000,
+    gain: 0.05,
+    type: 'square',
+  },
 }
 
 function getBrowserStorage(): StorageLike | null {
@@ -102,7 +117,8 @@ export function createSoundEffectsController(
   options: SoundEffectsControllerOptions = {},
 ): SoundEffectsController {
   const storage = options.storage ?? getBrowserStorage()
-  const createAudioContext = options.createAudioContext ?? getBrowserAudioContext
+  const createAudioContext =
+    options.createAudioContext ?? getBrowserAudioContext
   const listeners = new Set<SoundEffectsListener>()
 
   let enabled = readEnabled(storage)
@@ -151,10 +167,7 @@ export function createSoundEffectsController(
         oscillator.frequency.setValueAtTime(profile.frequency, now)
         gainNode.gain.setValueAtTime(0.0001, now)
         gainNode.gain.exponentialRampToValueAtTime(profile.gain, now + 0.01)
-        gainNode.gain.linearRampToValueAtTime(
-          0.0001,
-          now + durationSeconds,
-        )
+        gainNode.gain.linearRampToValueAtTime(0.0001, now + durationSeconds)
 
         oscillator.connect(gainNode)
         gainNode.connect(context.destination)
@@ -177,9 +190,7 @@ export function setSoundEffectsEnabled(enabled: boolean) {
   defaultController.setEnabled(enabled)
 }
 
-export function subscribeToSoundEffectsEnabled(
-  listener: SoundEffectsListener,
-) {
+export function subscribeToSoundEffectsEnabled(listener: SoundEffectsListener) {
   return defaultController.subscribe(listener)
 }
 
