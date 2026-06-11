@@ -6,6 +6,7 @@ test('loads a published fixture build from the gallery', async ({ page }) => {
   await expect(page.getByText('Bricks in build: 0')).toBeVisible()
 
   await page.getByTestId('gallery-toggle').click()
+  await expect(page.getByText('Demo gallery')).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Starter House' }),
   ).toBeVisible()

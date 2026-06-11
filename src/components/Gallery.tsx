@@ -6,13 +6,14 @@ interface GalleryProps {
 }
 
 export function Gallery({ client }: GalleryProps) {
-  const { builds, loading, loadingBuildId, error, loadBuild } =
+  const { builds, loading, loadingBuildId, error, mode, loadBuild } =
     useGallery(client)
 
   return (
     <section className="gallery-panel" aria-label="Published builds">
       <div className="gallery-panel__header">
         <h3>Gallery</h3>
+        {mode === 'demo' && <span>Demo gallery</span>}
         <span>{builds.length} builds</span>
       </div>
 
