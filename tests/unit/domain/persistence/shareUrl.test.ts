@@ -165,7 +165,17 @@ describe('SNOT mount — share URL round-trip', () => {
     const bad = JSON.stringify({
       version: 1,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
-      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, mount: 'px' }],
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          mount: 'px',
+        },
+      ],
     })
     const token = compressToEncodedURIComponent(bad)
     expect(decodeShareToken(token)).toBeNull()
@@ -175,7 +185,17 @@ describe('SNOT mount — share URL round-trip', () => {
     const bad = JSON.stringify({
       version: 1,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
-      bricks: [{ partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0, offset: { x: 1, z: 0 } }],
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          offset: { x: 1, z: 0 },
+        },
+      ],
     })
     const token = compressToEncodedURIComponent(bad)
     expect(decodeShareToken(token)).toBeNull()

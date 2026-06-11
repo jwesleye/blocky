@@ -48,6 +48,9 @@ const CollapseSimulation = lazy(() =>
   })),
 )
 
+const shouldExposeTestHooks =
+  import.meta.env.DEV || import.meta.env.MODE === 'e2e'
+
 function toRenderPartType(partId: string): PartType | null {
   const part = getPart(partId)
   if (!part || part.category === 'baseplate') {
@@ -163,7 +166,7 @@ function ThreeDevExpose() {
   const { camera, gl } = useThree()
 
   useEffect(() => {
-    if (import.meta.env.DEV) {
+    if (shouldExposeTestHooks) {
       window.__blockyCamera = camera as PerspectiveCamera
       window.__blockyProjectToCanvas = (worldX, worldY, worldZ) => {
         const point = new Vector3(worldX, worldY, worldZ).project(
@@ -178,7 +181,7 @@ function ThreeDevExpose() {
     }
 
     return () => {
-      if (import.meta.env.DEV) {
+      if (shouldExposeTestHooks) {
         delete window.__blockyProjectToCanvas
       }
     }
