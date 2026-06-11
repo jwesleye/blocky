@@ -41,4 +41,8 @@ describe('Performance Budgets consistency', () => {
       expect(docContent.toLowerCase()).toContain(browser.toLowerCase())
     }
   })
+
+  it('documents the uncompressed chunk warning threshold separately from the gzip entry ceiling', () => {
+    expect(docContent).toContain(`${budgets.BUNDLE_CHUNK_WARNING_LIMIT_KIB}`)
+  })
 })

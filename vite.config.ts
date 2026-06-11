@@ -6,7 +6,33 @@ import { gzipSync } from 'node:zlib'
 import {
   BUNDLE_ENTRY_BUDGET_KIB,
   BUNDLE_ENTRY_BUDGET_BYTES,
+  BUNDLE_CHUNK_WARNING_LIMIT_KIB,
 } from './tests/perf/budgets'
+
+export function getManualChunkName(id: string) {
+  if (
+    id.includes('node_modules/react') ||
+    id.includes('node_modules/react-dom')
+  ) {
+    return 'react-vendor'
+  }
+  if (
+    id.includes('node_modules/three') ||
+    id.includes('node_modules/@react-three/fiber') ||
+    id.includes('node_modules/@react-three/drei')
+  ) {
+    return 'three-vendor'
+  }
+  if (
+    id.includes('node_modules/@react-three/rapier') ||
+    id.includes('node_modules/@dimforge') ||
+    id.includes('node_modules/@pmndrs/rapier')
+  ) {
+    return 'physics-vendor'
+  }
+
+  return undefined
+}
 
 function enforceBundleBudget() {
   return {
@@ -52,10 +78,15 @@ export default defineConfig({
   plugins: [react(), enforceBundleBudget()],
   build: {
     // Vite's chunkSizeWarningLimit is an uncompressed-size threshold. The gzip
-    // enforcement is handled by enforceBundleBudget above. Set this to a value
-    // that matches the actual uncompressed bundle size so the Rollup warning
-    // does not fire on every passing build.
-    chunkSizeWarningLimit: 3000,
+    // enforcement is handled by enforceBundleBudget above. BUNDLE_CHUNK_WARNING_LIMIT_KIB
+    // is a documented exception for the Three.js/Rapier runtime chunks, which are
+    // large uncompressed but still pass the gzip entry gate.
+    chunkSizeWarningLimit: BUNDLE_CHUNK_WARNING_LIMIT_KIB,
+    rollupOptions: {
+      output: {
+        manualChunks: getManualChunkName,
+      },
+    },
   },
   resolve: {
     alias: {

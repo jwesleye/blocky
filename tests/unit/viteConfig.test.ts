@@ -1,25 +1,44 @@
-import fs from 'node:fs'
-import path from 'node:path'
+// @vitest-environment node
 import { describe, expect, it } from 'vitest'
 
-describe('vite.config chunkSizeWarningLimit', () => {
-  // Importing vite.config.ts directly fails in the jsdom environment because
-  // esbuild (loaded by the react plugin) requires a native TextEncoder that
-  // jsdom shadows. Source-text assertion is equally reliable for guarding
-  // against regression of this specific mis-assignment.
-  const configSource = fs.readFileSync(
-    path.resolve(__dirname, '../../vite.config.ts'),
-    'utf8',
-  )
+import viteConfig, { getManualChunkName } from '../../vite.config'
+import { BUNDLE_CHUNK_WARNING_LIMIT_KIB } from '../perf/budgets'
 
-  it('does not set chunkSizeWarningLimit to the gzip budget constant', () => {
-    // Vite's chunkSizeWarningLimit measures uncompressed size; BUNDLE_ENTRY_BUDGET_KIB
-    // is a gzip ceiling. Equating the two causes a spurious Rollup warning on
-    // every passing build because production bundles are typically 1500–2500 KiB
-    // uncompressed while still under 500 KiB gzip. The authoritative gate is the
-    // enforceBundleBudget plugin.
-    expect(configSource).not.toMatch(
-      /chunkSizeWarningLimit\s*:\s*BUNDLE_ENTRY_BUDGET_KIB/,
+describe('vite.config chunkSizeWarningLimit', () => {
+  it('uses the documented uncompressed warning threshold', () => {
+    expect(viteConfig.build?.chunkSizeWarningLimit).toBe(
+      BUNDLE_CHUNK_WARNING_LIMIT_KIB,
     )
+  })
+
+  it('keeps the warning threshold above the known CollapseSimulation chunk size', () => {
+    // The current CollapseSimulation async chunk is about 2264 KiB minified in
+    // production builds. Keeping the warning threshold above that observed size
+    // prevents Rollup from warning on every otherwise-passing build.
+    expect(BUNDLE_CHUNK_WARNING_LIMIT_KIB).toBeGreaterThan(2264)
+  })
+
+  it('routes React modules into react-vendor', () => {
+    expect(
+      getManualChunkName('/project/node_modules/react-dom/client.js'),
+    ).toBe('react-vendor')
+  })
+
+  it('routes Three.js modules into three-vendor', () => {
+    expect(
+      getManualChunkName('/project/node_modules/@react-three/drei/index.js'),
+    ).toBe('three-vendor')
+  })
+
+  it('routes Rapier modules into physics-vendor', () => {
+    expect(
+      getManualChunkName('/project/node_modules/@dimforge/rapier3d/index.js'),
+    ).toBe('physics-vendor')
+  })
+
+  it('leaves app source in the default chunk graph', () => {
+    expect(
+      getManualChunkName('/project/src/scene/CollapseSimulation.tsx'),
+    ).toBeUndefined()
   })
 })
