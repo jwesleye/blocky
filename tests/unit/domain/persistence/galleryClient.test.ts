@@ -8,7 +8,10 @@ import {
   AUTOSAVE_STORAGE_KEY,
 } from '@/domain/persistence/autosave'
 import type { KeyValueStorage } from '@/domain/persistence/autosave'
-import { createGalleryClient } from '@/domain/persistence/galleryClient'
+import {
+  createGalleryClient,
+  GALLERY_REQUEST_TIMEOUT_MS,
+} from '@/domain/persistence/galleryClient'
 import { createFixtureGalleryClient } from '@/domain/persistence/galleryClient'
 import { SHARED_BUILD_CONTRACT_VERSION } from '@/domain/persistence/sharedBuildContract'
 import type { SharedBuildPayload } from '@/domain/persistence/sharedBuildContract'
@@ -49,6 +52,9 @@ const makePublishResponse = (
     updatedAt: '2026-06-08T00:00:00.000Z',
   },
 })
+
+const makeTimeoutError = () =>
+  new DOMException('The operation timed out', 'TimeoutError')
 
 function memoryStorage(): KeyValueStorage & { map: Map<string, string> } {
   const map = new Map<string, string>()
@@ -504,6 +510,9 @@ describe('galleryClient.load', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:4000/builds/srv_abc123',
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }),
     )
   })
 
@@ -728,5 +737,140 @@ describe('galleryClient.deleteBuild', () => {
     if (!result.ok) {
       expect(result.reason).toBe('network-error')
     }
+  })
+})
+
+describe('galleryClient request timeouts', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  it('attaches a default timeout signal to every real gallery request', async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response('{}', { status: 200 }))
+
+    const client = createGalleryClient('http://localhost:4000')
+    await client.list()
+    await client.publish({
+      build: makeBuild(),
+      gallery: {
+        title: 'Timed Publish',
+        visibility: 'public',
+        author: { identityMode: 'anonymous' },
+      },
+    })
+    await client.load('srv_abc123')
+    await client.reportBuild('srv_abc123', { reason: 'spam' })
+    await client.deleteBuild('srv_abc123')
+
+    const calls = vi.mocked(fetch).mock.calls
+    expect(calls).toHaveLength(5)
+    for (const [, options] of calls) {
+      expect(options).toBeDefined()
+      expect(options?.signal).toBeInstanceOf(AbortSignal)
+    }
+  })
+
+  it('uses the exported default timeout value when no override is provided', async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response('{}', { status: 200 }))
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
+
+    const client = createGalleryClient('http://localhost:4000')
+    await client.list()
+
+    expect(timeoutSpy).toHaveBeenCalledWith(GALLERY_REQUEST_TIMEOUT_MS)
+  })
+
+  it('honors a timeout override for every real gallery request', async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response('{}', { status: 200 }))
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
+    const timeoutMs = 2500
+
+    const client = createGalleryClient('http://localhost:4000', { timeoutMs })
+    await client.list()
+    await client.publish({
+      build: makeBuild(),
+      gallery: {
+        title: 'Timed Publish',
+        visibility: 'public',
+        author: { identityMode: 'anonymous' },
+      },
+    })
+    await client.load('srv_abc123')
+    await client.reportBuild('srv_abc123', { reason: 'spam' })
+    await client.deleteBuild('srv_abc123')
+
+    expect(timeoutSpy).toHaveBeenCalledTimes(5)
+    expect(timeoutSpy).toHaveBeenNthCalledWith(1, timeoutMs)
+    expect(timeoutSpy).toHaveBeenNthCalledWith(2, timeoutMs)
+    expect(timeoutSpy).toHaveBeenNthCalledWith(3, timeoutMs)
+    expect(timeoutSpy).toHaveBeenNthCalledWith(4, timeoutMs)
+    expect(timeoutSpy).toHaveBeenNthCalledWith(5, timeoutMs)
+  })
+
+  it('maps list timeouts to network-error', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(makeTimeoutError())
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.list()
+
+    expect(result).toEqual(
+      expect.objectContaining({ ok: false, reason: 'network-error' }),
+    )
+  })
+
+  it('maps publish timeouts to network-error', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(makeTimeoutError())
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.publish({
+      build: makeBuild(),
+      gallery: {
+        title: 'Timed Publish',
+        visibility: 'public',
+        author: { identityMode: 'anonymous' },
+      },
+    })
+
+    expect(result).toEqual(
+      expect.objectContaining({ ok: false, reason: 'network-error' }),
+    )
+  })
+
+  it('maps load timeouts to network-error', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(makeTimeoutError())
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.load('srv_abc123')
+
+    expect(result).toEqual(
+      expect.objectContaining({ ok: false, reason: 'network-error' }),
+    )
+  })
+
+  it('maps reportBuild timeouts to network-error', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(makeTimeoutError())
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.reportBuild('srv_abc123', { reason: 'spam' })
+
+    expect(result).toEqual(
+      expect.objectContaining({ ok: false, reason: 'network-error' }),
+    )
+  })
+
+  it('maps deleteBuild timeouts to network-error', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(makeTimeoutError())
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.deleteBuild('srv_abc123')
+
+    expect(result).toEqual(
+      expect.objectContaining({ ok: false, reason: 'network-error' }),
+    )
   })
 })
