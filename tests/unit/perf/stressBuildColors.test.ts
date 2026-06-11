@@ -17,6 +17,7 @@ const FIXTURE_PATHS = [
 ] as const
 
 const SOURCE_PATHS = [
+  join(process.cwd(), 'src/testing/stressBuild.ts'),
   join(process.cwd(), 'scripts/gen-stress-build.ts'),
   join(process.cwd(), 'tests/perf/render-perf.spec.ts'),
   join(process.cwd(), 'tests/perf/collapse-perf.spec.ts'),
