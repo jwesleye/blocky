@@ -142,9 +142,7 @@ describe('PersistenceControls - screenshot export', () => {
     render(<PersistenceControls onExportScreenshot={onExportScreenshot} />)
 
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole('button', { name: 'Export Screenshot' }),
-      )
+      fireEvent.click(screen.getByRole('button', { name: 'Export Screenshot' }))
     })
 
     expect(onExportScreenshot).toHaveBeenCalledOnce()
@@ -157,9 +155,7 @@ describe('PersistenceControls - screenshot export', () => {
     render(<PersistenceControls onExportScreenshot={onExportScreenshot} />)
 
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole('button', { name: 'Export Screenshot' }),
-      )
+      fireEvent.click(screen.getByRole('button', { name: 'Export Screenshot' }))
     })
 
     expect(

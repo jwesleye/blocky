@@ -97,10 +97,7 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
         <button onClick={exportToJSON}>Export JSON</button>
         <button onClick={importFromJSON}>Import JSON</button>
         <button onClick={handleShare}>Share Link</button>
-        <button
-          onClick={handleExportScreenshot}
-          disabled={!onExportScreenshot}
-        >
+        <button onClick={handleExportScreenshot} disabled={!onExportScreenshot}>
           Export Screenshot
         </button>
         <button
