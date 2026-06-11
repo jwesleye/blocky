@@ -6,15 +6,14 @@ import { describe, expect, it } from 'vitest'
 import defaultConfig from '../../playwright.config'
 import perfConfig from '../../playwright.perf.config'
 
-const LOAD_PERF_POSIX = 'tests/perf/load-perf.spec.ts'
-const LOAD_PERF_WIN = 'tests\\perf\\load-perf.spec.ts'
-const WEBGL2_E2E = 'tests/e2e/webgl2.spec.ts'
-
 type PackageJson = {
   scripts?: Record<string, string>
 }
 
 const PACKAGE_PATH = join(process.cwd(), 'package.json')
+const LOAD_PERF_POSIX = 'tests/perf/load-perf.spec.ts'
+const LOAD_PERF_WIN = 'tests\\perf\\load-perf.spec.ts'
+const WEBGL2_E2E = 'tests/e2e/webgl2.spec.ts'
 
 const readPackageJson = (): PackageJson =>
   JSON.parse(readFileSync(PACKAGE_PATH, 'utf-8')) as PackageJson
