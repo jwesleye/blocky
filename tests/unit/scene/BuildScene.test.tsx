@@ -231,6 +231,47 @@ describe('BuildScene', () => {
     await renderer.unmount()
   })
 
+  it('passes store bricks to InstancedBricks with correct part type and color', async () => {
+    useBuildStore.setState({
+      bricks: {
+        brick1: {
+          id: 'brick1',
+          partId: 'brick-2x4',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        brick2: {
+          id: 'brick2',
+          partId: 'brick-2x4',
+          color: 'blue',
+          x: 6,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+      },
+    })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    expect(lastInstancedBricksProps).not.toBeNull()
+    const bricks = lastInstancedBricksProps!.bricks
+    const ids = bricks.map((b) => b.id)
+    expect(ids).toContain('brick1')
+    expect(ids).toContain('brick2')
+    const partTypes = bricks.map((b) => b.partType)
+    expect(partTypes?.every((t) => t === 'brick')).toBe(true)
+    const brick1 = bricks.find((b) => b.id === 'brick1')
+    const brick2 = bricks.find((b) => b.id === 'brick2')
+    expect(brick1?.color).toBe('red')
+    expect(brick2?.color).toBe('blue')
+
+    await renderer.unmount()
+  })
+
   it('recolors a clicked brick while in paint mode', async () => {
     useBuildStore.setState({
       bricks: {
