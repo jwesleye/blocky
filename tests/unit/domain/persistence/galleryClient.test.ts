@@ -225,7 +225,9 @@ describe('galleryClient.list', () => {
 
   it('returns summaries for published builds on successful list (200)', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([makePublishResponse()]), { status: 200 }),
+      new Response(JSON.stringify({ builds: [makePublishResponse()] }), {
+        status: 200,
+      }),
     )
 
     const client = createGalleryClient('http://localhost:4000')
@@ -246,7 +248,9 @@ describe('galleryClient.list', () => {
 
   it('returns validation-error when the list payload is malformed', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([{ not: 'a build' }]), { status: 200 }),
+      new Response(JSON.stringify({ builds: [{ not: 'a build' }] }), {
+        status: 200,
+      }),
     )
 
     const client = createGalleryClient('http://localhost:4000')
