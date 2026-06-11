@@ -351,7 +351,14 @@ export const useBuildStore = create<BuildStore>()(
 
           const mirrored = mirrorBricks(selectedBricks, axis, PART_CATALOG)
 
-          if (!canPlaceGroup(mirrored, otherBricks, PART_CATALOG)) {
+          if (
+            !canPlaceGroup(
+              mirrored,
+              otherBricks,
+              PART_CATALOG,
+              get().baseplateSize,
+            )
+          ) {
             return false
           }
 
@@ -374,7 +381,12 @@ export const useBuildStore = create<BuildStore>()(
             (b) => !state.selection.has(b.id),
           )
           const mirrored = mirrorBricks(selectedBricks, axis, PART_CATALOG)
-          return canPlaceGroup(mirrored, otherBricks, PART_CATALOG)
+          return canPlaceGroup(
+            mirrored,
+            otherBricks,
+            PART_CATALOG,
+            get().baseplateSize,
+          )
         },
 
         selectBrick: (id, additive = false) =>
