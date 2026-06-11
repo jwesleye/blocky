@@ -1,6 +1,7 @@
 import {
   BoxGeometry,
   BufferGeometry,
+  ConeGeometry,
   CylinderGeometry,
   ExtrudeGeometry,
   Shape,
@@ -13,7 +14,9 @@ import type { PartDims } from '@/scene/instancing'
 const STUD_HEIGHT = 0.18
 const STUD_RADIUS = 0.3
 const STUD_SEGMENTS = 16
+const ROUND_SEGMENTS = 16
 const STANDARD_SLOPE_IDS = new Set(['slope-2x1', 'slope-2x2'])
+const ROUND_PART_IDS = new Set(['round-brick-1x1', 'round-plate-1x1'])
 
 const geometryCache = new Map<string, BufferGeometry>()
 
@@ -77,6 +80,16 @@ function createGeometry(partId: string, dims: PartDims) {
 
   if (part.category === 'brick' || part.category === 'plate') {
     return createStuddedGeometry(dims)
+  }
+
+  if (ROUND_PART_IDS.has(partId)) {
+    const radius = Math.min(dims.w, dims.d) / 2
+    return new CylinderGeometry(radius, radius, dims.h, ROUND_SEGMENTS)
+  }
+
+  if (partId === 'cone-1x1') {
+    const radius = Math.min(dims.w, dims.d) / 2
+    return new ConeGeometry(radius, dims.h, ROUND_SEGMENTS)
   }
 
   if (

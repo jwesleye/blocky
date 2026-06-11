@@ -32,6 +32,7 @@ import {
 } from './environmentPresets'
 import type { RenderBrick } from './instancing'
 import { InstancedBricks } from './InstancedBricks'
+import { getPartGeometry } from './parts/geometries'
 import { SceneEnvironment } from './SceneEnvironment'
 import { ScreenshotCaptureBridge, type CaptureScreenshot } from './ScreenshotCaptureBridge'
 import { CAMERA_DEFAULT_FOV, CAMERA_DEFAULT_POSITION } from './sceneConfig'
@@ -77,8 +78,20 @@ function GhostBrickMesh({
   ]
 
   return (
-    <mesh name="ghost-brick" position={position} raycast={() => null}>
-      <boxGeometry args={[width * 0.97, part.height * 0.97, depth * 0.97]} />
+    <mesh
+      name="ghost-brick"
+      position={position}
+      raycast={() => null}
+      scale={[0.97, 0.97, 0.97]}
+    >
+      <primitive
+        object={getPartGeometry(partId, {
+          w: width,
+          h: part.height,
+          d: depth,
+        })}
+        attach="geometry"
+      />
       <meshStandardMaterial
         color={valid ? '#00ee55' : '#ff3333'}
         transparent
