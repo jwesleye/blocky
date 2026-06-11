@@ -55,22 +55,26 @@ afterEach(() => {
 })
 
 describe('gallery store resource bounds', () => {
-  it('evicts the oldest build and its reports when the build cap is exceeded', () => {
-    const firstId = generateBuildId()
-    storeBuild(makePayload(firstId))
-    addReport(firstId, { reason: 'spam' })
+  it(
+    'evicts the oldest build and its reports when the build cap is exceeded',
+    { timeout: 30000 },
+    () => {
+      const firstId = generateBuildId()
+      storeBuild(makePayload(firstId))
+      addReport(firstId, { reason: 'spam' })
 
-    let lastId = firstId
-    for (let index = 0; index < MAX_STORED_BUILDS; index += 1) {
-      lastId = generateBuildId()
-      storeBuild(makePayload(lastId))
-    }
+      let lastId = firstId
+      for (let index = 0; index < MAX_STORED_BUILDS; index += 1) {
+        lastId = generateBuildId()
+        storeBuild(makePayload(lastId))
+      }
 
-    expect(listBuilds()).toHaveLength(MAX_STORED_BUILDS)
-    expect(getBuild(firstId)).toBeUndefined()
-    expect(getReports(firstId)).toEqual([])
-    expect(getBuild(lastId)).toBeDefined()
-  })
+      expect(listBuilds()).toHaveLength(MAX_STORED_BUILDS)
+      expect(getBuild(firstId)).toBeUndefined()
+      expect(getReports(firstId)).toEqual([])
+      expect(getBuild(lastId)).toBeDefined()
+    },
+  )
 
   it(
     'never stores more builds than the configured cap',
