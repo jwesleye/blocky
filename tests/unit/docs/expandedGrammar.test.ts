@@ -45,7 +45,21 @@ describe('docs/PRD.md — expanded-grammar scope drift guard', () => {
     })
   })
 
-  describe('v1 ↔ v2 ↔ v3 migration guarantee', () => {
+  describe('supported hinges (first post-SNOT family) scope', () => {
+    it('names hinges as the first supported post-SNOT family', () => {
+      expect(doc()).toMatch(/first supported post-snot/i)
+    })
+
+    it('states that a build with a hinge brick serializes as version 4', () => {
+      expect(doc()).toMatch(/version:\s*4/i)
+    })
+
+    it('names the two pivot axes', () => {
+      expect(doc()).toMatch(/'x'\s*\|\s*'z'|x.*z.*pivot|pivot.*x.*z/i)
+    })
+  })
+
+  describe('v1 ↔ v2 ↔ v3 ↔ v4 migration guarantee', () => {
     it('states a no-offset build stays version 1', () => {
       expect(doc()).toMatch(/version:\s*1/i)
     })
@@ -60,7 +74,7 @@ describe('docs/PRD.md — expanded-grammar scope drift guard', () => {
   })
 
   describe('still-excluded connection types', () => {
-    it.each(['hinge', 'Technic', 'angled'])(
+    it.each(['Technic', 'angled'])(
       'names %s as out of scope',
       (term) => {
         expect(doc()).toMatch(new RegExp(term, 'i'))

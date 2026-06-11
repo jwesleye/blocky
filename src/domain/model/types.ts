@@ -8,6 +8,9 @@ export interface HalfStudOffset {
 /** SNOT facing: which Y-perpendicular face carries studs sideways. */
 export type BrickMount = 'px' | 'nx' | 'pz' | 'nz'
 
+/** Hinge pivot axis: which horizontal axis the brick pivots about. */
+export type BrickHinge = 'x' | 'z'
+
 export interface PlacedBrick {
   id: string
   partId: string
@@ -18,6 +21,7 @@ export interface PlacedBrick {
   rot: 0 | 1 | 2 | 3
   offset?: HalfStudOffset
   mount?: BrickMount
+  hinge?: BrickHinge
 }
 
 /**

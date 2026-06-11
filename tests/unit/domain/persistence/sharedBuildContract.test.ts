@@ -190,3 +190,58 @@ describe('SNOT mount — gallery contract round-trip', () => {
     expect(safeParseSharedBuildPayload(bad)).toBeNull()
   })
 })
+
+describe('hinge — gallery contract round-trip', () => {
+  const makeV4Payload = (): SharedBuildPayload => ({
+    ...makePayload(),
+    build: {
+      version: 4,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'x',
+        },
+      ],
+    },
+  })
+
+  it('accepts a gallery payload with a v4/hinge build', () => {
+    const payload = makeV4Payload()
+    expect(validateSharedBuildPayload(payload)).toEqual(payload)
+  })
+
+  it('round-trips a v4/hinge payload through serialize → parse', () => {
+    const payload = makeV4Payload()
+    expect(
+      parseSharedBuildPayload(serializeSharedBuildPayload(payload)),
+    ).toEqual(payload)
+  })
+
+  it('returns null via safeParseSharedBuildPayload for a payload with an unknown hinge value', () => {
+    const bad = JSON.stringify({
+      ...makePayload(),
+      build: {
+        version: 4,
+        baseplate: { size: BASEPLATE_SIZE_STUDS },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'red',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            hinge: 'y',
+          },
+        ],
+      },
+    })
+    expect(safeParseSharedBuildPayload(bad)).toBeNull()
+  })
+})

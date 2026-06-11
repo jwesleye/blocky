@@ -47,8 +47,8 @@ over when you push it too far.
   collapses are simulated, and only briefly.
 - Not a CAD / instructions tool: no part numbers, BOM export, or building-step
   generation.
-- Not full Technic or angled building: hinges, pins, and angled joints remain
-  deferred; half-stud offsets and SNOT are supported slices (see §6).
+- Not full Technic or angled building: Technic pins and angled joints remain
+  deferred; half-stud offsets, SNOT, and hinges are supported slices (see §6).
 - No mobile-first design (desktop-first; touch is a stretch goal).
 
 ---
@@ -200,8 +200,16 @@ the chosen end-state behavior.
   - A build with any `mount` brick serializes as `version: 3`; builds with only
     offsets stay `version: 2`; plain classic builds stay `version: 1`. No user
     migration is required for existing v1 or v2 builds.
-- **Still out of scope:** hinges, Technic pins, and angled connections. These
-  remain deferred grammar expansions.
+- **First supported post-SNOT slice:** hinges (version 4).
+  - A brick gains an optional `hinge` pivot axis field: `'x' | 'z'` — the
+    horizontal axis the brick pivots about. Absent `hinge` = rigid classic
+    placement. Two discrete values keep the field consistent with the existing
+    discrete-grammar style.
+  - A build with any `hinge` brick serializes as `version: 4`; builds with only
+    `mount` stay `version: 3`; only-offset stays `version: 2`; classic stays
+    `version: 1`. No user migration is required for existing builds.
+- **Still out of scope:** Technic pins and angled connections. These remain
+  deferred grammar expansions.
 
 ---
 
@@ -361,14 +369,15 @@ Build {
     rot: 0 | 1 | 2 | 3       // 90° steps about Y
     offset?: { x: 0 | 1, z: 0 | 1 }  // optional +0.5 stud jumper shift per axis
     mount?: 'px' | 'nx' | 'pz' | 'nz'  // optional SNOT facing; absent = classic studs-up
+    hinge?: 'x' | 'z'  // optional hinge pivot axis (version 4); absent = rigid classic placement
   }>
 }
 ```
 
 Serialized to compact JSON. `version: 1` is the classic stud-stacked envelope;
 `version: 2` adds optional half-stud offsets; `version: 3` adds optional SNOT
-`mount` facings — all preserving legacy integer-anchor semantics. URL-sharing
-uses a compressed encoding of this.
+`mount` facings; `version: 4` adds optional `hinge` pivot axis — all preserving
+legacy integer-anchor semantics. URL-sharing uses a compressed encoding of this.
 
 Future gallery publishing/loading must reuse this exact `Build` payload inside a
 versioned shared-build contract rather than forking the build schema. The
@@ -417,7 +426,7 @@ visibility, author identity mode) plus server-owned identifiers and timestamps.
 
 ### Later / maybe
 
-- Hinges, Technic pins, and angled connections (deferred grammar expansions).
+- Technic pins and angled connections (deferred grammar expansions).
 - Build gallery / community sharing after an explicit backend path is added,
   using the shared-build contract while leaving v1 local-only persistence
   unchanged.

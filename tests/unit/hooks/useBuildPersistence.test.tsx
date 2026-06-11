@@ -135,4 +135,24 @@ describe('useBuildPersistence.exportToJSON (issue #101)', () => {
     expect(build.version).toBe(3)
     expect(build.bricks[0]).toMatchObject({ partId: 'brick-1x1', mount: 'px' })
   })
+
+  it('serializes a hinge build as version 4 with the hinge intact', () => {
+    const hingeBrick: PlacedBrick = {
+      id: 'hinged',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+      hinge: 'z',
+    }
+    useBuildStore.setState({ bricks: { [hingeBrick.id]: hingeBrick } })
+    const { result } = renderHook(() => useBuildPersistence())
+
+    const build = exportedJSON(() => result.current.exportToJSON())
+
+    expect(build.version).toBe(4)
+    expect(build.bricks[0]).toMatchObject({ partId: 'brick-1x1', hinge: 'z' })
+  })
 })
