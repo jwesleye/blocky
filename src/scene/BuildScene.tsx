@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
@@ -54,6 +55,7 @@ const CollapseSimulation = lazy(() =>
 
 const shouldExposeTestHooks =
   import.meta.env.DEV || import.meta.env.MODE === 'e2e'
+const DRAG_GESTURE_THRESHOLD_PX = 5
 
 function toRenderPartType(partId: string): PartType | null {
   const part = getPart(partId)
@@ -263,6 +265,8 @@ export function BuildScene({
   const sampleBrick = useCursorStore((state) => state.sampleBrick)
   const setHoveredBrickId = useCursorStore((state) => state.setHoveredBrickId)
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
+  const gestureStartRef = useRef<{ x: number; y: number } | null>(null)
+  const draggedSincePointerDownRef = useRef(false)
 
   const stableOnCaptureFnReady = useCallback(
     (fn: CaptureScreenshot) => onCaptureFnReady?.(fn),
@@ -323,7 +327,49 @@ export function BuildScene({
     mount,
   ])
 
+  const resetPlacementGesture = () => {
+    gestureStartRef.current = null
+    draggedSincePointerDownRef.current = false
+  }
+
+  const handleCanvasPointerDown = (event: {
+    clientX?: number
+    clientY?: number
+  }) => {
+    if (event.clientX === undefined || event.clientY === undefined) {
+      gestureStartRef.current = null
+      draggedSincePointerDownRef.current = false
+      return
+    }
+
+    gestureStartRef.current = { x: event.clientX, y: event.clientY }
+    draggedSincePointerDownRef.current = false
+  }
+
+  const handleCanvasPointerMove = (event: {
+    clientX?: number
+    clientY?: number
+  }) => {
+    if (draggedSincePointerDownRef.current) return
+    if (event.clientX === undefined || event.clientY === undefined) return
+
+    const start = gestureStartRef.current
+    if (!start) return
+
+    const deltaX = event.clientX - start.x
+    const deltaY = event.clientY - start.y
+    if (
+      Math.hypot(deltaX, deltaY) > DRAG_GESTURE_THRESHOLD_PX
+    ) {
+      draggedSincePointerDownRef.current = true
+    }
+  }
+
   const handlePlace = () => {
+    const wasDragged = draggedSincePointerDownRef.current
+    resetPlacementGesture()
+
+    if (wasDragged) return
     if (editingTool !== 'place') return
     if (!ghostGrid || !ghostValid) return
     placeBrick({
@@ -364,7 +410,10 @@ export function BuildScene({
       }}
       gl={{ preserveDrawingBuffer: true }}
       onClick={handlePlace}
+      onPointerDown={handleCanvasPointerDown}
+      onPointerMove={handleCanvasPointerMove}
       onPointerLeave={() => {
+        resetPlacementGesture()
         setGhostGrid(null)
         setHoveredBrickId(null)
       }}
