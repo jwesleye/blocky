@@ -642,6 +642,35 @@ describe('useBuildStore', () => {
         useBuildStore.getState().duplicateSelection({ dx: 2, dy: 0, dz: 0 }),
       ).toBe(false)
     })
+
+    it('rejects mirrorSelection and previewMirrorSelection outside current baseplateSize', () => {
+      const a = placeBrick({
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 14,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+      const b = placeBrick({
+        partId: 'brick-1x1',
+        color: 'blue',
+        x: 20,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+
+      useBuildStore.getState().setBaseplateSize(16)
+      useBuildStore.getState().selectBrick(a)
+      useBuildStore.getState().selectBrick(b, true)
+
+      const bricksBefore = useBuildStore.getState().bricks
+
+      expect(useBuildStore.getState().previewMirrorSelection('x')).toBe(false)
+      expect(useBuildStore.getState().mirrorSelection('x')).toBe(false)
+      expect(useBuildStore.getState().bricks).toBe(bricksBefore)
+    })
   })
 
   describe('grounding validation', () => {
