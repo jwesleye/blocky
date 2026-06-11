@@ -79,6 +79,69 @@ export function forEachOccupiedCell(
   }
 }
 
+/**
+ * Returns the 3D bounding volume for a mounted (SNOT) brick in the half-stud
+ * collision grid (inclusive ranges).
+ *
+ * A mounted brick is rotated 90° around a horizontal axis so its plate height H
+ * becomes a lateral X or Z extent (1 plate = 1 stud unit in this grid model)
+ * and its footprint width W or depth L becomes its vertical Y extent.
+ *
+ * 'px'/'nx' — 90° around Z: H → X extent, W → Y extent, L → Z extent
+ * 'pz'/'nz' — 90° around X: H → Z extent, L → Y extent, W → X extent
+ */
+export function getMountedBrickVolumeBounds(
+  brick: PlacedBrick,
+  def: PartDef,
+): {
+  xHalfMin: number
+  xHalfMax: number
+  yMin: number
+  yMax: number
+  zHalfMin: number
+  zHalfMax: number
+} {
+  const [W, L] =
+    brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
+  const H = def.height
+  // 2*(brick.y + H/2) — integer arithmetic avoids floating-point in Y centre.
+  const yCenter2 = 2 * brick.y + H
+
+  switch (brick.mount) {
+    case 'px':
+    case 'nx':
+      return {
+        xHalfMin: 2 * brick.x + W - H,
+        xHalfMax: 2 * brick.x + W + H - 1,
+        yMin: Math.ceil((yCenter2 - W) / 2),
+        yMax: Math.ceil((yCenter2 + W) / 2) - 1,
+        zHalfMin: 2 * brick.z,
+        zHalfMax: 2 * brick.z + 2 * L - 1,
+      }
+    case 'pz':
+    case 'nz': {
+      const zCenter2 = 2 * brick.z + L
+      return {
+        xHalfMin: 2 * brick.x,
+        xHalfMax: 2 * brick.x + 2 * W - 1,
+        yMin: Math.ceil((yCenter2 - L) / 2),
+        yMax: Math.ceil((yCenter2 + L) / 2) - 1,
+        zHalfMin: zCenter2 - H,
+        zHalfMax: zCenter2 + H - 1,
+      }
+    }
+    default:
+      return {
+        xHalfMin: 2 * brick.x,
+        xHalfMax: 2 * brick.x + 2 * W - 1,
+        yMin: brick.y,
+        yMax: brick.y + H - 1,
+        zHalfMin: 2 * brick.z,
+        zHalfMax: 2 * brick.z + 2 * L - 1,
+      }
+  }
+}
+
 export function toBrickFootprint(
   brick: PlacedBrick,
   catalog: PartCatalog,
