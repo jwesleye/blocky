@@ -171,12 +171,12 @@ describe('gallery store durability', () => {
       success: false,
       reason: 'not-found',
     })
-    expect(deleteBuild(anonymousPayload.buildId, { userId: 'owner-1' })).toEqual(
-      {
-        success: false,
-        reason: 'unauthorized',
-      },
-    )
+    expect(
+      deleteBuild(anonymousPayload.buildId, { userId: 'owner-1' }),
+    ).toEqual({
+      success: false,
+      reason: 'unauthorized',
+    })
     expect(deleteBuild(ownedPayload.buildId, { userId: 'owner-2' })).toEqual({
       success: false,
       reason: 'unauthorized',

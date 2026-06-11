@@ -16,7 +16,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'html',
   use: {
-    baseURL: 'http://127.0.0.1:4174',
+    baseURL: 'http://localhost:4174',
     trace: 'on-first-retry',
   },
   projects: [
@@ -39,9 +39,9 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      'npm run build -- --mode e2e && npm run preview -- --host 127.0.0.1 --port 4174',
+      'npm run build -- --mode e2e && npm run preview -- --host localhost --port 4174',
     cwd: process.cwd(),
-    url: 'http://127.0.0.1:4174',
+    url: 'http://localhost:4174',
     reuseExistingServer: false,
     timeout: 120_000,
   },
