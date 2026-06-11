@@ -108,3 +108,33 @@
   background: #1a3a5c;
   color: #fff;
 }
+
+/* Environment preset picker */
+.environment-preset-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px 8px 8px;
+}
+
+.environment-preset-btn {
+  min-width: 0;
+  font-size: 12px;
+  padding: 5px 6px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #e0e0e0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.environment-preset-btn:hover {
+  background: #3a3a3a;
+}
+
+.environment-preset-btn--selected {
+  border-color: #4a9eff;
+  background: #1a3a5c;
+  color: #fff;
+}

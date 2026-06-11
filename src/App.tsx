@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { BaseplateSizePicker } from '@/components/BaseplateSizePicker'
 import { ColorPicker } from '@/components/ColorPicker'
 import { EditingToolbar } from '@/components/EditingToolbar'
+import { EnvironmentPresetPicker } from '@/components/EnvironmentPresetPicker'
 import { Gallery } from '@/components/Gallery'
 import { HUD } from '@/components/HUD'
 import { PartPicker } from '@/components/PartPicker'
@@ -17,8 +18,10 @@ import {
   loadBuild,
   loadBuildFromShareSearch,
 } from '@/domain/persistence'
+import { useScenePresetPreference } from '@/hooks/useScenePresetPreference'
 import { BuildScene } from '@/scene/BuildScene'
 import { useCursorStore } from '@/state/cursor'
+import { useSceneSettingsStore } from '@/state/sceneSettings'
 import { useBuildStore } from '@/state/store'
 import { TouchToolbar } from '@/components/TouchToolbar'
 import '@/styles/gallery.css'
@@ -29,6 +32,7 @@ import '@/styles/responsive.css'
 export function App() {
   const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
   const [galleryOpen, setGalleryOpen] = useState(false)
+  useScenePresetPreference()
 
   const colorId = useCursorStore((s) => s.colorId)
   const partId = useCursorStore((s) => s.partId)
@@ -41,6 +45,7 @@ export function App() {
   const bricks = Object.values(bricksById)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
+  const selectedPresetId = useSceneSettingsStore((s) => s.selectedPresetId)
   const autosaverRef = useRef(createAutosaver())
   const [hasHydratedPersistence, setHasHydratedPersistence] = useState(false)
 
@@ -176,6 +181,22 @@ export function App() {
           <BaseplateSizePicker />
         </div>
 
+        <div style={{ borderBottom: '1px solid #333' }}>
+          <div
+            style={{
+              padding: '8px 8px 0',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#888',
+            }}
+          >
+            Environment
+          </div>
+          <EnvironmentPresetPicker />
+        </div>
+
         <div
           style={{
             flex: 1,
@@ -286,7 +307,7 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <BuildScene />
+          <BuildScene presetId={selectedPresetId} />
           <ViewControls />
           <HUD />
           <TouchToolbar />
