@@ -45,16 +45,56 @@ export interface DevWindow {
   ) => { x: number; y: number }
 }
 
-export async function waitForStores(page: Page) {
+type WaitForDevWindowOptions = {
+  requireStore?: boolean
+  requireCursorStore?: boolean
+  requireCamera?: boolean
+  requireProjectToCanvas?: boolean
+  timeout?: number
+}
+
+export async function waitForDevWindow(
+  page: Page,
+  {
+    requireStore = true,
+    requireCursorStore = true,
+    requireCamera = false,
+    requireProjectToCanvas = false,
+    timeout,
+  }: WaitForDevWindowOptions = {},
+) {
   await page.waitForFunction(
-    () =>
-      (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCursorStore !==
-        undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCamera !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !==
-        undefined,
+    ({
+      requireStore,
+      requireCursorStore,
+      requireCamera,
+      requireProjectToCanvas,
+    }) => {
+      const win = window as unknown as Partial<DevWindow>
+      return (
+        (!requireStore || win.__blockyStore !== undefined) &&
+        (!requireCursorStore || win.__blockyCursorStore !== undefined) &&
+        (!requireCamera || win.__blockyCamera !== undefined) &&
+        (!requireProjectToCanvas || win.__blockyProjectToCanvas !== undefined)
+      )
+    },
+    {
+      requireStore,
+      requireCursorStore,
+      requireCamera,
+      requireProjectToCanvas,
+    },
+    timeout === undefined ? undefined : { timeout },
   )
+}
+
+export async function waitForStores(page: Page) {
+  await waitForDevWindow(page, {
+    requireStore: true,
+    requireCursorStore: true,
+    requireCamera: true,
+    requireProjectToCanvas: true,
+  })
 }
 
 export async function projectToCanvas(
