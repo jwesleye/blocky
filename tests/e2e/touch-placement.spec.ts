@@ -85,4 +85,42 @@ test.describe('touch placement flow', () => {
     )
     expect(countAfter).toBe(countBefore)
   })
+
+  test('tap on an existing brick in place mode does not delete it', async ({ page }) => {
+    await page.goto('/')
+    await waitForSceneHandles(page)
+
+    const brickId = await page.evaluate(() => {
+      return (window as unknown as DevWindow).__blockyStore.getState().placeBrick({
+        partId: 'brick-2x4',
+        color: 'red',
+        x: 4,
+        y: 0,
+        z: 4,
+        rot: 0,
+      })
+    })
+    expect(brickId).toBeTruthy()
+
+    const countBefore = await page.evaluate(
+      () => Object.keys((window as unknown as DevWindow).__blockyStore.getState().bricks).length,
+    )
+
+    const brickPos = await page.evaluate(
+      () => (window as unknown as DevWindow).__blockyProjectToCanvas(5, 1.5, 6),
+    )
+    await page.touchscreen.tap(brickPos.x, brickPos.y)
+    await page.waitForTimeout(200)
+
+    const result = await page.evaluate((id) => {
+      const bricks = (window as unknown as DevWindow).__blockyStore.getState().bricks
+      return {
+        count: Object.keys(bricks).length,
+        exists: (id as string) in bricks,
+      }
+    }, brickId)
+
+    expect(result.exists).toBe(true)
+    expect(result.count).toBe(countBefore)
+  })
 })

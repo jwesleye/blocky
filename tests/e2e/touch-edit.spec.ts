@@ -100,4 +100,42 @@ test.describe('touch edit controls', () => {
     )
     expect(brickExists).toBe(false)
   })
+
+  test('moving back to the baseplate clears hovered brick state', async ({ page }) => {
+    await page.goto('/')
+    await waitForSceneHandles(page)
+
+    const brickId = await page.evaluate(() => {
+      return (window as unknown as DevWindow).__blockyStore.getState().placeBrick({
+        partId: 'brick-2x4',
+        color: 'red',
+        x: 4,
+        y: 0,
+        z: 4,
+        rot: 0,
+      })
+    })
+    expect(brickId).toBeTruthy()
+
+    const brickPos = await page.evaluate(
+      () => (window as unknown as DevWindow).__blockyProjectToCanvas(5, 1.5, 6),
+    )
+    await page.mouse.move(brickPos.x, brickPos.y)
+    await page.waitForFunction(
+      () => (window as unknown as DevWindow).__blockyCursorStore.getState().hoveredBrickId !== null,
+      { timeout: 3000 },
+    )
+
+    const baseplatePos = await page.evaluate(
+      () => (window as unknown as DevWindow).__blockyProjectToCanvas(12, 0, 12),
+    )
+    await page.mouse.move(baseplatePos.x, baseplatePos.y)
+
+    await page.waitForFunction(
+      () => (window as unknown as DevWindow).__blockyCursorStore.getState().hoveredBrickId === null,
+      { timeout: 3000 },
+    )
+
+    await expect(page.locator('[data-testid="touch-delete"]')).toBeDisabled()
+  })
 })

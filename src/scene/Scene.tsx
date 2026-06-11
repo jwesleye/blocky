@@ -68,14 +68,17 @@ function GhostBrickMesh({
 function Baseplate({
   size,
   onPointerPos,
+  onPointerEnterEmpty,
 }: {
   size: number
   onPointerPos: (pos: GridCoord) => void
+  onPointerEnterEmpty: () => void
 }) {
   const sceneSize = size * STUD
 
   const updateGhost = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation()
+    onPointerEnterEmpty()
     onPointerPos({
       x: Math.round(event.point.x / STUD),
       y: 0,
@@ -208,10 +211,7 @@ export function Scene() {
   }
 
   const handleBrickClick = (brickId: string) => {
-    if (editingTool === 'place') {
-      deleteBrick(brickId)
-      return
-    }
+    if (editingTool === 'place') return
 
     if (editingTool === 'paint') {
       recolorBrick(brickId, colorId)
@@ -247,7 +247,11 @@ export function Scene() {
       <CameraRig />
       <CameraControls />
       <ThreeDevExpose />
-      <Baseplate size={baseplateSize} onPointerPos={setGhostGrid} />
+      <Baseplate
+        size={baseplateSize}
+        onPointerPos={setGhostGrid}
+        onPointerEnterEmpty={() => setHoveredBrickId(null)}
+      />
       <InstancedBricks
         bricks={placedBricks}
         getDims={(partId) => {
