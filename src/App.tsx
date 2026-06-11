@@ -8,7 +8,6 @@ import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { SoundToggle } from '@/components/SoundToggle'
 import { ViewControls } from '@/components/ViewControls'
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import { bricksToBuild, buildToBricks } from '@/domain/model/build'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
@@ -21,6 +20,7 @@ import { BuildScene } from '@/scene/BuildScene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import { TouchToolbar } from '@/components/TouchToolbar'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
 import '@/styles/gallery.css'
 import '@/styles/hud.css'
 import '@/styles/pickers.css'
@@ -39,6 +39,7 @@ export function App() {
 
   const bricksById = useBuildStore((state) => state.bricks)
   const bricks = Object.values(bricksById)
+  const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
   const autosaverRef = useRef(createAutosaver())
@@ -67,8 +68,9 @@ export function App() {
 
   useEffect(() => {
     if (!hasHydratedPersistence) return
-    autosaverRef.current.schedule(bricksToBuild(bricks, BASEPLATE_SIZE_STUDS))
-  }, [bricks, hasHydratedPersistence])
+    assertSupportedBaseplateSize(baseplateSize)
+    autosaverRef.current.schedule(bricksToBuild(bricks, baseplateSize))
+  }, [baseplateSize, bricks, hasHydratedPersistence])
 
   useEffect(() => {
     const autosaver = autosaverRef.current

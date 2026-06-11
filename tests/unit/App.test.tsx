@@ -110,6 +110,15 @@ describe('App', () => {
       ])
       expect(useBuildStore.getState().baseplateSize).toBe(48)
     })
+
+    await waitFor(() => {
+      expect(localStorage.getItem(AUTOSAVE_STORAGE_KEY)).not.toBeNull()
+      expect(JSON.parse(localStorage.getItem(AUTOSAVE_STORAGE_KEY) ?? '')).toEqual(
+        expect.objectContaining({
+          baseplate: expect.objectContaining({ size: 48 }),
+        }),
+      )
+    })
   })
 
   it('falls back to the autosaved build when no share URL is present', async () => {
