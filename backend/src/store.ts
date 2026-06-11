@@ -101,7 +101,6 @@ export function reloadStore(): void {
 
 export function generateBuildId(): string {
   counter += 1
-  persistStore()
   return `build_${Date.now().toString(36)}_${counter.toString(36)}`
 }
 
