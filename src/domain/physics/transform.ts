@@ -14,9 +14,34 @@ function usesUnsupportedMountPlacement(brick: PlacedBrick): boolean {
 }
 
 /**
+ * Rebuilds a mirrored brick with normalized half-stud offsets. A `{ x: 0, z: 0 }`
+ * offset is omitted entirely so mirrored classic bricks match the no-offset
+ * representation used elsewhere in the model.
+ */
+function withOffset(
+  brick: PlacedBrick,
+  offsetX: number,
+  offsetZ: number,
+): PlacedBrick {
+  if (offsetX === 0 && offsetZ === 0) {
+    const { offset: _omit, ...rest } = brick
+    return rest
+  }
+  return {
+    ...brick,
+    offset: { x: offsetX as 0 | 1, z: offsetZ as 0 | 1 },
+  }
+}
+
+/**
  * Mirrors a set of bricks across the selection's bounding-box midline.
  * axis='x' reflects X coordinates; axis='z' reflects Z coordinates.
  * Returns a new array with the same ids; validity is enforced separately.
+ *
+ * All bounds and reflections are computed in half-stud coordinates so that
+ * half-stud-offset (jumper) bricks reflect about their true physical footprint
+ * rather than their full-stud origin. The mirrored half-stud origin is then
+ * split back into an integer position plus a `0 | 1` offset component.
  */
 export function mirrorBricks(
   selection: Iterable<PlacedBrick>,
@@ -26,19 +51,19 @@ export function mirrorBricks(
   const bricks = Array.from(selection)
   if (bricks.length === 0) return []
 
-  let minX = Infinity,
-    maxX = -Infinity
-  let minZ = Infinity,
-    maxZ = -Infinity
+  let minHX = Infinity,
+    maxHX = -Infinity
+  let minHZ = Infinity,
+    maxHZ = -Infinity
 
   for (const brick of bricks) {
     const def = catalog[brick.partId]
     if (!def) continue
-    for (const cell of getOccupiedCells(brick, def)) {
-      if (cell.x < minX) minX = cell.x
-      if (cell.x > maxX) maxX = cell.x
-      if (cell.z < minZ) minZ = cell.z
-      if (cell.z > maxZ) maxZ = cell.z
+    for (const cell of getOccupiedHalfStudCells(brick, def)) {
+      if (cell.x < minHX) minHX = cell.x
+      if (cell.x > maxHX) maxHX = cell.x
+      if (cell.z < minHZ) minHZ = cell.z
+      if (cell.z > maxHZ) maxHZ = cell.z
     }
   }
 
@@ -49,13 +74,29 @@ export function mirrorBricks(
     const L = brick.rot % 2 === 0 ? def.length : def.width
 
     if (axis === 'x') {
-      const newX = minX + maxX - (brick.x + W - 1)
+      // Reflect the half-stud footprint [origin .. origin + 2W - 1] about the
+      // selection's half-stud X span, then recover position + offset.
+      const originHalf = 2 * brick.x + (brick.offset?.x ?? 0)
+      const newOriginHalf = minHX + maxHX - (originHalf + 2 * W - 1)
+      const newX = Math.floor(newOriginHalf / 2)
+      const newOffsetX = newOriginHalf - 2 * newX
       const newRot = ((4 - brick.rot) % 4) as 0 | 1 | 2 | 3
-      return { ...brick, x: newX, rot: newRot }
+      return withOffset(
+        { ...brick, x: newX, rot: newRot },
+        newOffsetX,
+        brick.offset?.z ?? 0,
+      )
     } else {
-      const newZ = minZ + maxZ - (brick.z + L - 1)
+      const originHalf = 2 * brick.z + (brick.offset?.z ?? 0)
+      const newOriginHalf = minHZ + maxHZ - (originHalf + 2 * L - 1)
+      const newZ = Math.floor(newOriginHalf / 2)
+      const newOffsetZ = newOriginHalf - 2 * newZ
       const newRot = ((2 - brick.rot + 4) % 4) as 0 | 1 | 2 | 3
-      return { ...brick, z: newZ, rot: newRot }
+      return withOffset(
+        { ...brick, z: newZ, rot: newRot },
+        brick.offset?.x ?? 0,
+        newOffsetZ,
+      )
     }
   })
 }
