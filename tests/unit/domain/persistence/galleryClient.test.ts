@@ -19,10 +19,26 @@ const makeBuild = (): Build => ({
   bricks: [],
 })
 
-const makePublishResponse = (): SharedBuildPayload => ({
+const makeMountBuild = (): Build => ({
+  version: 3,
+  baseplate: { size: BASEPLATE_SIZE_STUDS },
+  bricks: [
+    {
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    },
+  ],
+})
+
+const makePublishResponse = (build: Build = makeBuild()): SharedBuildPayload => ({
   contractVersion: SHARED_BUILD_CONTRACT_VERSION,
   buildId: 'srv_abc123',
-  build: makeBuild(),
+  build,
   gallery: {
     title: 'Test Build',
     visibility: 'public',
@@ -77,6 +93,29 @@ describe('galleryClient.publish', () => {
     if (result.ok) {
       expect(result.payload.buildId).toBe('srv_abc123')
       expect(result.payload.gallery.title).toBe('Test Build')
+    }
+  })
+
+  it('round-trips a SNOT build (v3/mount) on publish', async () => {
+    const build = makeMountBuild()
+    const serverPayload = makePublishResponse(build)
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(serverPayload), { status: 201 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.publish({
+      build,
+      gallery: {
+        title: 'SNOT Build',
+        visibility: 'public',
+        author: { identityMode: 'anonymous' },
+      },
+    })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.payload.build.bricks[0].mount).toBe('px')
     }
   })
 
@@ -349,6 +388,86 @@ describe('galleryClient.load', () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.payload.buildId).toBe('srv_abc123')
+    }
+  })
+
+  it('round-trips a SNOT build (v3/mount) on load', async () => {
+    const build = makeMountBuild()
+    const serverPayload = makePublishResponse(build)
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(serverPayload), { status: 200 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.load('srv_abc123')
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.payload.build.bricks[0].mount).toBe('px')
+    }
+  })
+
+  it('returns validation-error when server payload carries unknown mount', async () => {
+    const serverPayload = {
+      ...makePublishResponse(),
+      build: {
+        version: 3,
+        baseplate: { size: BASEPLATE_SIZE_STUDS },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            mount: 'sideways', // Invalid
+          },
+        ],
+      },
+    }
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(serverPayload), { status: 200 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.load('srv_abc123')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('validation-error')
+    }
+  })
+
+  it('returns validation-error when mount is inside a v1 envelope', async () => {
+    const serverPayload = {
+      ...makePublishResponse(),
+      build: {
+        version: 1,
+        baseplate: { size: BASEPLATE_SIZE_STUDS },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            mount: 'px',
+          },
+        ],
+      },
+    }
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(serverPayload), { status: 200 }),
+    )
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.load('srv_abc123')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('validation-error')
     }
   })
 
