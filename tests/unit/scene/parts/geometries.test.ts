@@ -59,4 +59,33 @@ describe('getPartGeometry', () => {
       depth: 4,
     })
   })
+
+  it('tile-2x2 returns studless geometry matching a plain box of the same footprint', () => {
+    const tileGeo = getPartGeometry('tile', { w: 2, d: 2, h: 1 })
+    const refBox = new BoxGeometry(2, 1, 2)
+
+    expect(tileGeo.getAttribute('position').count).toBe(
+      refBox.getAttribute('position').count,
+    )
+    expect(geometrySize(tileGeo)).toEqual({ width: 2, height: 1, depth: 2 })
+  })
+
+  it('tile-2x2 geometry is distinct from same-footprint plate-2x2 (fewer vertices — no studs)', () => {
+    const tileGeo = getPartGeometry('tile', { w: 2, d: 2, h: 1 })
+    const plateGeo = getPartGeometry('plate', { w: 2, d: 2, h: 1 })
+
+    expect(tileGeo.getAttribute('position').count).toBeLessThan(
+      plateGeo.getAttribute('position').count,
+    )
+  })
+
+  it('tile-1x2 returns studless geometry matching a plain box of the same footprint', () => {
+    const tileGeo = getPartGeometry('tile', { w: 1, d: 2, h: 1 })
+    const refBox = new BoxGeometry(1, 1, 2)
+
+    expect(tileGeo.getAttribute('position').count).toBe(
+      refBox.getAttribute('position').count,
+    )
+    expect(geometrySize(tileGeo)).toEqual({ width: 1, height: 1, depth: 2 })
+  })
 })
