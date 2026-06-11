@@ -21,7 +21,11 @@ describe('downloadScreenshot', () => {
 
   let createObjectURL: ReturnType<typeof vi.fn>
   let revokeObjectURL: ReturnType<typeof vi.fn>
-  let mockAnchor: { href: string; download: string; click: ReturnType<typeof vi.fn> }
+  let mockAnchor: {
+    href: string
+    download: string
+    click: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     createObjectURL = vi.fn().mockReturnValue(FAKE_URL)
