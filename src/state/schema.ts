@@ -1,7 +1,14 @@
-import { z } from 'zod'
-
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
+import {
+  BUILD_SCHEMA_VERSION,
+  bricksToBuild,
+  parseBuild,
+  serializeBuild,
+} from '@/domain/model/build'
+import { createBrickId } from '@/domain/model/ids'
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
+import { buildConnectionGraph } from '@/domain/physics/graph'
+import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 
 /**
  * Build JSON schema and (de)serialization helpers.
@@ -11,58 +18,17 @@ import type { BuildState, PlacedBrick } from '@/domain/model/types'
  * per-session brick ids are intentionally excluded — ids are regenerated on
  * load so two clients never collide on a shared build.
  */
-export const BUILD_SCHEMA_VERSION = 1
-
-const rotationSchema = z.union([
-  z.literal(0),
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-])
-
-const serializedBrickSchema = z.object({
-  partId: z.string(),
-  color: z.string(),
-  x: z.number().int(),
-  y: z.number().int(),
-  z: z.number().int(),
-  rot: rotationSchema,
-})
-
-export const buildSchema = z.object({
-  version: z.literal(BUILD_SCHEMA_VERSION),
-  baseplate: z.object({ size: z.literal(BASEPLATE_SIZE_STUDS) }),
-  bricks: z.array(serializedBrickSchema),
-})
-
-export type SerializedBrick = z.infer<typeof serializedBrickSchema>
-export type Build = z.infer<typeof buildSchema>
-
-let idCounter = 0
-
-/** Generates a unique id for a placed brick. */
-export function createBrickId(): string {
-  if (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.randomUUID === 'function'
-  ) {
-    return crypto.randomUUID()
-  }
-  idCounter += 1
-  return `brick-${idCounter}`
-}
+export { createBrickId }
+export { BUILD_SCHEMA_VERSION }
+export type { Build } from '@/domain/model/build'
 
 /** Serializes the runtime build model to a compact Build JSON string. */
 export function serialize(state: BuildState): string {
-  const bricks: SerializedBrick[] = Object.values(state.bricks).map(
-    ({ partId, color, x, y, z, rot }) => ({ partId, color, x, y, z, rot }),
+  const baseplateSize = state.baseplateSize
+  assertSupportedBaseplateSize(baseplateSize)
+  return serializeBuild(
+    bricksToBuild(Object.values(state.bricks), baseplateSize),
   )
-  const build: Build = {
-    version: BUILD_SCHEMA_VERSION,
-    baseplate: { size: BASEPLATE_SIZE_STUDS },
-    bricks,
-  }
-  return JSON.stringify(build)
 }
 
 /**
@@ -71,11 +37,17 @@ export function serialize(state: BuildState): string {
  * generated and the selection starts empty.
  */
 export function deserialize(json: string): BuildState {
-  const parsed = buildSchema.parse(JSON.parse(json))
+  const parsed = parseBuild(json)
   const bricks: Record<string, PlacedBrick> = {}
   for (const brick of parsed.bricks) {
     const id = createBrickId()
     bricks[id] = { id, ...brick }
   }
-  return { bricks, selection: new Set<string>() }
+  return {
+    bricks,
+    selection: new Set<string>(),
+    connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
+    lastCollapse: null,
+    baseplateSize: parsed.baseplate.size,
+  }
 }

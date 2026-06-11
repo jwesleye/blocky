@@ -1,12 +1,15 @@
-import type Graph from 'graphology'
 import type { PlacedBrick } from '../model/types'
+import type { ConnectionGraph } from './graph'
 
 /**
  * Returns the IDs of bricks that are NOT connected (transitively) to the
  * baseplate. A brick at y=0 is directly grounded; all bricks reachable from
  * any grounded brick via the connection graph are also grounded.
  */
-export function getFloatingBricks(bricks: PlacedBrick[], graph: Graph): Set<string> {
+export function getFloatingBricks(
+  bricks: PlacedBrick[],
+  graph: ConnectionGraph,
+): Set<string> {
   const grounded = new Set<string>()
   const queue: string[] = []
 

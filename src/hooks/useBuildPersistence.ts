@@ -12,7 +12,8 @@ export function useBuildPersistence() {
   const bricks = Object.values(brickMap)
 
   const exportToJSON = useCallback(() => {
-    const build = bricksToBuild(bricks, BASEPLATE_SIZE_STUDS)
+    assertSupportedBaseplateSize(baseplateSize)
+    const build = bricksToBuild(Object.values(bricks), baseplateSize)
     const blob = new Blob([JSON.stringify(build, null, 2)], {
       type: 'application/json',
     })
@@ -22,7 +23,7 @@ export function useBuildPersistence() {
     a.download = `build-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
-  }, [bricks])
+  }, [bricks, baseplateSize])
 
   const importFromJSON = useCallback(async () => {
     const input = document.createElement('input')
@@ -62,5 +63,11 @@ export function useBuildPersistence() {
     })
   }, [])
 
-  return { exportToJSON, importFromJSON }
+  return {
+    exportToJSON,
+    importFromJSON,
+    createShareLink,
+    loadFromShareUrl,
+    publishToGallery,
+  }
 }

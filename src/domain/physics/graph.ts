@@ -1,46 +1,43 @@
 import Graph from 'graphology'
 import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
-import { getOccupiedCells } from '../parts/footprint'
+import { toBrickFootprint } from '../parts/footprint'
+import {
+  buildConnectionGraph as buildFootprintGraph,
+  BASEPLATE,
+} from './placement'
+
+export type ConnectionGraph = Graph
 
 /**
- * Builds an undirected connection graph for a set of placed bricks.
- * Two bricks share an edge when a stud face of one aligns with the
- * anti-stud face of the other (i.e. they share an (X,Z) cell and one's
- * top Y equals the other's bottom Y).
+ * Builds an undirected brick-only connection graph for a set of placed bricks.
+ *
+ * Delegates stud/anti-stud coupling — including the `hasTopStuds === false`
+ * skip for smooth tiles — to the shared footprint-based graph builder in
+ * placement.ts, then strips the synthetic BASEPLATE node so callers receive
+ * a brick-only graph consistent with the old signature.
  */
 export function buildConnectionGraph(
   bricks: PlacedBrick[],
   catalog: PartCatalog,
-): Graph {
-  const graph = new Graph({ type: 'undirected', allowSelfLoops: false })
-
-  for (const brick of bricks) {
-    graph.addNode(brick.id)
-  }
-
-  // Map from "x,z,yTop" → brick id so we can find bricks supporting from below.
-  const topFaceMap = new Map<string, string>()
-
-  for (const brick of bricks) {
-    const def = catalog[brick.partId]
-    if (!def) continue
-    const yTop = brick.y + def.height
-    for (const { x, z } of getOccupiedCells(brick, def)) {
-      topFaceMap.set(`${x},${z},${yTop}`, brick.id)
+): ConnectionGraph {
+  const footprints = []
+  const unknownIds: string[] = []
+  for (const b of bricks) {
+    if (catalog[b.partId]) {
+      footprints.push(toBrickFootprint(b, catalog))
+    } else {
+      unknownIds.push(b.id)
     }
   }
 
-  for (const brick of bricks) {
-    const def = catalog[brick.partId]
-    if (!def) continue
-    for (const { x, z } of getOccupiedCells(brick, def)) {
-      const belowId = topFaceMap.get(`${x},${z},${brick.y}`)
-      if (belowId && belowId !== brick.id && !graph.hasEdge(brick.id, belowId)) {
-        graph.addEdge(brick.id, belowId)
-      }
-    }
+  const g = buildFootprintGraph(footprints) as unknown as ConnectionGraph
+  if (g.hasNode(BASEPLATE)) g.dropNode(BASEPLATE)
+
+  // Preserve backward compat: bricks with unknown partIds become isolated nodes.
+  for (const id of unknownIds) {
+    if (!g.hasNode(id)) g.addNode(id)
   }
 
-  return graph
+  return g
 }

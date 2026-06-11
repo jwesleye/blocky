@@ -1,0 +1,315 @@
+import { createServer } from 'node:http'
+import type { Server } from 'node:http'
+import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest'
+import { handler } from '../../../backend/src/server'
+import {
+  clearStore,
+  storeBuild,
+  generateBuildId,
+} from '../../../backend/src/store'
+import { SHARED_BUILD_CONTRACT_VERSION } from '../../../backend/src/validation'
+import type { SharedBuildPayload } from '../../../backend/src/validation'
+
+let srv: Server
+let port: number
+
+function req(path: string, options: RequestInit = {}): Promise<Response> {
+  return fetch(`http://127.0.0.1:${port}${path}`, options)
+}
+
+const validBuild = {
+  version: 1 as const,
+  baseplate: { size: 32 as const },
+  bricks: [],
+}
+
+const validGallery = {
+  title: 'Test Build',
+  visibility: 'public' as const,
+  author: { identityMode: 'anonymous' as const },
+}
+
+function makeAuthored(userId: string): SharedBuildPayload {
+  const buildId = generateBuildId()
+  return {
+    contractVersion: SHARED_BUILD_CONTRACT_VERSION,
+    buildId,
+    build: validBuild,
+    gallery: {
+      title: 'Owned Build',
+      visibility: 'public',
+      author: { identityMode: 'authenticated', userId, displayName: 'User' },
+      publishedAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  }
+}
+
+function makeAnonymous(): SharedBuildPayload {
+  const buildId = generateBuildId()
+  return {
+    contractVersion: SHARED_BUILD_CONTRACT_VERSION,
+    buildId,
+    build: validBuild,
+    gallery: {
+      title: 'Anonymous Build',
+      visibility: 'public',
+      author: { identityMode: 'anonymous' },
+      publishedAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  }
+}
+
+function makeUnlisted(): SharedBuildPayload {
+  const buildId = generateBuildId()
+  return {
+    contractVersion: SHARED_BUILD_CONTRACT_VERSION,
+    buildId,
+    build: validBuild,
+    gallery: {
+      title: 'Unlisted Build',
+      visibility: 'unlisted',
+      author: { identityMode: 'anonymous' },
+      publishedAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  }
+}
+
+beforeAll(async () => {
+  srv = createServer((req, res) => void handler(req, res))
+  await new Promise<void>((resolve) => {
+    srv.listen(0, '127.0.0.1', () => {
+      port = (srv.address() as { port: number }).port
+      resolve()
+    })
+  })
+})
+
+afterAll(async () => {
+  await new Promise<void>((resolve) => srv.close(() => resolve()))
+})
+
+beforeEach(() => {
+  clearStore()
+})
+
+describe('POST /builds — publish', () => {
+  it('returns 201 with the stored payload on valid request', async () => {
+    const res = await req('/builds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ build: validBuild, gallery: validGallery }),
+    })
+    expect(res.status).toBe(201)
+    const body = (await res.json()) as SharedBuildPayload
+    expect(body.buildId).toBeTruthy()
+    expect(body.gallery.title).toBe('Test Build')
+  })
+
+  it('returns 422 for invalid publish payload', async () => {
+    const res = await req('/builds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ build: validBuild, gallery: { title: '' } }),
+    })
+    expect(res.status).toBe(422)
+  })
+
+  it('returns 422 when baseplate size is invalid', async () => {
+    const res = await req('/builds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        build: { ...validBuild, baseplate: { size: 24 } },
+        gallery: validGallery,
+      }),
+    })
+    expect(res.status).toBe(422)
+  })
+})
+
+describe('GET /builds/:id — load', () => {
+  it('returns 200 with payload for an existing build', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}`)
+    expect(res.status).toBe(200)
+    const body = (await res.json()) as SharedBuildPayload
+    expect(body.buildId).toBe(payload.buildId)
+  })
+
+  it('returns 404 for an unknown build id', async () => {
+    const res = await req('/builds/nonexistent')
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 410 for a deleted build', async () => {
+    const payload = makeAuthored('user1')
+    storeBuild(payload)
+
+    await req(`/builds/${payload.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'user1' },
+    })
+
+    const res = await req(`/builds/${payload.buildId}`)
+    expect(res.status).toBe(410)
+  })
+})
+
+describe('GET /builds — list', () => {
+  it('excludes deleted builds from the listing', async () => {
+    const kept = makeAnonymous()
+    const toDelete = makeAuthored('owner1')
+    storeBuild(kept)
+    storeBuild(toDelete)
+
+    await req(`/builds/${toDelete.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'owner1' },
+    })
+
+    const res = await req('/builds')
+    const body = (await res.json()) as { builds: SharedBuildPayload[] }
+    const ids = body.builds.map((b) => b.buildId)
+    expect(ids).toContain(kept.buildId)
+    expect(ids).not.toContain(toDelete.buildId)
+  })
+
+  it('hides unlisted builds from the listing but keeps them loadable by id', async () => {
+    const publicBuild = makeAnonymous()
+    const unlisted = makeUnlisted()
+    storeBuild(publicBuild)
+    storeBuild(unlisted)
+
+    const listRes = await req('/builds')
+    const body = (await listRes.json()) as { builds: SharedBuildPayload[] }
+    const ids = body.builds.map((b) => b.buildId)
+    expect(ids).toContain(publicBuild.buildId)
+    expect(ids).not.toContain(unlisted.buildId)
+
+    const directRes = await req(`/builds/${unlisted.buildId}`)
+    expect(directRes.status).toBe(200)
+    const fetched = (await directRes.json()) as SharedBuildPayload
+    expect(fetched.buildId).toBe(unlisted.buildId)
+  })
+})
+
+describe('DELETE /builds/:id — delete', () => {
+  it('returns 200 when the authenticated owner deletes their build', async () => {
+    const payload = makeAuthored('owner1')
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'owner1' },
+    })
+    expect(res.status).toBe(200)
+  })
+
+  it('returns 403 when a different user attempts deletion', async () => {
+    const payload = makeAuthored('owner1')
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'other_user' },
+    })
+    expect(res.status).toBe(403)
+  })
+
+  it('returns 403 for an anonymous-authored build', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'anyone' },
+    })
+    expect(res.status).toBe(403)
+  })
+
+  it('returns 404 for an unknown build id', async () => {
+    const res = await req('/builds/nonexistent', {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'user1' },
+    })
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 400 when x-user-id header is missing', async () => {
+    const payload = makeAuthored('owner1')
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}`, {
+      method: 'DELETE',
+    })
+    expect(res.status).toBe(400)
+  })
+})
+
+describe('POST /builds/:id/reports — report', () => {
+  it('returns 201 on a valid report', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'spam' }),
+    })
+    expect(res.status).toBe(201)
+  })
+
+  it('returns 422 for invalid report payload', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'not-a-valid-reason' }),
+    })
+    expect(res.status).toBe(422)
+  })
+
+  it('returns 422 for oversized details', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'other', details: 'x'.repeat(2001) }),
+    })
+    expect(res.status).toBe(422)
+  })
+
+  it('returns 404 for an unknown build id', async () => {
+    const res = await req('/builds/nonexistent/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'spam' }),
+    })
+    expect(res.status).toBe(404)
+  })
+
+  it('does not mutate the stored SharedBuildPayload after a report', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+    const payloadBefore = JSON.stringify(payload)
+
+    await req(`/builds/${payload.buildId}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'spam' }),
+    })
+
+    const getRes = await req(`/builds/${payload.buildId}`)
+    const fetched = (await getRes.json()) as unknown
+    expect(JSON.stringify(fetched)).toBe(payloadBefore)
+  })
+})

@@ -1,7 +1,16 @@
 import { z } from 'zod'
 
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import {
+  BASEPLATE_SIZE_STUDS,
+  SUPPORTED_BASEPLATE_SIZES,
+  type BaseplateSize,
+  boundsForSize,
+  isSupportedBaseplateSize,
+} from '@/domain/grid'
+import { createBrickId } from '@/domain/model/ids'
 import type { PlacedBrick } from './types'
+
+const buildVersionSchema = z.union([z.literal(1), z.literal(2)])
 
 const rotationSchema = z.union([
   z.literal(0),
@@ -10,48 +19,89 @@ const rotationSchema = z.union([
   z.literal(3),
 ])
 
-export const BuildSchema = z.object({
-  version: z.number().int().positive(),
-  baseplate: z.object({
-    size: z.number().int().positive(),
-  }),
-  bricks: z.array(
-    z.object({
-      partId: z.string(),
-      color: z.string(),
-      x: z.number().int(),
-      y: z.number().int(),
-      z: z.number().int(),
-      rot: rotationSchema,
-    }),
-  ),
+const halfStudOffsetSchema = z.object({
+  x: z.union([z.literal(0), z.literal(1)]),
+  z: z.union([z.literal(0), z.literal(1)]),
 })
+
+const buildBrickSchema = z.object({
+  partId: z.string(),
+  color: z.string(),
+  x: z.number().int().min(0),
+  y: z.number().int().min(0),
+  z: z.number().int().min(0),
+  rot: rotationSchema,
+  offset: halfStudOffsetSchema.optional(),
+})
+
+export type SerializedBrick = z.infer<typeof buildBrickSchema>
+
+const baseplateSizeSchema = z.custom<BaseplateSize>(
+  (size) => typeof size === 'number' && isSupportedBaseplateSize(size),
+  `Supported baseplate sizes are ${SUPPORTED_BASEPLATE_SIZES.join(', ')}`,
+)
+
+export const BuildSchema = z
+  .object({
+    version: buildVersionSchema,
+    baseplate: z.object({
+      size: baseplateSizeSchema,
+    }),
+    bricks: z.array(buildBrickSchema),
+  })
+  .superRefine((build, ctx) => {
+    const bounds = boundsForSize(build.baseplate.size)
+
+    for (const [index, brick] of build.bricks.entries()) {
+      if (brick.x > bounds.maxX) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'x'],
+          message: `x must be less than or equal to ${bounds.maxX}`,
+        })
+      }
+
+      if (brick.z > bounds.maxZ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'z'],
+          message: `z must be less than or equal to ${bounds.maxZ}`,
+        })
+      }
+    }
+  })
 
 export const buildSchema = BuildSchema
 
 export type Build = z.infer<typeof BuildSchema>
 
-export const CURRENT_BUILD_VERSION = 1
+export const CURRENT_BUILD_VERSION = 2
 export const BUILD_SCHEMA_VERSION = CURRENT_BUILD_VERSION
 
-export function bricksToBuild(bricks: PlacedBrick[], baseplateSize: number): Build {
+export function bricksToBuild(
+  bricks: PlacedBrick[],
+  baseplateSize: BaseplateSize,
+): Build {
+  const hasOffset = bricks.some((brick) => brick.offset !== undefined)
+
   return {
-    version: CURRENT_BUILD_VERSION,
+    version: hasOffset ? CURRENT_BUILD_VERSION : 1,
     baseplate: { size: baseplateSize },
-    bricks: bricks.map(({ partId, color, x, y, z, rot }) => ({
+    bricks: bricks.map(({ partId, color, x, y, z, rot, offset }) => ({
       partId,
       color,
       x,
       y,
       z,
       rot,
+      ...(offset ? { offset } : {}),
     })),
   }
 }
 
 export function buildToBricks(build: Build): PlacedBrick[] {
-  return build.bricks.map((brick, index) => ({
-    id: `brick-${index}-${Math.random().toString(36).substring(2, 11)}`,
+  return build.bricks.map((brick) => ({
+    id: createBrickId(),
     ...brick,
   }))
 }
@@ -61,7 +111,7 @@ export function validateBuild(data: unknown): Build {
 }
 
 export const createEmptyBuild = (): Build => ({
-  version: BUILD_SCHEMA_VERSION,
+  version: 1,
   baseplate: { size: BASEPLATE_SIZE_STUDS },
   bricks: [],
 })

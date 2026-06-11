@@ -1,0 +1,140 @@
+/* Color picker */
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+}
+
+.color-swatch {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+}
+
+.color-swatch--selected {
+  border-color: #fff;
+  outline: 2px solid #333;
+  outline-offset: 1px;
+}
+
+.color-swatch__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Part picker */
+.part-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.part-group__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin: 0 0 6px;
+}
+
+.part-group__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.part-btn {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #e0e0e0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.part-btn:hover {
+  background: #3a3a3a;
+}
+
+.part-btn--selected {
+  border-color: #4a9eff;
+  background: #1a3a5c;
+  color: #fff;
+}
+
+/* Baseplate size picker */
+.baseplate-size-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 8px 8px;
+}
+
+.baseplate-size-btn {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #e0e0e0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.baseplate-size-btn:hover {
+  background: #3a3a3a;
+}
+
+.baseplate-size-btn--selected {
+  border-color: #4a9eff;
+  background: #1a3a5c;
+  color: #fff;
+}
+
+/* Environment preset picker */
+.environment-preset-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px 8px 8px;
+}
+
+.environment-preset-btn {
+  min-width: 0;
+  font-size: 12px;
+  padding: 5px 6px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #e0e0e0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.environment-preset-btn:hover {
+  background: #3a3a3a;
+}
+
+.environment-preset-btn--selected {
+  border-color: #4a9eff;
+  background: #1a3a5c;
+  color: #fff;
+}

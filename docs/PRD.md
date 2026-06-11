@@ -113,8 +113,10 @@ unlimited (sandbox).
 ### 4.4 The model
 
 A build is a set of **placed bricks**, each: `{ partId, color, position (x,y,z),
-rotation (0–3) }`. Plus a derived **connection graph** and **connected
-components** used by the physics (§5).
+rotation (0–3), offset? }`. `offset` is omitted for classic v1 stud-stacked
+bricks; when present it encodes an allowed non-v1 horizontal half-stud shift in
+X/Z (see §6). Plus a derived **connection graph** and **connected components**
+used by the physics (§5).
 
 ---
 
@@ -178,12 +180,21 @@ the chosen end-state behavior.
 
 ## 6. Building Grammar (scope of "any design")
 
-- **Classic stud-stacking only**, axis-aligned, 90° Y-rotations.
+- **Classic stud-stacking remains the default grammar**: axis-aligned, 90° Y
+  rotations, integer anchor coordinates, and gravity fixed along −Y.
 - Bricks + plates + tiles + slopes give fine vertical detail and smooth
   surfaces — enough for houses, vehicles, towers, statues, and mosaics.
-- **Explicitly out of scope for v1:** SNOT (sideways building), hinges, Technic
-  pins, angled connections, half-stud (jumper) offsets. These are the largest
-  complexity multipliers and are deferred.
+- **First supported non-v1 slice:** half-stud (jumper) offsets.
+  - A brick keeps integer anchor coordinates `x`, `y`, `z`; the offset is a
+    separate optional field, not a fractional coordinate.
+  - The offset is limited to `0 | 1` half-stud units per horizontal axis, so
+    only `+0.5` stud shifts in X and/or Z are representable.
+  - Vertical positioning is unchanged; jumper offsets affect only the X/Z plane.
+  - A build with no offsets remains byte-for-byte compatible with v1 and
+    serializes as `version: 1`; a build with one or more offsets serializes as
+    `version: 2`.
+- **Still out of scope:** SNOT (sideways building), hinges, Technic pins, and
+  angled connections. These remain major future grammar expansions.
 
 ---
 
@@ -213,6 +224,11 @@ the chosen end-state behavior.
 - **Export / Import** a build as a JSON file.
 - **Shareable URL**: build state encoded (compressed) into the link; opening it
   loads the build. No backend required.
+- **Future gallery/community sharing is accepted future scope:** autosave, JSON
+  import/export, and shareable URLs stay client-only and continue to exchange
+  the same `Build` JSON payload. A later backend-mediated gallery may wrap that
+  `Build` in a versioned shared-build contract without replacing local-only
+  flows.
 - **New / clear** with confirmation.
 
 ### 7.4 Feedback
@@ -250,6 +266,11 @@ the chosen end-state behavior.
 - **Domain core:** a pure, framework-agnostic module for the grid, connection
   graph, component detection, balance check, and shear — independently testable.
 - **Client-only:** no server, no database, no auth. Static hosting.
+- **Future gallery backend boundary:** community publish/load is allowed only as
+  a later, explicit backend path. It must preserve the current static SPA and
+  `Build` serialization semantics for autosave/import/export/shareable URLs,
+  keep the implementation in the JS/TS ecosystem, and use server-owned IDs,
+  timestamps, and storage instead of coupling local persistence to a service.
 
 ### 9.0 Engineering principles (dependency philosophy)
 
@@ -331,11 +352,20 @@ Build {
     color: string       // palette id
     x: int, y: int, z: int   // y in plate units
     rot: 0 | 1 | 2 | 3       // 90° steps about Y
+    offset?: { x: 0 | 1, z: 0 | 1 }  // optional +0.5 stud jumper shift per axis
   }>
 }
 ```
 
-Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
+Serialized to compact JSON; `version: 1` remains the classic stud-stacked
+envelope, while `version: 2` adds optional half-stud offsets without changing
+legacy integer anchor semantics. URL-sharing uses a compressed encoding of
+this.
+
+Future gallery publishing/loading must reuse this exact `Build` payload inside a
+versioned shared-build contract rather than forking the build schema. The
+backend-owned wrapper adds gallery metadata (title, optional description,
+visibility, author identity mode) plus server-owned identifiers and timestamps.
 
 ---
 
@@ -350,6 +380,10 @@ Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 - **Robustness:** no operation can leave the model in an invalid (floating/
   overlapping) persisted state; autosave never corrupts a build.
 - **Privacy:** all data stays client-side unless the user shares a link.
+- **Future gallery privacy boundary:** community publishing is an intentional
+  backend action, not an automatic extension of autosave or URL sharing. Any
+  later backend must make authorship, visibility, storage, and deletion policy
+  explicit.
 
 ---
 
@@ -376,7 +410,9 @@ Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 ### Later / maybe
 
 - SNOT and additional connection types (major scope expansion).
-- Build gallery / community sharing (would require a backend).
+- Build gallery / community sharing after an explicit backend path is added,
+  using the shared-build contract while leaving v1 local-only persistence
+  unchanged.
 
 ---
 
@@ -410,16 +446,17 @@ Serialized to compact JSON; URL-sharing uses a compressed encoding of this.
 
 ## 14. Decisions Log (resolved during scoping)
 
-| #   | Decision                    | Choice                                                                            |
-| --- | --------------------------- | --------------------------------------------------------------------------------- |
-| 1   | Core experience             | Pure creative sandbox                                                             |
-| 2   | Physics role                | Placement constraint + balance check (not live sim)                               |
-| 3   | Dimensionality              | True 3D (three.js / r3f)                                                          |
-| 4   | Connection grammar          | Classic stud-stacking, axis-aligned, 90° rotations                                |
-| 5   | Units                       | Bricks + plates; vertical grid in plate units                                     |
-| 6   | Instability behavior        | One-shot collapse (not prevent / not advisory-only)                               |
-| 7   | Collapse fidelity           | Real brief tumble (Rapier), debris fades after settling                           |
-| 8   | Collapse scope (unbalanced) | Smart shear (phased; whole-component topple in MVP)                               |
-| 9   | Dev/deploy environment      | Containerized (Docker): dev container + multi-stage static-serve image            |
-| 10  | Language scope              | JS/TS ecosystem only (no Python/Rust/C++/etc.); TypeScript + React retained       |
-| 11  | Dependency philosophy       | Off-the-shelf libraries first; core physics engine must be off-the-shelf (Rapier) |
+| #   | Decision                    | Choice                                                                                                                      |
+| --- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Core experience             | Pure creative sandbox                                                                                                       |
+| 2   | Physics role                | Placement constraint + balance check (not live sim)                                                                         |
+| 3   | Dimensionality              | True 3D (three.js / r3f)                                                                                                    |
+| 4   | Connection grammar          | Classic stud-stacking, axis-aligned, 90° rotations                                                                          |
+| 5   | Units                       | Bricks + plates; vertical grid in plate units                                                                               |
+| 6   | Instability behavior        | One-shot collapse (not prevent / not advisory-only)                                                                         |
+| 7   | Collapse fidelity           | Real brief tumble (Rapier), debris fades after settling                                                                     |
+| 8   | Collapse scope (unbalanced) | Smart shear (phased; whole-component topple in MVP)                                                                         |
+| 9   | Dev/deploy environment      | Containerized (Docker): dev container + multi-stage static-serve image                                                      |
+| 10  | Language scope              | JS/TS ecosystem only (no Python/Rust/C++/etc.); TypeScript + React retained                                                 |
+| 11  | Dependency philosophy       | Off-the-shelf libraries first; core physics engine must be off-the-shelf (Rapier)                                           |
+| 12  | Community sharing scope     | Accepted as future scope only; any gallery path must be backend-mediated, explicit, and preserve v1 client-only persistence |

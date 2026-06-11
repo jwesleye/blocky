@@ -17,6 +17,12 @@ export interface CollapseSimulationProps {
   staticBodies?: readonly BrickBodySnapshot[]
   onComplete?: (transaction: CollapseTransaction) => void
   tickMs?: number
+  /**
+   * Renders a fixed ground collider at the baseplate (y = 0) so dynamic bodies
+   * land and sleep, driving the settle → fade → remove lifecycle. Defaults to
+   * `true`; pass `false` when the caller supplies its own colliders.
+   */
+  ground?: boolean
 }
 
 function BrickRigidBody({
@@ -69,6 +75,7 @@ export function CollapseSimulation({
   staticBodies = [],
   onComplete,
   tickMs = 50,
+  ground = true,
 }: CollapseSimulationProps) {
   const [current, setCurrent] = useState(transaction)
 
@@ -95,6 +102,11 @@ export function CollapseSimulation({
 
   return (
     <Physics>
+      {ground && (
+        <RigidBody type="fixed" position={[0, -0.5, 0]} colliders={false}>
+          <CuboidCollider args={[1000, 0.5, 1000]} />
+        </RigidBody>
+      )}
       {bodies.map((body) => (
         <BrickRigidBody
           key={body.id}
