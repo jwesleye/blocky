@@ -78,3 +78,118 @@ describe('backend PublishRequestSchema baseplate contract', () => {
     expect(PublishRequestSchema.safeParse(request).success).toBe(false)
   })
 })
+
+describe('backend PublishRequestSchema mount contract', () => {
+  it('accepts a version 3 build whose brick includes a valid mount', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 3 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            mount: 'px' as const,
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(true)
+  })
+
+  it('rejects a version 3 build whose brick includes an unknown mount', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 3 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            mount: 'bogus',
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects mount on a version 1 build', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            mount: 'px' as const,
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects mount on a version 2 build', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        version: 2 as const,
+        baseplate: { size: 32 as const },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            mount: 'px' as const,
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+
+  it('rejects offset on a version 1 build', () => {
+    const request = {
+      ...validRequest,
+      build: {
+        ...validRequest.build,
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'blue',
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: 0,
+            offset: { x: 1 as const, z: 0 as const },
+          },
+        ],
+      },
+    }
+
+    expect(PublishRequestSchema.safeParse(request).success).toBe(false)
+  })
+})
