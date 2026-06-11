@@ -342,16 +342,14 @@ test('right-click to delete: context-menu on a placed brick removes it from the 
   await waitForStores(page)
 
   const brickId = await page.evaluate(() =>
-    (window as unknown as DevWindow).__blockyStore
-      .getState()
-      .placeBrick({
-        partId: 'brick-2x4',
-        color: 'red',
-        x: 0,
-        y: 0,
-        z: 0,
-        rot: 0,
-      }),
+    (window as unknown as DevWindow).__blockyStore.getState().placeBrick({
+      partId: 'brick-2x4',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }),
   )
   expect(brickId).toBeTruthy()
   expect(await getBrickCount(page)).toBe(1)

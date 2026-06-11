@@ -3,7 +3,9 @@ import { test, expect } from '@playwright/test'
 test.describe('tablet HUD layout', () => {
   test.use({ viewport: { width: 820, height: 1180 } })
 
-  test('sidebar is narrower than 220px at tablet viewport', async ({ page }) => {
+  test('sidebar is narrower than 220px at tablet viewport', async ({
+    page,
+  }) => {
     await page.goto('/')
     await expect(page.locator('canvas')).toBeVisible()
 

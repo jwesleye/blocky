@@ -28,8 +28,10 @@ async function waitForSceneHandles(page: import('@playwright/test').Page) {
   await page.waitForFunction(
     () =>
       (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCursorStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !== undefined,
+      (window as unknown as Partial<DevWindow>).__blockyCursorStore !==
+        undefined &&
+      (window as unknown as Partial<DevWindow>).__blockyProjectToCanvas !==
+        undefined,
     { timeout: 10000 },
   )
 }
@@ -60,26 +62,30 @@ test.describe('touch edit controls', () => {
 
     // Place a brick via store
     const brickId = await page.evaluate(() => {
-      return (window as unknown as DevWindow).__blockyStore.getState().placeBrick({
-        partId: 'brick-2x4',
-        color: 'red',
-        x: 4,
-        y: 0,
-        z: 4,
-        rot: 0,
-      })
+      return (window as unknown as DevWindow).__blockyStore
+        .getState()
+        .placeBrick({
+          partId: 'brick-2x4',
+          color: 'red',
+          x: 4,
+          y: 0,
+          z: 4,
+          rot: 0,
+        })
     })
     expect(brickId).toBeTruthy()
 
     // Move pointer over the brick to set hoveredBrickId
-    const brickPos = await page.evaluate(
-      () => (window as unknown as DevWindow).__blockyProjectToCanvas(5, 1.5, 6),
+    const brickPos = await page.evaluate(() =>
+      (window as unknown as DevWindow).__blockyProjectToCanvas(5, 1.5, 6),
     )
     await page.mouse.move(brickPos.x, brickPos.y)
 
     // Wait for hoveredBrickId to be set in the cursor store
     await page.waitForFunction(
-      () => (window as unknown as DevWindow).__blockyCursorStore.getState().hoveredBrickId !== null,
+      () =>
+        (window as unknown as DevWindow).__blockyCursorStore.getState()
+          .hoveredBrickId !== null,
       { timeout: 3000 },
     )
 
@@ -89,50 +95,63 @@ test.describe('touch edit controls', () => {
     // Assert the brick was removed
     await page.waitForFunction(
       (id) =>
-        !(id as string in (window as unknown as DevWindow).__blockyStore.getState().bricks),
+        !(
+          (id as string) in
+          (window as unknown as DevWindow).__blockyStore.getState().bricks
+        ),
       brickId,
       { timeout: 3000 },
     )
 
     const brickExists = await page.evaluate(
-      (id) => (id as string) in (window as unknown as DevWindow).__blockyStore.getState().bricks,
+      (id) =>
+        (id as string) in
+        (window as unknown as DevWindow).__blockyStore.getState().bricks,
       brickId,
     )
     expect(brickExists).toBe(false)
   })
 
-  test('moving back to the baseplate clears hovered brick state', async ({ page }) => {
+  test('moving back to the baseplate clears hovered brick state', async ({
+    page,
+  }) => {
     await page.goto('/')
     await waitForSceneHandles(page)
 
     const brickId = await page.evaluate(() => {
-      return (window as unknown as DevWindow).__blockyStore.getState().placeBrick({
-        partId: 'brick-2x4',
-        color: 'red',
-        x: 4,
-        y: 0,
-        z: 4,
-        rot: 0,
-      })
+      return (window as unknown as DevWindow).__blockyStore
+        .getState()
+        .placeBrick({
+          partId: 'brick-2x4',
+          color: 'red',
+          x: 4,
+          y: 0,
+          z: 4,
+          rot: 0,
+        })
     })
     expect(brickId).toBeTruthy()
 
-    const brickPos = await page.evaluate(
-      () => (window as unknown as DevWindow).__blockyProjectToCanvas(5, 1.5, 6),
+    const brickPos = await page.evaluate(() =>
+      (window as unknown as DevWindow).__blockyProjectToCanvas(5, 1.5, 6),
     )
     await page.mouse.move(brickPos.x, brickPos.y)
     await page.waitForFunction(
-      () => (window as unknown as DevWindow).__blockyCursorStore.getState().hoveredBrickId !== null,
+      () =>
+        (window as unknown as DevWindow).__blockyCursorStore.getState()
+          .hoveredBrickId !== null,
       { timeout: 3000 },
     )
 
-    const baseplatePos = await page.evaluate(
-      () => (window as unknown as DevWindow).__blockyProjectToCanvas(12, 0, 12),
+    const baseplatePos = await page.evaluate(() =>
+      (window as unknown as DevWindow).__blockyProjectToCanvas(12, 0, 12),
     )
     await page.mouse.move(baseplatePos.x, baseplatePos.y)
 
     await page.waitForFunction(
-      () => (window as unknown as DevWindow).__blockyCursorStore.getState().hoveredBrickId === null,
+      () =>
+        (window as unknown as DevWindow).__blockyCursorStore.getState()
+          .hoveredBrickId === null,
       { timeout: 3000 },
     )
 

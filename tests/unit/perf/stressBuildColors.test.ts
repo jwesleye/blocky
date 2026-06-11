@@ -39,9 +39,12 @@ describe('stress build color fixtures', () => {
     }
   })
 
-  it.each(SOURCE_PATHS)('%s does not use the invalid gray literal', (sourcePath) => {
-    const source = readFileSync(sourcePath, 'utf-8')
+  it.each(SOURCE_PATHS)(
+    '%s does not use the invalid gray literal',
+    (sourcePath) => {
+      const source = readFileSync(sourcePath, 'utf-8')
 
-    expect(source).not.toMatch(/['"]gray['"]/)
-  })
+      expect(source).not.toMatch(/['"]gray['"]/)
+    },
+  )
 })

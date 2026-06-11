@@ -124,7 +124,9 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(localStorage.getItem(AUTOSAVE_STORAGE_KEY)).not.toBeNull()
-      expect(JSON.parse(localStorage.getItem(AUTOSAVE_STORAGE_KEY) ?? '')).toEqual(
+      expect(
+        JSON.parse(localStorage.getItem(AUTOSAVE_STORAGE_KEY) ?? ''),
+      ).toEqual(
         expect.objectContaining({
           baseplate: expect.objectContaining({ size: 48 }),
         }),
