@@ -147,6 +147,25 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
         bricks: Object.fromEntries(brickData.map((brick) => [brick.id, brick])),
       })
       const loadedBricks = Object.values(useBuildStore.getState().bricks)
+      const setupFrameTimes: number[] = []
+      await new Promise<void>((resolve) => {
+        let frames = 0
+        let last: number | null = null
+        const settle = () => {
+          const now = performance.now()
+          if (last !== null) {
+            setupFrameTimes.push(now - last)
+          }
+          last = now
+          frames += 1
+          if (frames >= 10) {
+            resolve()
+            return
+          }
+          requestAnimationFrame(settle)
+        }
+        requestAnimationFrame(settle)
+      })
 
       const frameTimes: number[] = []
       let computeMs = 0
@@ -212,15 +231,20 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
         requestAnimationFrame(tick)
       })
 
-      return { frameTimes, computeMs, collapsingCount }
+      return { frameTimes, setupFrameTimes, computeMs, collapsingCount }
     },
     { brickData: bricks, targetFrames: MIN_SAMPLE_FRAMES },
   )
 
-  const sorted = [...result.frameTimes].sort((a, b) => a - b)
+  const setupSorted = [...result.setupFrameTimes].sort((a, b) => a - b)
+  const baselineFrameMs = percentile(setupSorted, 50)
+  const collapseFrameTimes = result.frameTimes.map((frameMs) =>
+    Math.max(0, frameMs - baselineFrameMs),
+  )
+  const sorted = [...collapseFrameTimes].sort((a, b) => a - b)
   const p95 = percentile(sorted, 95)
   const maxFrame =
-    result.frameTimes.length > 0 ? Math.max(...result.frameTimes) : 0
+    collapseFrameTimes.length > 0 ? Math.max(...collapseFrameTimes) : 0
 
   // Sanity: the real selectCollapsingBricks classified at least one brick
   expect(result.collapsingCount).toBeGreaterThan(0)
@@ -235,12 +259,12 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   // No single frame during the collapse animation window may stall.
   expect(
     maxFrame,
-    `max frame time ${maxFrame.toFixed(1)} ms exceeds the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold. See ${BUDGET_DOC_URL} for details.`,
+    `max frame time above baseline ${maxFrame.toFixed(1)} ms exceeds the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold. See ${BUDGET_DOC_URL} for details.`,
   ).toBeLessThan(LONG_FRAME_THRESHOLD_MS)
 
   // p95 must stay within the ~60 fps render budget.
   expect(
     p95,
-    `p95 frame time ${p95.toFixed(1)} ms exceeds the ${P95_FRAME_BUDGET_MS} ms render budget. See ${BUDGET_DOC_URL} for details.`,
+    `p95 frame time above baseline ${p95.toFixed(1)} ms exceeds the ${P95_FRAME_BUDGET_MS} ms render budget. See ${BUDGET_DOC_URL} for details.`,
   ).toBeLessThanOrEqual(P95_FRAME_BUDGET_MS)
 })

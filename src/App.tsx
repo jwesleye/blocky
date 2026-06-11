@@ -18,7 +18,6 @@ import {
   loadBuild,
   loadBuildFromShareSearch,
 } from '@/domain/persistence'
-import { BuildScene } from '@/scene/BuildScene'
 import { useScenePresetPreference } from '@/hooks/useScenePresetPreference'
 import { BuildScene, type CaptureScreenshot } from '@/scene/BuildScene'
 import { downloadScreenshot } from '@/lib/screenshotExport'
@@ -26,15 +25,17 @@ import { useCursorStore } from '@/state/cursor'
 import { useSceneSettingsStore } from '@/state/sceneSettings'
 import { useBuildStore } from '@/state/store'
 import { TouchToolbar } from '@/components/TouchToolbar'
-import { assertSupportedBaseplateSize } from '@/domain/grid'
 import '@/styles/gallery.css'
 import '@/styles/hud.css'
 import '@/styles/pickers.css'
 import '@/styles/responsive.css'
 
 export function App() {
-  const brickMap = useBuildStore((state) => state.bricks)
-  const bricks = Object.values(brickMap)
+  const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  useScenePresetPreference()
+  const captureScreenshotRef = useRef<CaptureScreenshot | null>(null)
+  const [isCaptureReady, setIsCaptureReady] = useState(false)
 
   const colorId = useCursorStore((s) => s.colorId)
   const partId = useCursorStore((s) => s.partId)
@@ -87,12 +88,22 @@ export function App() {
     }
   }, [])
 
-  const currentColor = getBrickColor(colorId)
-  const currentPart = getPart(partId)
   const handleCaptureFnReady = useCallback((fn: CaptureScreenshot) => {
     captureScreenshotRef.current = fn
     setIsCaptureReady(true)
   }, [])
+
+  const handleExportScreenshot = isCaptureReady
+    ? async () => {
+        const capture = captureScreenshotRef.current
+        if (!capture) return
+        const blob = await capture()
+        await downloadScreenshot(blob)
+      }
+    : undefined
+
+  const currentColor = getBrickColor(colorId)
+  const currentPart = getPart(partId)
 
   const handleMirror = (axis: 'x' | 'z') => {
     const ok = mirrorSelection(axis)

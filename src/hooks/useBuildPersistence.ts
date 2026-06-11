@@ -4,12 +4,26 @@ import {
   validateBuild,
   buildToBricks,
 } from '@/domain/model/build'
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
+import { createGalleryClient } from '@/domain/persistence/galleryClient'
+import type {
+  GalleryPublishRequest,
+  GalleryPublishResult,
+} from '@/domain/persistence/galleryClient'
+import {
+  createShareUrl,
+  loadBuildFromShareSearch,
+} from '@/domain/persistence/shareUrl'
 import { useBuildStore } from '@/state/store'
 
+const GALLERY_BASE_URL =
+  typeof import.meta.env !== 'undefined'
+    ? ((import.meta.env['VITE_GALLERY_URL'] as string | undefined) ?? '')
+    : ''
+
 export function useBuildPersistence() {
-  const brickMap = useBuildStore((state) => state.bricks)
-  const bricks = Object.values(brickMap)
+  const bricks = useBuildStore((state) => state.bricks)
+  const baseplateSize = useBuildStore((state) => state.baseplateSize)
 
   const exportToJSON = useCallback(() => {
     assertSupportedBaseplateSize(baseplateSize)
@@ -47,7 +61,7 @@ export function useBuildPersistence() {
             bricks: Object.fromEntries(
               newBricks.map((brick) => [brick.id, brick]),
             ),
-            selection: new Set<string>(),
+            baseplateSize: build.baseplate.size,
           })
           resolve()
         } catch (err) {
@@ -62,6 +76,40 @@ export function useBuildPersistence() {
       input.click()
     })
   }, [])
+
+  const createShareLink = useCallback((): string => {
+    assertSupportedBaseplateSize(baseplateSize)
+    const build = bricksToBuild(Object.values(bricks), baseplateSize)
+    return createShareUrl(build)
+  }, [bricks, baseplateSize])
+
+  const loadFromShareUrl = useCallback((search?: string): boolean => {
+    const query =
+      search ?? (typeof window !== 'undefined' ? window.location.search : '')
+    const build = loadBuildFromShareSearch(query)
+    if (!build) return false
+    const newBricks = buildToBricks(build)
+    useBuildStore.setState({
+      bricks: Object.fromEntries(newBricks.map((brick) => [brick.id, brick])),
+      baseplateSize: build.baseplate.size,
+    })
+    return true
+  }, [])
+
+  const publishToGallery = useCallback(
+    async (
+      meta: Pick<
+        GalleryPublishRequest['gallery'],
+        'title' | 'description' | 'visibility' | 'author'
+      >,
+    ): Promise<GalleryPublishResult> => {
+      assertSupportedBaseplateSize(baseplateSize)
+      const build = bricksToBuild(Object.values(bricks), baseplateSize)
+      const client = createGalleryClient(GALLERY_BASE_URL)
+      return client.publish({ build, gallery: meta })
+    },
+    [bricks, baseplateSize],
+  )
 
   return {
     exportToJSON,

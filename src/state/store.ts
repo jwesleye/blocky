@@ -1,5 +1,9 @@
 import { create } from 'zustand'
 import { temporal } from 'zundo'
+import type { TemporalState } from 'zundo'
+import { subscribeWithSelector } from 'zustand/middleware'
+import type { StoreApi } from 'zustand/vanilla'
+import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { createBrickId } from '@/domain/model/ids'
@@ -57,11 +61,6 @@ export interface BuildActions {
   /** Returns true if mirroring the current selection would be valid without mutating state. */
   previewMirrorSelection: (axis: 'x' | 'z') => boolean
   /**
-   * Atomically removes all collapsing bricks, recording a single undo step.
-   * Undoing restores the entire pre-collapse build.
-   */
-  commitCollapse: (collapsingIds: ReadonlySet<string>) => void
-  /**
    * Selects a brick. By default this replaces the current selection; pass
    * `additive` to extend it (e.g. shift-click multi-select).
    */
@@ -100,55 +99,349 @@ export interface CollapseSlice {
   activeCollapse: CollapseTransaction | null
 }
 
-export const useBuildStore = create<BuildStore>()(
-  temporal(
-    (set) => ({
-      bricks: {},
-      selection: new Set<string>(),
+export type BuildStore = BuildState & BuildActions & CollapseSlice
 
-      placeBrick: (brick) => {
-        const id = createBrickId()
-        set((state) => ({
-          bricks: { ...state.bricks, [id]: { id, ...brick } },
-        }))
-        return id
-      },
+export interface BuildStoreWithTemporal extends BuildStore {
+  temporal: StoreApi<TemporalState<Partial<BuildState>>>
+}
 
-      deleteBrick: (id) =>
-        set((state) => {
-          if (!(id in state.bricks)) return state
-          const bricks = { ...state.bricks }
-          delete bricks[id]
-          const selection = new Set(state.selection)
-          selection.delete(id)
-          return { bricks, selection }
-        }),
+function applyCollapse(
+  allBricks: PlacedBrick[],
+  selection: Set<string>,
+  stableBricks: Record<string, PlacedBrick> | null = null,
+): Pick<
+  BuildStore,
+  'bricks' | 'selection' | 'lastCollapse' | 'activeCollapse'
+> {
+  const collapsing = selectCollapsingBricks(allBricks)
+  if (collapsing.size === 0) {
+    return {
+      bricks:
+        stableBricks ??
+        Object.fromEntries(allBricks.map((brick) => [brick.id, brick])),
+      selection,
+      lastCollapse: null,
+      activeCollapse: null,
+    }
+  }
 
-      commitCollapse: (collapsingIds) =>
-        set((state) => {
-          const bricks: Record<string, PlacedBrick> = {}
-          for (const [id, brick] of Object.entries(state.bricks)) {
-            if (!collapsingIds.has(id)) bricks[id] = brick
-          }
-          const selection = new Set(state.selection)
-          for (const id of collapsingIds) selection.delete(id)
-          return { bricks, selection }
-        }),
+  const bricks: Record<string, PlacedBrick> = {}
+  for (const brick of allBricks) {
+    if (!collapsing.has(brick.id)) bricks[brick.id] = brick
+  }
 
-      selectBrick: (id, additive = false) =>
-        set((state) => {
-          if (!(id in state.bricks)) return state
-          const selection = additive
-            ? new Set(state.selection)
-            : new Set<string>()
-          selection.add(id)
-          return { selection }
-        }),
+  const nextSelection = new Set(selection)
+  for (const id of collapsing) nextSelection.delete(id)
 
-      clearSelection: () => set({ selection: new Set<string>() }),
+  return {
+    bricks,
+    selection: nextSelection,
+    lastCollapse: { count: collapsing.size, label: 'Undo collapse' },
+    activeCollapse: createCollapseTransaction({
+      allBricks,
+      collapsingBodies: bricksToBodySnapshots(
+        allBricks.filter((brick) => collapsing.has(brick.id)),
+      ),
     }),
-    // Only the build itself is tracked for undo/redo; the transient selection is
-    // excluded so selecting bricks never creates an undo step.
-    { partialize: (state) => ({ bricks: state.bricks }) },
+  }
+}
+
+export const useBuildStore = create<BuildStore>()(
+  subscribeWithSelector(
+    temporal(
+      (set, get) => ({
+        bricks: {},
+        selection: new Set<string>(),
+        connectionGraph: new Graph({
+          type: 'undirected',
+          allowSelfLoops: false,
+        }),
+        lastCollapse: null,
+        baseplateSize: BASEPLATE_SIZE_STUDS,
+        activeCollapse: null,
+
+        placeBrick: (brick) => {
+          const id = createBrickId()
+          const candidate = { id, ...brick }
+
+          if (
+            !canPlaceGroup(
+              [candidate],
+              Object.values(get().bricks),
+              PART_CATALOG,
+              get().baseplateSize,
+            )
+          ) {
+            return null
+          }
+
+          set((state) =>
+            applyCollapse(
+              [...Object.values(state.bricks), candidate],
+              state.selection,
+            ),
+          )
+          playSoundEffect('place')
+          return id
+        },
+
+        deleteBrick: (id) => {
+          if (!(id in get().bricks)) return
+
+          set((state) => {
+            const selection = new Set(state.selection)
+            selection.delete(id)
+            const bricks = Object.values(state.bricks).filter(
+              (brick) => brick.id !== id,
+            )
+            return applyCollapse(bricks, selection)
+          })
+          playSoundEffect('delete')
+        },
+
+        recolorBrick: (id, color) =>
+          set((state) => {
+            if (!(id in state.bricks)) return state
+            return {
+              bricks: {
+                ...state.bricks,
+                [id]: { ...state.bricks[id], color },
+              },
+            }
+          }),
+
+        moveSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((brick): brick is PlacedBrick => !!brick)
+
+          const otherBricks = Object.values(state.bricks).filter(
+            (brick) => !state.selection.has(brick.id),
+          )
+
+          const moved = selectedBricks.map((brick) =>
+            translateBrick(brick, delta),
+          )
+
+          if (
+            !canPlaceGroup(
+              moved,
+              otherBricks,
+              PART_CATALOG,
+              get().baseplateSize,
+            )
+          ) {
+            return false
+          }
+
+          const nextBricks = { ...state.bricks }
+          for (const brick of moved) {
+            nextBricks[brick.id] = brick
+          }
+
+          set({ bricks: nextBricks, lastCollapse: null })
+          return true
+        },
+
+        duplicateSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((brick): brick is PlacedBrick => !!brick)
+
+          const clones = selectedBricks.map((brick) => {
+            const id = createBrickId()
+            return translateBrick({ ...brick, id }, delta)
+          })
+
+          const allExisting = Object.values(state.bricks)
+
+          if (
+            !canPlaceGroup(
+              clones,
+              allExisting,
+              PART_CATALOG,
+              get().baseplateSize,
+            )
+          ) {
+            return false
+          }
+
+          const nextBricks = { ...state.bricks }
+          const nextSelection = new Set<string>()
+          for (const brick of clones) {
+            nextBricks[brick.id] = brick
+            nextSelection.add(brick.id)
+          }
+
+          set({
+            bricks: nextBricks,
+            selection: nextSelection,
+            lastCollapse: null,
+          })
+          return true
+        },
+
+        previewMoveSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((brick): brick is PlacedBrick => !!brick)
+          const otherBricks = Object.values(state.bricks).filter(
+            (brick) => !state.selection.has(brick.id),
+          )
+          const moved = selectedBricks.map((brick) =>
+            translateBrick(brick, delta),
+          )
+          return canPlaceGroup(
+            moved,
+            otherBricks,
+            PART_CATALOG,
+            get().baseplateSize,
+          )
+        },
+
+        previewDuplicateSelection: (delta) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((brick): brick is PlacedBrick => !!brick)
+          const clones = selectedBricks.map((brick, index) =>
+            translateBrick({ ...brick, id: `preview-${index}` }, delta),
+          )
+          const allExisting = Object.values(state.bricks)
+          return canPlaceGroup(
+            clones,
+            allExisting,
+            PART_CATALOG,
+            get().baseplateSize,
+          )
+        },
+
+        mirrorSelection: (axis) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+
+          const otherBricks = Object.values(state.bricks).filter(
+            (b) => !state.selection.has(b.id),
+          )
+
+          const mirrored = mirrorBricks(selectedBricks, axis, PART_CATALOG)
+
+          if (!canPlaceGroup(mirrored, otherBricks, PART_CATALOG)) {
+            return false
+          }
+
+          const nextBricks = { ...state.bricks }
+          for (const b of mirrored) {
+            nextBricks[b.id] = b
+          }
+
+          set({ bricks: nextBricks, lastCollapse: null })
+          return true
+        },
+
+        previewMirrorSelection: (axis) => {
+          const state = get()
+          if (state.selection.size === 0) return false
+          const selectedBricks = Array.from(state.selection)
+            .map((id) => state.bricks[id])
+            .filter((b): b is PlacedBrick => !!b)
+          const otherBricks = Object.values(state.bricks).filter(
+            (b) => !state.selection.has(b.id),
+          )
+          const mirrored = mirrorBricks(selectedBricks, axis, PART_CATALOG)
+          return canPlaceGroup(mirrored, otherBricks, PART_CATALOG)
+        },
+
+        selectBrick: (id, additive = false) =>
+          set((state) => {
+            if (!(id in state.bricks)) return state
+            const selection = additive
+              ? new Set(state.selection)
+              : new Set<string>()
+            selection.add(id)
+            return { selection, lastCollapse: null }
+          }),
+
+        clearSelection: () =>
+          set({ selection: new Set<string>(), lastCollapse: null }),
+
+        clearBricks: () =>
+          set({
+            bricks: {},
+            selection: new Set<string>(),
+            lastCollapse: null,
+            activeCollapse: null,
+          }),
+
+        setBaseplateSize: (size) => set({ baseplateSize: size }),
+
+        triggerCollapse: () => {
+          const state = get()
+          const allBricks = Object.values(state.bricks)
+          if (selectCollapsingBricks(allBricks).size === 0) return
+
+          set((currentState) =>
+            applyCollapse(
+              allBricks,
+              currentState.selection,
+              currentState.bricks,
+            ),
+          )
+          playSoundEffect('collapse')
+        },
+
+        completeCollapse: () => set({ activeCollapse: null }),
+
+        undo: () => {
+          ;(useBuildStore as unknown as BuildStoreWithTemporal).temporal
+            .getState()
+            .undo()
+          useBuildStore.setState({ activeCollapse: null })
+        },
+
+        redo: () => {
+          ;(useBuildStore as unknown as BuildStoreWithTemporal).temporal
+            .getState()
+            .redo()
+          useBuildStore.setState({ activeCollapse: null })
+        },
+      }),
+      {
+        limit: 50,
+        partialize: (state) => {
+          const { bricks, selection, lastCollapse, baseplateSize } = state
+          return { bricks, selection, lastCollapse, baseplateSize }
+        },
+        equality: (pastState, currentState) =>
+          pastState.bricks === currentState.bricks &&
+          pastState.selection === currentState.selection,
+      },
+    ),
   ),
+)
+
+useBuildStore.subscribe(
+  (state) => state.bricks,
+  (bricks) => {
+    useBuildStore.setState({
+      connectionGraph: buildConnectionGraph(
+        Object.values(bricks),
+        PART_CATALOG,
+      ),
+    })
+  },
+  { fireImmediately: true },
 )

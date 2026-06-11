@@ -66,6 +66,30 @@ describe('findShearRegion', () => {
     expect(shear.map((brick) => brick.id)).toEqual(['z-offset'])
     expect(remainder.map((brick) => brick.id)).toEqual(['base', 'a-centered'])
   })
+
+  it('keeps a larger cantilever connected while preserving input order', () => {
+    const component = [
+      brick('base-a', 'brick-2x4', 0, 0, 0),
+      brick('base-b', 'brick-2x4', 2, 0, 0),
+      brick('span-a', 'plate-2x8', 0, 3, 0, 1),
+      brick('span-b', 'plate-2x8', 2, 4, 0, 1),
+      brick('tip-a', 'brick-2x2', 7, 5, 0),
+      brick('tip-b', 'brick-2x2', 9, 5, 0),
+    ]
+    const originalOrder = component.map((candidate) => candidate.id)
+
+    const { shear, remainder } = findShearRegion(component)
+
+    expect(shear.map((candidate) => candidate.id)).toEqual(['tip-b'])
+    expect(remainder.map((candidate) => candidate.id)).toEqual([
+      'base-a',
+      'base-b',
+      'span-a',
+      'span-b',
+      'tip-a',
+    ])
+    expect(component.map((candidate) => candidate.id)).toEqual(originalOrder)
+  })
 })
 
 describe('recursiveShear', () => {

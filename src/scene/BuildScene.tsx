@@ -34,7 +34,10 @@ import type { RenderBrick } from './instancing'
 import { InstancedBricks } from './InstancedBricks'
 import { getPartGeometry } from './parts/geometries'
 import { SceneEnvironment } from './SceneEnvironment'
-import { ScreenshotCaptureBridge, type CaptureScreenshot } from './ScreenshotCaptureBridge'
+import {
+  ScreenshotCaptureBridge,
+  type CaptureScreenshot,
+} from './ScreenshotCaptureBridge'
 import { CAMERA_DEFAULT_FOV, CAMERA_DEFAULT_POSITION } from './sceneConfig'
 
 export type { CaptureScreenshot }
@@ -52,6 +55,22 @@ function toRenderPartType(partId: string): PartType | null {
   }
 
   return part.category
+}
+
+function isWithinRenderedBaseplate(brick: PlacedBrick, baseplateSize: number) {
+  const part = PART_CATALOG[brick.partId]
+  if (!part) return false
+
+  const [width, depth] = rotatedDimensions(part, brick.rot)
+  const offsetX = (brick.offset?.x ?? 0) * 0.5
+  const offsetZ = (brick.offset?.z ?? 0) * 0.5
+
+  return (
+    brick.x + offsetX >= 0 &&
+    brick.z + offsetZ >= 0 &&
+    brick.x + offsetX + width <= baseplateSize &&
+    brick.z + offsetZ + depth <= baseplateSize
+  )
 }
 
 function GhostBrickMesh({
@@ -237,10 +256,11 @@ export function BuildScene({
   const renderBricks = useMemo(
     () =>
       placedBricks.flatMap((brick) => {
+        if (!isWithinRenderedBaseplate(brick, baseplateSize)) return []
         const partType = toRenderPartType(brick.partId)
         return partType ? [{ ...brick, partType }] : []
       }),
-    [placedBricks],
+    [baseplateSize, placedBricks],
   )
   const ghostValid = useMemo(() => {
     if (!ghostGrid) return false
@@ -255,7 +275,7 @@ export function BuildScene({
       offset,
     }
     return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
-  }, [baseplateSize, colorId, ghostGrid, offset, partId, placedBricks, rot])
+  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot, offset])
 
   const handlePlace = () => {
     if (editingTool !== 'place') return
@@ -287,6 +307,7 @@ export function BuildScene({
 
   return (
     <Canvas
+      frameloop="demand"
       shadows
       camera={{
         fov: CAMERA_DEFAULT_FOV,
@@ -295,6 +316,7 @@ export function BuildScene({
         position: CAMERA_DEFAULT_POSITION,
       }}
       gl={{ preserveDrawingBuffer: true }}
+      onClick={handlePlace}
       onPointerLeave={() => {
         setGhostGrid(null)
         setHoveredBrickId(null)
@@ -302,24 +324,6 @@ export function BuildScene({
       tabIndex={0}
       style={{ outline: 'none' }}
     >
-      <group onClick={handlePlace}>
-        <color attach="background" args={[BACKGROUND_COLOR]} />
-        <Lighting />
-        <CameraRig />
-        <CameraControls />
-        <ThreeDevExpose />
-        <Baseplate
-          size={baseplateSize}
-          onPointerPos={setGhostGrid}
-          onPointerEnterEmpty={() => setHoveredBrickId(null)}
-        />
-        <InstancedBricks
-          bricks={placedBricks}
-          getDims={(partId) => {
-            const part = PART_CATALOG[partId]
-            if (!part) {
-              throw new Error(`unknown partId "${partId}"`)
-            }
       <SceneEnvironment presetId={presetId} />
       <CameraRig />
       <CameraControls />
@@ -341,48 +345,47 @@ export function BuildScene({
             throw new Error(`unknown partId "${partId}"`)
           }
 
-            return {
-              w: part.width,
-              d: part.length,
-              h: part.height,
-            }
-          }}
-          getColor={(color) => getBrickColor(color)?.hex ?? color}
-          onInstanceClick={(brick, event) => {
-            event.stopPropagation()
-            if (brick.id) {
-              handleBrickClick(brick.id)
-            }
-          }}
-          onInstancePointerMove={(brick, event) => {
-            event.stopPropagation()
-            if (brick.id) setHoveredBrickId(brick.id)
-            const grid = brickPointerToGhostGrid(brick, event)
-            if (grid) setGhostGrid(grid)
-          }}
-          onInstancePointerDown={(brick, event) => {
-            event.stopPropagation()
-            if (brick.id) setHoveredBrickId(brick.id)
-            const grid = brickPointerToGhostGrid(brick, event)
-            if (grid) setGhostGrid(grid)
-          }}
-          onInstanceContextMenu={(brick, event) => {
-            event.stopPropagation()
-            if (brick.id) {
-              deleteBrick(brick.id)
-            }
-          }}
+          return {
+            w: part.width,
+            d: part.length,
+            h: part.height,
+          }
+        }}
+        getColor={(color) => getBrickColor(color)?.hex ?? color}
+        onInstanceClick={(brick, event) => {
+          event.stopPropagation()
+          if (brick.id) {
+            handleBrickClick(brick.id)
+          }
+        }}
+        onInstancePointerMove={(brick, event) => {
+          event.stopPropagation()
+          if (brick.id) setHoveredBrickId(brick.id)
+          const grid = brickPointerToGhostGrid(brick, event)
+          if (grid) setGhostGrid(grid)
+        }}
+        onInstancePointerDown={(brick, event) => {
+          event.stopPropagation()
+          if (brick.id) setHoveredBrickId(brick.id)
+          const grid = brickPointerToGhostGrid(brick, event)
+          if (grid) setGhostGrid(grid)
+        }}
+        onInstanceContextMenu={(brick, event) => {
+          event.stopPropagation()
+          if (brick.id) {
+            deleteBrick(brick.id)
+          }
+        }}
+      />
+      {ghostGrid && (
+        <GhostBrickMesh
+          grid={ghostGrid}
+          valid={ghostValid}
+          partId={partId}
+          rot={rot}
+          offset={offset}
         />
-        {ghostGrid && (
-          <GhostBrickMesh
-            grid={ghostGrid}
-            valid={ghostValid}
-            partId={partId}
-            rot={rot}
-            offset={offset}
-          />
-        )}
-      </group>
+      )}
       {activeCollapse && (
         <Suspense fallback={null}>
           <CollapseSimulation
