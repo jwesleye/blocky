@@ -244,9 +244,9 @@ describe('version 3 — SNOT mount', () => {
     expect(() => validateBuild(JSON.parse(bad))).toThrow()
   })
 
-  it('rejects version 4 (unsupported future version)', () => {
+  it('rejects version 5 (unsupported future version)', () => {
     const bad = JSON.stringify({
-      version: 4,
+      version: 5,
       baseplate: { size: 32 },
       bricks: [],
     })
@@ -258,6 +258,135 @@ describe('version 3 — SNOT mount', () => {
     const build = createEmptyBuild()
     expect(build.version).toBe(1)
     expect(buildSchema.safeParse(build).success).toBe(true)
+  })
+})
+
+describe('version 4 — hinge', () => {
+  it('selects version 4 when any brick has a hinge', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        hinge: 'x',
+      },
+    ]
+    expect(bricksToBuild(bricks, 32).version).toBe(4)
+  })
+
+  it('selects version 3 when only mount bricks are present (no hinge)', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        mount: 'px',
+      },
+    ]
+    expect(bricksToBuild(bricks, 32).version).toBe(3)
+  })
+
+  it('round-trips a brick with hinge through bricksToBuild → buildToBricks', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        hinge: 'z',
+      },
+    ]
+    const restored = buildToBricks(bricksToBuild(bricks, 32))
+    expect(restored[0]).toMatchObject({ hinge: 'z' })
+  })
+
+  it('round-trips a brick with hinge through serializeBuild → parseBuild', () => {
+    const bricks: PlacedBrick[] = [
+      {
+        id: '1',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        hinge: 'x',
+      },
+    ]
+    const build = bricksToBuild(bricks, 32)
+    const restored = parseBuild(serializeBuild(build))
+    expect(restored.version).toBe(4)
+    expect(restored.bricks[0]).toMatchObject({ hinge: 'x' })
+  })
+
+  it('rejects an unknown hinge value', () => {
+    const bad = JSON.stringify({
+      version: 4,
+      baseplate: { size: 32 },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'y',
+        },
+      ],
+    })
+    expect(safeParseBuild(bad)).toBeNull()
+    expect(() => validateBuild(JSON.parse(bad))).toThrow()
+  })
+
+  it('rejects hinge on a version 3 envelope', () => {
+    const bad = JSON.stringify({
+      version: 3,
+      baseplate: { size: 32 },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'x',
+        },
+      ],
+    })
+    expect(safeParseBuild(bad)).toBeNull()
+    expect(() => validateBuild(JSON.parse(bad))).toThrow()
+  })
+
+  it('accepts hinge on a version 4 envelope', () => {
+    const good = JSON.stringify({
+      version: 4,
+      baseplate: { size: 32 },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'z',
+        },
+      ],
+    })
+    expect(safeParseBuild(good)).not.toBeNull()
   })
 })
 

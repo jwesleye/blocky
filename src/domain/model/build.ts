@@ -10,7 +10,12 @@ import {
 import { createBrickId } from '@/domain/model/ids'
 import type { PlacedBrick } from './types'
 
-const buildVersionSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
+const buildVersionSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+])
 
 const rotationSchema = z.union([
   z.literal(0),
@@ -31,6 +36,8 @@ const brickMountSchema = z.union([
   z.literal('nz'),
 ])
 
+const brickHingeSchema = z.union([z.literal('x'), z.literal('z')])
+
 const buildBrickSchema = z.object({
   partId: z.string(),
   color: z.string(),
@@ -40,6 +47,7 @@ const buildBrickSchema = z.object({
   rot: rotationSchema,
   offset: halfStudOffsetSchema.optional(),
   mount: brickMountSchema.optional(),
+  hinge: brickHingeSchema.optional(),
 })
 
 export type SerializedBrick = z.infer<typeof buildBrickSchema>
@@ -92,6 +100,14 @@ export const BuildSchema = z
           message: `mount requires version 3; envelope is version ${build.version}`,
         })
       }
+
+      if (brick.hinge !== undefined && build.version < 4) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['bricks', index, 'hinge'],
+          message: `hinge requires version 4; envelope is version ${build.version}`,
+        })
+      }
     }
   })
 
@@ -99,30 +115,34 @@ export const buildSchema = BuildSchema
 
 export type Build = z.infer<typeof BuildSchema>
 
-export const CURRENT_BUILD_VERSION = 3
+export const CURRENT_BUILD_VERSION = 4
 export const BUILD_SCHEMA_VERSION = CURRENT_BUILD_VERSION
 
 export function bricksToBuild(
   bricks: PlacedBrick[],
   baseplateSize: BaseplateSize,
 ): Build {
+  const hasHinge = bricks.some((brick) => brick.hinge !== undefined)
   const hasMount = bricks.some((brick) => brick.mount !== undefined)
   const hasOffset = bricks.some((brick) => brick.offset !== undefined)
-  const version = hasMount ? 3 : hasOffset ? 2 : 1
+  const version = hasHinge ? 4 : hasMount ? 3 : hasOffset ? 2 : 1
 
   return {
     version,
     baseplate: { size: baseplateSize },
-    bricks: bricks.map(({ partId, color, x, y, z, rot, offset, mount }) => ({
-      partId,
-      color,
-      x,
-      y,
-      z,
-      rot,
-      ...(offset ? { offset } : {}),
-      ...(mount ? { mount } : {}),
-    })),
+    bricks: bricks.map(
+      ({ partId, color, x, y, z, rot, offset, mount, hinge }) => ({
+        partId,
+        color,
+        x,
+        y,
+        z,
+        rot,
+        ...(offset ? { offset } : {}),
+        ...(mount ? { mount } : {}),
+        ...(hinge ? { hinge } : {}),
+      }),
+    ),
   }
 }
 

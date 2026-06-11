@@ -151,9 +151,9 @@ describe('SNOT mount — share URL round-trip', () => {
     expect(decodeShareToken(token)).toBeNull()
   })
 
-  it('returns null for a token carrying version 4 (unsupported future grammar)', () => {
+  it('returns null for a token carrying version 5 (unsupported future grammar)', () => {
     const bad = JSON.stringify({
-      version: 4,
+      version: 5,
       baseplate: { size: BASEPLATE_SIZE_STUDS },
       bricks: [],
     })
@@ -194,6 +194,68 @@ describe('SNOT mount — share URL round-trip', () => {
           z: 0,
           rot: 0,
           offset: { x: 1, z: 0 },
+        },
+      ],
+    })
+    const token = compressToEncodedURIComponent(bad)
+    expect(decodeShareToken(token)).toBeNull()
+  })
+})
+
+describe('hinge — share URL round-trip', () => {
+  it('round-trips a v4 build with a hinge brick through encode → decode', () => {
+    const build: Build = {
+      version: 4,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'x',
+        },
+      ],
+    }
+    const token = encodeBuildToShareToken(build)
+    expect(decodeShareToken(token)).toEqual(build)
+  })
+
+  it('returns null for a token whose JSON carries an unknown hinge value', () => {
+    const bad = JSON.stringify({
+      version: 4,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'y',
+        },
+      ],
+    })
+    const token = compressToEncodedURIComponent(bad)
+    expect(decodeShareToken(token)).toBeNull()
+  })
+
+  it('returns null for a token with hinge in a version 3 envelope', () => {
+    const bad = JSON.stringify({
+      version: 3,
+      baseplate: { size: BASEPLATE_SIZE_STUDS },
+      bricks: [
+        {
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'z',
         },
       ],
     })
