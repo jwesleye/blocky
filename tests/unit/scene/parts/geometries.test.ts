@@ -69,8 +69,14 @@ describe('getPartGeometry', () => {
     expect(roundPlate.type).toBe('CylinderGeometry')
     expect(geometrySize(roundBrick)).toEqual({ width: 1, height: 3, depth: 1 })
     expect(geometrySize(roundPlate)).toEqual({ width: 1, height: 1, depth: 1 })
-    expect((roundBrick as BoxGeometry & { parameters?: { radialSegments?: number } }).parameters?.radialSegments).toBe(16)
-    expect((roundPlate as BoxGeometry & { parameters?: { radialSegments?: number } }).parameters?.radialSegments).toBe(16)
+    expect(
+      (roundBrick as BoxGeometry & { parameters?: { radialSegments?: number } })
+        .parameters?.radialSegments,
+    ).toBe(16)
+    expect(
+      (roundPlate as BoxGeometry & { parameters?: { radialSegments?: number } })
+        .parameters?.radialSegments,
+    ).toBe(16)
   })
 
   it('builds cone geometry for cone-1x1', () => {
@@ -78,7 +84,10 @@ describe('getPartGeometry', () => {
 
     expect(cone.type).toBe('ConeGeometry')
     expect(geometrySize(cone)).toEqual({ width: 1, height: 3, depth: 1 })
-    expect((cone as BoxGeometry & { parameters?: { radialSegments?: number } }).parameters?.radialSegments).toBe(16)
+    expect(
+      (cone as BoxGeometry & { parameters?: { radialSegments?: number } })
+        .parameters?.radialSegments,
+    ).toBe(16)
   })
 
   it('falls back to a plain box for non-studded part types', () => {
@@ -151,7 +160,11 @@ describe('getPartGeometry', () => {
     const slope2x1 = getPartGeometry('slope-2x1', { w: 2, d: 1, h: 3 })
     const slope2x2 = getPartGeometry('slope-2x2', { w: 2, d: 2, h: 3 })
     const cornerSlope = getPartGeometry('slope-corner', { w: 2, d: 2, h: 3 })
-    const invertedSlope = getPartGeometry('slope-inverted', { w: 2, d: 1, h: 3 })
+    const invertedSlope = getPartGeometry('slope-inverted', {
+      w: 2,
+      d: 1,
+      h: 3,
+    })
     const brickGeo = getPartGeometry('brick-2x4', { w: 2, d: 4, h: 3 })
 
     expect(geometrySize(slope2x1)).toEqual({ width: 2, height: 3, depth: 1 })

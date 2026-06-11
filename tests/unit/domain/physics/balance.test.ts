@@ -241,7 +241,15 @@ describe('Balance primitives', () => {
       // brick-1x1 (height=3) at x=1 with offset.x=1: true CoM_x = 1.5+0.5 = 2.0 → inside [2,3].
       // Without offset: CoM_x = 1.5, outside [2,3] → misjudged as unbalanced.
       const bricks: PlacedBrick[] = [
-        { id: 'base', partId: 'plate-1x1', color: 'red', x: 2, y: 0, z: 0, rot: 0 },
+        {
+          id: 'base',
+          partId: 'plate-1x1',
+          color: 'red',
+          x: 2,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
         {
           id: 'top',
           partId: 'brick-1x1',
