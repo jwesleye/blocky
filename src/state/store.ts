@@ -108,9 +108,7 @@ export interface BuildStoreWithTemporal extends BuildStore {
 function usesUnsupportedMountPlacement(
   brick: Omit<PlacedBrick, 'id'>,
 ): boolean {
-  return (
-    brick.mount !== undefined && (brick.y !== 0 || brick.offset !== undefined)
-  )
+  return brick.mount !== undefined && brick.offset !== undefined
 }
 
 function applyCollapse(

@@ -168,13 +168,50 @@ describe('isValidPlacement', () => {
     expect(isValidPlacement(ghost, [])).toBe(true)
   })
 
-  it('rejects a mounted brick above the baseplate until mount physics ship', () => {
+  it('rejects a mounted brick with no lateral contact to any standard brick (floating)', () => {
+    // Mounted 'px' at x=0, y=3: anti-stud = 0.5 - 1.5 = -1.0 ≠ support.xHi (1.0) → no contact.
     const support = brick({ id: 'support' })
     const ghost = brick({
       y: 3,
       mount: 'px',
     })
     expect(isValidPlacement(ghost, [support])).toBe(false)
+  })
+
+  it('allows a valid lateral SNOT placement (mounted brick anti-stud contacts standard face)', () => {
+    // Standard at (0,0,0): xHi=1.0. Mounted 'px' at (2,1,0): anti-stud = 2.5-1.5 = 1.0 ✓
+    // Y overlap: mounted [2.0,3.0] vs standard [0,3] → grounded via lateral contact.
+    const support = brick({ id: 'support' })
+    const ghost = brick({ x: 2, y: 1, mount: 'px' })
+    expect(isValidPlacement(ghost, [support])).toBe(true)
+  })
+
+  it('rejects a mounted brick whose rotated body intersects an adjacent standard brick', () => {
+    // Reviewer repro: standard at (0,0,0), obstacle at (3,0,0), mounted 'px' at
+    // (2,1,0). The mounted brick's rotated X extent is [1.0, 4.0] studs, which
+    // overlaps the obstacle at x=[3,4]. findCollisions must detect this.
+    const support = brick({ id: 'support' })
+    const obstacle = brick({ id: 'obstacle', x: 3 })
+    const ghost = brick({ x: 2, y: 1, mount: 'px' })
+    expect(isValidPlacement(ghost, [support, obstacle])).toBe(false)
+  })
+
+  it('accepts a mounted brick whose rotated body clears all existing bricks', () => {
+    // Same layout but obstacle moved to x=5 — no X overlap with mounted [1,4].
+    const support = brick({ id: 'support' })
+    const clear = brick({ id: 'clear', x: 5 })
+    const ghost = brick({ x: 2, y: 1, mount: 'px' })
+    expect(isValidPlacement(ghost, [support, clear])).toBe(true)
+  })
+
+  it('rejects a nz-mounted brick whose rotated body intersects a standard brick', () => {
+    // 'nz' at (0,1,2): Z extent [1.0, 4.0], anti-stud at z=4.0.
+    // Support at (0,0,4) provides lateral contact (sr.zLo=4.0 = anti-stud).
+    // Obstacle at (0,0,3): z=[3,4] overlaps the mounted body. Must be rejected.
+    const support = brick({ id: 'support', z: 4 })
+    const obstacle = brick({ id: 'obstacle', z: 3 })
+    const ghost = brick({ z: 2, y: 1, mount: 'nz' })
+    expect(isValidPlacement(ghost, [support, obstacle])).toBe(false)
   })
 
   it('rejects offset-plus-mount placements as unsupported', () => {

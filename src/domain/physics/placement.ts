@@ -13,7 +13,7 @@
  */
 import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
-import type { PlacedBrick, HalfStudOffset } from '../model/types'
+import type { PlacedBrick, HalfStudOffset, BrickMount } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
 import {
   toBrickFootprint,
@@ -52,6 +52,91 @@ export interface BrickFootprint {
    * `z: 1` means +0.5 stud shift along Z. Absent/undefined is no shift.
    */
   readonly offset?: HalfStudOffset
+  /**
+   * Optional mount direction for SNOT / lateral bricks. When set, this brick
+   * attaches to a neighbour via a lateral face rather than a vertical
+   * stud/anti-stud coupling, and the `hasLateralContact` geometry check is
+   * used to establish the connection edge.
+   */
+  readonly mount?: BrickMount
+}
+
+/** Tolerance for comparing world-space contact-face positions (half-integer safe). */
+const FACE_EPS = 1e-9
+
+/**
+ * Returns true when `mounted` (a brick with a mount direction) makes physical
+ * face-to-face contact with `standard` (a conventionally-oriented brick) via a
+ * lateral coupling.
+ *
+ * Geometry: each mount direction corresponds to a 90-degree rotation that maps
+ * the brick's plate height H onto a lateral span, and the footprint width W or
+ * depth L onto the post-rotation Y extent. The anti-stud contact face world
+ * position is computed from the footprint centroid ± H/2.
+ */
+function hasLateralContact(
+  mounted: BrickFootprint,
+  standard: BrickFootprint,
+): boolean {
+  const mr = bfpToRect(mounted)
+  const sr = bfpToRect(standard)
+  const H = mounted.height
+
+  // Physical Y extent of the mounted brick after rotation.
+  // 'px'/'nx' rotate around Z: Y half-width = W (footprint X extent / 2).
+  // 'pz'/'nz' rotate around X: Y half-width = L (footprint Z extent / 2).
+  const W = mr.xHi - mr.xLo
+  const L = mr.zHi - mr.zLo
+  const mountedYHalfWidth =
+    mounted.mount === 'pz' || mounted.mount === 'nz' ? L / 2 : W / 2
+  const mountedYCenter = mounted.bottomY + H / 2
+  const mountedYLo = mountedYCenter - mountedYHalfWidth
+  const mountedYHi = mountedYCenter + mountedYHalfWidth
+
+  // Y ranges must strictly overlap (positive-measure contact).
+  if (mountedYLo >= standard.bottomY + standard.height) return false
+  if (mountedYHi <= standard.bottomY) return false
+
+  const xCenter = (mr.xLo + mr.xHi) / 2
+  const zCenter = (mr.zLo + mr.zHi) / 2
+
+  switch (mounted.mount) {
+    case 'px':
+      // Stud face → +X; anti-stud at world X = xCenter − H/2.
+      // The standard brick's +X face (sr.xHi) must sit at that position.
+      return (
+        Math.abs(sr.xHi - (xCenter - H / 2)) <= FACE_EPS &&
+        sr.zLo < mr.zHi &&
+        sr.zHi > mr.zLo
+      )
+
+    case 'nx':
+      // Stud face → −X; anti-stud at world X = xCenter + H/2.
+      return (
+        Math.abs(sr.xLo - (xCenter + H / 2)) <= FACE_EPS &&
+        sr.zLo < mr.zHi &&
+        sr.zHi > mr.zLo
+      )
+
+    case 'pz':
+      // Stud face → +Z; anti-stud at world Z = zCenter − H/2.
+      return (
+        Math.abs(sr.zHi - (zCenter - H / 2)) <= FACE_EPS &&
+        sr.xLo < mr.xHi &&
+        sr.xHi > mr.xLo
+      )
+
+    case 'nz':
+      // Stud face → −Z; anti-stud at world Z = zCenter + H/2.
+      return (
+        Math.abs(sr.zLo - (zCenter + H / 2)) <= FACE_EPS &&
+        sr.xLo < mr.xHi &&
+        sr.xHi > mr.xLo
+      )
+
+    default:
+      return false
+  }
 }
 
 /** Graph node id standing in for the baseplate (the ground). */
@@ -113,16 +198,36 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   // bottom sits at the same Y plane and whose footprint rect overlaps with
   // positive area. This reproduces exact-cell coupling for integer-aligned
   // bricks and additionally handles half-stud-offset (jumper) bricks.
+  // Mounted (SNOT) bricks are excluded from this scan: their stud/anti-stud
+  // faces are lateral, not vertical, so they connect via hasLateralContact.
   for (const b of all) {
     if (b.hasTopStuds === false) continue
+    if (b.mount !== undefined) continue
     const topY = b.bottomY + b.height
     const candidates = byBottomY.get(topY)
     if (!candidates) continue
     const bRect = bfpToRect(b)
     for (const other of candidates) {
       if (other.id === b.id) continue
+      if (other.mount !== undefined) continue
       if (rectsOverlap(bRect, bfpToRect(other))) {
         graph.mergeEdge(b.id, other.id)
+      }
+    }
+  }
+
+  // Lateral connections for mounted (SNOT) bricks.
+  // A mounted brick couples to any standard (non-mounted) brick whose contact
+  // face aligns with the mounted brick's anti-stud face and whose Y extent
+  // physically overlaps.
+  const mountedBricks = all.filter((b) => b.mount !== undefined)
+  if (mountedBricks.length > 0) {
+    const standardBricks = all.filter((b) => b.mount === undefined)
+    for (const m of mountedBricks) {
+      for (const s of standardBricks) {
+        if (hasLateralContact(m, s)) {
+          graph.mergeEdge(m.id, s.id)
+        }
       }
     }
   }

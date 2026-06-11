@@ -127,6 +127,32 @@ describe('buildConnectionGraph', () => {
     expect(graph.hasEdge('tile', 'top')).toBe(false)
   })
 
+  it('does not create an edge between two mounted bricks (both excluded from vertical scan)', () => {
+    const m1: PlacedBrick = {
+      id: 'm1',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    }
+    const m2: PlacedBrick = {
+      id: 'm2',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 3,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    }
+
+    const graph = buildConnectionGraph([m1, m2], PART_CATALOG)
+    expect(graph.hasEdge('m1', 'm2')).toBe(false)
+  })
+
   it('couples a half-stud-offset (jumper) brick to all supporters it physically overlaps', () => {
     // Two 1x1 supporters side by side in X at y=0.
     // The top brick has offset.x=1 (+0.5 stud shift in X), so its footprint rect
@@ -163,5 +189,87 @@ describe('buildConnectionGraph', () => {
     const graph = buildConnectionGraph([left, right, top], PART_CATALOG)
     expect(graph.hasEdge('top', 'left')).toBe(true)
     expect(graph.hasEdge('top', 'right')).toBe(true)
+  })
+})
+
+describe('lateral connections (SNOT mount)', () => {
+  it("connects a mounted 'px' brick to the standard brick whose +X face aligns with its anti-stud", () => {
+    // brick-1x1 height=3, W=1. Mounted 'px' at x=2: anti-stud world X = 2.5 - 1.5 = 1.0.
+    // Standard at x=0: xHi = 1.0. Contact face matches.
+    const standard: PlacedBrick = {
+      id: 'std',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+    const mounted: PlacedBrick = {
+      id: 'mnt',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 2,
+      y: 0,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    }
+
+    const graph = buildConnectionGraph([standard, mounted], PART_CATALOG)
+    expect(graph.hasEdge('std', 'mnt')).toBe(true)
+  })
+
+  it('does not connect a mounted brick whose anti-stud face does not align with any standard face', () => {
+    // Standard at x=0: xHi=1.0. Mounted 'px' at x=4: anti-stud = 4.5 - 1.5 = 3.0 ≠ 1.0.
+    const standard: PlacedBrick = {
+      id: 'std',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+    const mounted: PlacedBrick = {
+      id: 'mnt',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 4,
+      y: 0,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    }
+
+    const graph = buildConnectionGraph([standard, mounted], PART_CATALOG)
+    expect(graph.hasEdge('std', 'mnt')).toBe(false)
+  })
+
+  it("connects a mounted 'nz' brick to the standard brick whose −Z face aligns with its anti-stud", () => {
+    // Mounted 'nz' at z=2: anti-stud world Z = zCenter(2.5) + H/2(1.5) = 4.0.
+    // Standard at z=4: zLo=4.0. Contact face matches.
+    const standard: PlacedBrick = {
+      id: 'std',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 4,
+      rot: 0,
+    }
+    const mounted: PlacedBrick = {
+      id: 'mnt',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 0,
+      y: 0,
+      z: 2,
+      rot: 0,
+      mount: 'nz',
+    }
+
+    const graph = buildConnectionGraph([standard, mounted], PART_CATALOG)
+    expect(graph.hasEdge('std', 'mnt')).toBe(true)
   })
 })

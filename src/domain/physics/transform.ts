@@ -4,18 +4,13 @@ import {
   toBrickFootprint,
   getOccupiedCells,
   getOccupiedHalfStudCells,
+  getMountedBrickVolumeBounds,
 } from '../parts/footprint'
 import { groundedIds } from './placement'
 import { BASEPLATE_SIZE_STUDS } from '../grid'
 
 function usesUnsupportedMountPlacement(brick: PlacedBrick): boolean {
-  if (brick.mount === undefined) {
-    return false
-  }
-
-  // Render-first SNOT in #365 supports baseplate-authored mounted bricks only.
-  // Mixed/elevated mount physics land in #366.
-  return brick.y !== 0 || brick.offset !== undefined
+  return brick.mount !== undefined && brick.offset !== undefined
 }
 
 /**
@@ -93,17 +88,37 @@ export function findCollisions(
     const def = catalog[brick.partId]
     if (!def) continue
 
-    const cells = getOccupiedHalfStudCells(brick, def)
-    for (const cell of cells) {
-      // A brick occupies cells from y to y + height - 1
-      for (let dy = 0; dy < def.height; dy++) {
-        const key = `${cell.x}|${cell.z}|${brick.y + dy}`
-        const existingId = occupancy.get(key)
-        if (existingId && existingId !== brick.id) {
-          collisions.add(existingId)
-          collisions.add(brick.id)
-        } else {
-          occupancy.set(key, brick.id)
+    if (brick.mount !== undefined) {
+      // Mounted bricks are rotated 90°; compute their actual physical volume.
+      const { xHalfMin, xHalfMax, yMin, yMax, zHalfMin, zHalfMax } =
+        getMountedBrickVolumeBounds(brick, def)
+      for (let hx = xHalfMin; hx <= xHalfMax; hx++) {
+        for (let hz = zHalfMin; hz <= zHalfMax; hz++) {
+          for (let py = yMin; py <= yMax; py++) {
+            const key = `${hx}|${hz}|${py}`
+            const existingId = occupancy.get(key)
+            if (existingId && existingId !== brick.id) {
+              collisions.add(existingId)
+              collisions.add(brick.id)
+            } else {
+              occupancy.set(key, brick.id)
+            }
+          }
+        }
+      }
+    } else {
+      const cells = getOccupiedHalfStudCells(brick, def)
+      for (const cell of cells) {
+        // A brick occupies cells from y to y + height - 1
+        for (let dy = 0; dy < def.height; dy++) {
+          const key = `${cell.x}|${cell.z}|${brick.y + dy}`
+          const existingId = occupancy.get(key)
+          if (existingId && existingId !== brick.id) {
+            collisions.add(existingId)
+            collisions.add(brick.id)
+          } else {
+            occupancy.set(key, brick.id)
+          }
         }
       }
     }
@@ -122,13 +137,27 @@ export function bricksOutsideBaseplate(
   for (const brick of bricks) {
     const def = catalog[brick.partId]
     if (!def) continue
-    const cells = getOccupiedCells(brick, def)
-    if (
-      cells.some(
-        (cell) => cell.x < 0 || cell.x >= size || cell.z < 0 || cell.z >= size,
-      )
-    ) {
-      outside.push(brick.id)
+    if (brick.mount !== undefined) {
+      const { xHalfMin, xHalfMax, zHalfMin, zHalfMax } =
+        getMountedBrickVolumeBounds(brick, def)
+      if (
+        xHalfMin < 0 ||
+        xHalfMax >= size * 2 ||
+        zHalfMin < 0 ||
+        zHalfMax >= size * 2
+      ) {
+        outside.push(brick.id)
+      }
+    } else {
+      const cells = getOccupiedCells(brick, def)
+      if (
+        cells.some(
+          (cell) =>
+            cell.x < 0 || cell.x >= size || cell.z < 0 || cell.z >= size,
+        )
+      ) {
+        outside.push(brick.id)
+      }
     }
   }
   return outside
@@ -161,15 +190,28 @@ export function canPlaceGroup(
 
     const def = catalog[brick.partId]
     if (!def) continue
-    const cells = getOccupiedHalfStudCells(brick, def)
-    for (const cell of cells) {
+    if (brick.mount !== undefined) {
+      const { xHalfMin, xHalfMax, zHalfMin, zHalfMax } =
+        getMountedBrickVolumeBounds(brick, def)
       if (
-        cell.x < 0 ||
-        cell.x >= baseplateSize * 2 ||
-        cell.z < 0 ||
-        cell.z >= baseplateSize * 2
+        xHalfMin < 0 ||
+        xHalfMax >= baseplateSize * 2 ||
+        zHalfMin < 0 ||
+        zHalfMax >= baseplateSize * 2
       ) {
         return false
+      }
+    } else {
+      const cells = getOccupiedHalfStudCells(brick, def)
+      for (const cell of cells) {
+        if (
+          cell.x < 0 ||
+          cell.x >= baseplateSize * 2 ||
+          cell.z < 0 ||
+          cell.z >= baseplateSize * 2
+        ) {
+          return false
+        }
       }
     }
     // Also check Y bounds (bottom >= 0)

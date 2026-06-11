@@ -170,6 +170,44 @@ describe('selectCollapsingBricks', () => {
     expect(result).not.toContain('base')
   })
 
+  it('treats a mounted brick connected via lateral contact as stable', () => {
+    // brick-2x2 at (0,0,0) has xHi=2. Mounted 'px' brick-1x1 at (3,1,0):
+    // anti-stud = 3.5-1.5 = 2.0 = xHi → lateral contact. Y overlap: [2,3] vs [0,3] ✓
+    // Combined CoM (1.5, 0.9) is inside the 2x2 support hull → no collapse.
+    const bricks: PlacedBrick[] = [
+      brick('std', 'brick-2x2', 0, 0, 0),
+      {
+        id: 'mnt',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 3,
+        y: 1,
+        z: 0,
+        rot: 0,
+        mount: 'px' as const,
+      },
+    ]
+    expect(selectCollapsingBricks(bricks)).toEqual(new Set())
+  })
+
+  it('collapses a mounted brick that loses its lateral connection when the supporting standard brick is removed', () => {
+    // Without the standard brick the mounted brick at y=1 has no path to the baseplate.
+    const bricks: PlacedBrick[] = [
+      {
+        id: 'mnt',
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 3,
+        y: 1,
+        z: 0,
+        rot: 0,
+        mount: 'px' as const,
+      },
+    ]
+    const result = selectCollapsingBricks(bricks)
+    expect(result).toContain('mnt')
+  })
+
   it('treats a brick resting only on a tile (hasTopStuds=false) as floating', () => {
     // tile at y=0 is grounded but has no top studs — the plate above cannot couple
     // through it, so the plate has no path to the baseplate and must collapse.

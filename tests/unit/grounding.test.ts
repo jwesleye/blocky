@@ -147,6 +147,80 @@ describe('offset-aware grounding (placement path)', () => {
   })
 })
 
+describe('lateral connections for mounted (SNOT) bricks', () => {
+  it('grounds a mounted brick at y=0 via baseplate (fallback grounding)', () => {
+    const m: BrickFootprint = {
+      id: 'm',
+      bottomY: 0,
+      height: 3,
+      cells: [{ x: 2, z: 0 }],
+      mount: 'px',
+    }
+    expect(groundedIds([m])).toContain('m')
+  })
+
+  it('grounds an elevated mounted brick that has lateral contact with a grounded standard brick', () => {
+    // standard 1x1 at (0,0,0): xHi=1.0. Mounted 'px' at (2,1,0): anti-stud = 2.5-1.5 = 1.0 ✓
+    // Y overlap: mounted [2.0, 3.0] vs standard [0, 3] → overlap ✓
+    const s: BrickFootprint = {
+      id: 's',
+      bottomY: 0,
+      height: 3,
+      cells: [{ x: 0, z: 0 }],
+    }
+    const m: BrickFootprint = {
+      id: 'm',
+      bottomY: 1,
+      height: 3,
+      cells: [{ x: 2, z: 0 }],
+      mount: 'px',
+    }
+    expect(groundedIds([s, m])).toContain('m')
+    expect(floatingIds([s, m])).not.toContain('m')
+  })
+
+  it('reports a mounted brick as floating when no standard brick makes lateral contact', () => {
+    // Standard at x=0 (xHi=1). Mounted 'px' at (5,1,0): anti-stud = 5.5-1.5 = 4.0 ≠ 1.0.
+    const s: BrickFootprint = {
+      id: 's',
+      bottomY: 0,
+      height: 3,
+      cells: [{ x: 0, z: 0 }],
+    }
+    const m: BrickFootprint = {
+      id: 'm',
+      bottomY: 1,
+      height: 3,
+      cells: [{ x: 5, z: 0 }],
+      mount: 'px',
+    }
+    expect(floatingIds([s, m])).toContain('m')
+    expect(groundedIds([s, m])).not.toContain('m')
+  })
+
+  it('does not spuriously couple a mounted brick via the vertical stud scan', () => {
+    // If mounted were included in the vertical scan, a standard brick at y=0 (topY=3)
+    // would couple to a mounted brick at bottomY=3 just because their Y faces touch.
+    // The mount flag must prevent this — the mounted brick must be explicitly floating.
+    const s: BrickFootprint = {
+      id: 's',
+      bottomY: 0,
+      height: 3,
+      cells: [{ x: 0, z: 0 }],
+    }
+    const m: BrickFootprint = {
+      id: 'm',
+      bottomY: 3,
+      height: 3,
+      cells: [{ x: 0, z: 0 }],
+      mount: 'px',
+    }
+    // Lateral contact check: mounted 'px' anti-stud = 0.5-1.5 = -1.0, standard xHi=1.0 → no contact.
+    // Vertical scan skips mounted bricks as recipients.
+    expect(floatingIds([s, m])).toContain('m')
+  })
+})
+
 describe('canPlace (anti-floating hard rule)', () => {
   it('allows a brick placed directly on the baseplate', () => {
     expect(canPlace(brick('new', 4, 4, 0), [])).toBe(true)
