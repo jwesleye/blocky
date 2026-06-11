@@ -31,11 +31,11 @@ function matchesTestIgnore(testIgnore: unknown, path: string): boolean {
 describe('playwright e2e defaults (issue #191)', () => {
   it('uses the preview server instead of the Vite dev server', () => {
     expect(playwrightConfig.workers).toBe(4)
-    expect(playwrightConfig.use?.baseURL).toBe('http://127.0.0.1:4174')
+    expect(playwrightConfig.use?.baseURL).toBe('http://localhost:4174')
     expect(playwrightConfig.webServer).toMatchObject({
       command:
-        'npm run build -- --mode e2e && npm run preview -- --host 127.0.0.1 --port 4174',
-      url: 'http://127.0.0.1:4174',
+        'npm run build -- --mode e2e && npm run preview -- --host localhost --port 4174',
+      url: 'http://localhost:4174',
       timeout: 120_000,
     })
   })
