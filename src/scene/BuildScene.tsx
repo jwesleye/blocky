@@ -157,7 +157,7 @@ function brickPointerToGhostGrid(
  * Renders the live build as static meshes, overlays the ghost placement cursor,
  * and runs the Rapier collapse simulation while a collapse is in flight.
  */
-export function Scene() {
+export function BuildScene() {
   const bricks = useBuildStore((state) => state.bricks)
   const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const activeCollapse = useBuildStore((state) => state.activeCollapse)
@@ -313,4 +313,4 @@ export function Scene() {
   )
 }
 
-export default Scene
+export default BuildScene

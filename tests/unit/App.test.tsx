@@ -6,8 +6,8 @@ vi.mock('@react-three/fiber', () => ({
   Canvas: () => <canvas data-testid="scene-canvas" />,
 }))
 
-vi.mock('@/scene/Scene', () => ({
-  Scene: () => <canvas data-testid="interactive-scene" />,
+vi.mock('@/scene/BuildScene', () => ({
+  BuildScene: () => <canvas data-testid="interactive-scene" />,
 }))
 
 import { App } from '@/App'
