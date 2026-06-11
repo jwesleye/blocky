@@ -2,7 +2,7 @@ import { connectedComponents } from 'graphology-components'
 
 import type { PlacedBrick } from '../model/types'
 import { CATALOG_BY_ID as PART_CATALOG } from '../parts/catalog'
-import { getOccupiedCells } from '../parts/footprint'
+import { forEachOccupiedCell } from '../parts/footprint'
 import { computeCoM, computeSupportFootprint, isBalanced } from './balance'
 import { buildConnectionGraph } from './graph'
 
@@ -51,33 +51,58 @@ function getOutermostProjection(
 
   const ox = 0.5 * (brick.offset?.x ?? 0)
   const oz = 0.5 * (brick.offset?.z ?? 0)
-  const projections = getOccupiedCells(brick, def).map(
-    ({ x, z }) =>
-      (x + 0.5 + ox) * direction.x + (z + 0.5 + oz) * direction.z,
-  )
+  let projection = Number.NEGATIVE_INFINITY
 
-  return projections.length > 0
-    ? Math.max(...projections)
-    : Number.NEGATIVE_INFINITY
+  forEachOccupiedCell(brick, def, ({ x, z }) => {
+    projection = Math.max(
+      projection,
+      (x + 0.5 + ox) * direction.x + (z + 0.5 + oz) * direction.z,
+    )
+  })
+
+  return projection
 }
 
-function isConnected(bricks: PlacedBrick[]): boolean {
-  if (bricks.length <= 1) return true
-  return (
-    connectedComponents(buildConnectionGraph(bricks, PART_CATALOG)).length === 1
-  )
+function isConnectedRemainder(
+  graph: ReturnType<typeof buildConnectionGraph>,
+  remainderIds: Set<string>,
+): boolean {
+  if (remainderIds.size <= 1) return true
+
+  const [start] = remainderIds
+  const visited = new Set<string>([start])
+  const stack = [start]
+
+  while (stack.length > 0) {
+    const id = stack.pop()
+    if (!id) continue
+
+    for (const neighbor of graph.neighbors(id)) {
+      if (!remainderIds.has(neighbor) || visited.has(neighbor)) continue
+      visited.add(neighbor)
+      stack.push(neighbor)
+    }
+  }
+
+  return visited.size === remainderIds.size
 }
 
 function sortByShearPriority(component: PlacedBrick[]): PlacedBrick[] {
   const direction = getOverhangDirection(component)
+  const projections = new Map(
+    component.map((brick) => [
+      brick.id,
+      getOutermostProjection(brick, direction),
+    ]),
+  )
 
   return [...component].sort((a, b) => {
     const groundedDelta = Number(a.y === 0) - Number(b.y === 0)
     if (groundedDelta !== 0) return groundedDelta
 
     const projectionDelta =
-      getOutermostProjection(b, direction) -
-      getOutermostProjection(a, direction)
+      (projections.get(b.id) ?? Number.NEGATIVE_INFINITY) -
+      (projections.get(a.id) ?? Number.NEGATIVE_INFINITY)
     if (projectionDelta !== 0) return projectionDelta
 
     const heightDelta = b.y - a.y
@@ -97,6 +122,7 @@ export function findShearRegion(
 
   const candidates = sortByShearPriority(component)
   const shearIds = new Set<string>()
+  const graph = buildConnectionGraph(component, PART_CATALOG)
 
   for (const brick of candidates) {
     shearIds.add(brick.id)
@@ -104,8 +130,9 @@ export function findShearRegion(
     const remainder = component.filter(
       (candidate) => !shearIds.has(candidate.id),
     )
+    const remainderIds = new Set(remainder.map((candidate) => candidate.id))
     if (remainder.length === 0) continue
-    if (!isConnected(remainder)) continue
+    if (!isConnectedRemainder(graph, remainderIds)) continue
 
     // If we're in minimal mode, any valid shear that leaves the remainder connected is enough
     if (options.minimal) {

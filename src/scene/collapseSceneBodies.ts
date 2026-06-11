@@ -6,11 +6,28 @@ export interface CollapseSceneBody extends BrickBodySnapshot {
   opacity: number
 }
 
+const EMPTY_STATIC_BODIES: readonly BrickBodySnapshot[] = []
+const sceneBodyCache = new WeakMap<
+  CollapseTransaction,
+  WeakMap<readonly BrickBodySnapshot[], CollapseSceneBody[]>
+>()
+
 export function createCollapseSceneBodies(
   transaction: CollapseTransaction,
-  staticBodies: readonly BrickBodySnapshot[] = [],
+  staticBodies: readonly BrickBodySnapshot[] = EMPTY_STATIC_BODIES,
 ): CollapseSceneBody[] {
-  return [
+  const staticBodiesKey =
+    staticBodies.length === 0 ? EMPTY_STATIC_BODIES : staticBodies
+  let staticCache = sceneBodyCache.get(transaction)
+  if (!staticCache) {
+    staticCache = new WeakMap()
+    sceneBodyCache.set(transaction, staticCache)
+  }
+
+  const cached = staticCache.get(staticBodiesKey)
+  if (cached) return cached
+
+  const bodies = [
     ...staticBodies.map((body) => ({
       ...body,
       bodyType: 'fixed' as const,
@@ -22,6 +39,8 @@ export function createCollapseSceneBodies(
       opacity: body.opacity,
     })),
   ]
+  staticCache.set(staticBodiesKey, bodies)
+  return bodies
 }
 
 export function getDynamicBodyStates(

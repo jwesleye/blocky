@@ -46,4 +46,18 @@ describe('createCollapseSceneBodies classification', () => {
 
     expect(new Set(ids).size).toBe(ids.length)
   })
+
+  it('reuses scene-body objects for repeated identical inputs', () => {
+    const transaction = createCollapseTransaction({
+      allBricks: [],
+      collapsingBodies: [snapshot('shear-a'), snapshot('shear-b')],
+    })
+
+    const first = createCollapseSceneBodies(transaction, [])
+    const second = createCollapseSceneBodies(transaction, [])
+
+    expect(second).toHaveLength(first.length)
+    expect(second[0]).toBe(first[0])
+    expect(second[1]).toBe(first[1])
+  })
 })

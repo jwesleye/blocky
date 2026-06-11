@@ -20,22 +20,14 @@ export type ConnectionGraph = Graph
 export function buildConnectionGraph(
   bricks: PlacedBrick[],
   catalog: PartCatalog,
-): Graph {
-  const graph = new Graph({ type: 'undirected', allowSelfLoops: false })
-
-  for (const brick of bricks) {
-    graph.addNode(brick.id)
-  }
-
-  // Map from "x,z,yTop" → brick id so we can find bricks supporting from below.
-  const topFaceMap = new Map<string, string>()
-
-  for (const brick of bricks) {
-    const def = catalog[brick.partId]
-    if (!def) continue
-    const yTop = brick.y + def.heightY
-    for (const { x, z } of getOccupiedCells(brick, def)) {
-      topFaceMap.set(`${x},${z},${yTop}`, brick.id)
+): ConnectionGraph {
+  const footprints = []
+  const unknownIds: string[] = []
+  for (const b of bricks) {
+    if (catalog[b.partId]) {
+      footprints.push(toBrickFootprint(b, catalog))
+    } else {
+      unknownIds.push(b.id)
     }
   }
 

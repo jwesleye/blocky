@@ -15,7 +15,10 @@ export interface FootprintRect {
   zHi: number
 }
 
-export function getFootprintRect(brick: PlacedBrick, def: PartDef): FootprintRect {
+export function getFootprintRect(
+  brick: PlacedBrick,
+  def: PartDef,
+): FootprintRect {
   const [W, L] =
     brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
   const xLo = brick.x + 0.5 * (brick.offset?.x ?? 0)
@@ -55,17 +58,25 @@ export function getOccupiedHalfStudCells(
  * Rotations 1 and 3 swap width and length (90° / 270° turns about Y).
  */
 export function getOccupiedCells(brick: PlacedBrick, def: PartDef): Cell[] {
-  const [W, L] =
-    brick.rot % 2 === 0
-      ? [def.widthX, def.widthZ]
-      : [def.widthZ, def.widthX]
   const cells: Cell[] = []
+  forEachOccupiedCell(brick, def, (cell) => {
+    cells.push(cell)
+  })
+  return cells
+}
+
+export function forEachOccupiedCell(
+  brick: PlacedBrick,
+  def: PartDef,
+  visit: (cell: Cell) => void,
+): void {
+  const [W, L] =
+    brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
   for (let dx = 0; dx < W; dx++) {
     for (let dz = 0; dz < L; dz++) {
-      cells.push({ x: brick.x + dx, z: brick.z + dz })
+      visit({ x: brick.x + dx, z: brick.z + dz })
     }
   }
-  return cells
 }
 
 export function toBrickFootprint(
