@@ -31,7 +31,7 @@ export function buildConnectionGraph(
     }
   }
 
-  const g = buildFootprintGraph(footprints) as unknown as ConnectionGraph
+  const g: ConnectionGraph = buildFootprintGraph(footprints)
   if (g.hasNode(BASEPLATE)) g.dropNode(BASEPLATE)
 
   // Preserve backward compat: bricks with unknown partIds become isolated nodes.
