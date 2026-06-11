@@ -26,12 +26,15 @@ interface CursorState {
    */
   cursorBrick: CursorBrick
   editingTool: EditingTool
+  /** ID of the brick the pointer is currently hovering over, for touch delete. */
+  hoveredBrickId: string | null
   setColor: (id: string) => void
   setPart: (id: string) => void
   rotate: () => void
   rotateCursor: () => void
   toggleOffset: () => void
   setEditingTool: (tool: EditingTool) => void
+  setHoveredBrickId: (id: string | null) => void
   /** Copies a placed brick's partId and color into the cursor without mutating the build. */
   sampleBrick: (brick: { partId: string; color: string }) => void
 }
@@ -51,6 +54,7 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
     offset: undefined,
   },
   editingTool: 'place',
+  hoveredBrickId: null,
   setColor: (id) =>
     set((state) => ({
       colorId: id,
@@ -82,6 +86,7 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
       }
     }),
   setEditingTool: (tool) => set({ editingTool: tool }),
+  setHoveredBrickId: (id) => set({ hoveredBrickId: id }),
   sampleBrick: (brick) =>
     set((state) => ({
       partId: brick.partId,
