@@ -258,11 +258,16 @@ describe('BuildScene', () => {
     const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
 
     expect(lastInstancedBricksProps).not.toBeNull()
-    const ids = lastInstancedBricksProps?.bricks.map((b) => b.id)
+    const bricks = lastInstancedBricksProps!.bricks
+    const ids = bricks.map((b) => b.id)
     expect(ids).toContain('brick1')
     expect(ids).toContain('brick2')
-    const partTypes = lastInstancedBricksProps?.bricks.map((b) => b.partType)
+    const partTypes = bricks.map((b) => b.partType)
     expect(partTypes?.every((t) => t === 'brick')).toBe(true)
+    const brick1 = bricks.find((b) => b.id === 'brick1')
+    const brick2 = bricks.find((b) => b.id === 'brick2')
+    expect(brick1?.color).toBe('red')
+    expect(brick2?.color).toBe('blue')
 
     await renderer.unmount()
   })
