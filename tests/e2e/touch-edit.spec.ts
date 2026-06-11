@@ -1,9 +1,10 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import {
   projectToCanvas,
   waitForDevWindow,
   type DevWindow,
 } from './support/devWindow'
+import { touchPointerTap } from './touch-gestures'
 
 interface DevStore {
   getState: () => {
@@ -25,6 +26,31 @@ type TouchEditWindow = Omit<
 > & {
   __blockyStore: DevStore
   __blockyCursorStore: DevCursorStore
+}
+
+async function tapUntilBrickHovered(
+  page: Page,
+  point: { x: number; y: number },
+) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await touchPointerTap(page, point)
+
+    const hoveredBrickId = await page.evaluate(
+      () =>
+        (window as unknown as TouchEditWindow).__blockyCursorStore.getState()
+          .hoveredBrickId,
+    )
+    if (hoveredBrickId !== null) return
+
+    await page.waitForTimeout(100)
+  }
+
+  await page.waitForFunction(
+    () =>
+      (window as unknown as TouchEditWindow).__blockyCursorStore.getState()
+        .hoveredBrickId !== null,
+    { timeout: 3000 },
+  )
 }
 
 test.describe('touch edit controls', () => {
@@ -76,17 +102,8 @@ test.describe('touch edit controls', () => {
     })
     expect(brickId).toBeTruthy()
 
-    // Move pointer over the brick to set hoveredBrickId
     const brickPos = await projectToCanvas(page, 5, 1.5, 6)
-    await page.mouse.move(brickPos.x, brickPos.y)
-
-    // Wait for hoveredBrickId to be set in the cursor store
-    await page.waitForFunction(
-      () =>
-        (window as unknown as TouchEditWindow).__blockyCursorStore.getState()
-          .hoveredBrickId !== null,
-      { timeout: 3000 },
-    )
+    await tapUntilBrickHovered(page, brickPos)
 
     // Tap the delete button
     await page.locator('[data-testid="touch-delete"]').tap()
@@ -135,16 +152,10 @@ test.describe('touch edit controls', () => {
     expect(brickId).toBeTruthy()
 
     const brickPos = await projectToCanvas(page, 5, 1.5, 6)
-    await page.mouse.move(brickPos.x, brickPos.y)
-    await page.waitForFunction(
-      () =>
-        (window as unknown as TouchEditWindow).__blockyCursorStore.getState()
-          .hoveredBrickId !== null,
-      { timeout: 3000 },
-    )
+    await tapUntilBrickHovered(page, brickPos)
 
     const baseplatePos = await projectToCanvas(page, 12, 0, 12)
-    await page.mouse.move(baseplatePos.x, baseplatePos.y)
+    await touchPointerTap(page, baseplatePos)
 
     await page.waitForFunction(
       () =>
