@@ -15,16 +15,13 @@ export function ScreenshotCaptureBridge({ onReady }: Props) {
     const capture: CaptureScreenshot = () =>
       new Promise<Blob>((resolve, reject) => {
         gl.render(scene, camera)
-        gl.domElement.toBlob(
-          (blob) => {
-            if (!blob || blob.size === 0) {
-              reject(new Error('Screenshot capture returned an empty blob'))
-              return
-            }
-            resolve(blob)
-          },
-          SCREENSHOT_MIME_TYPE,
-        )
+        gl.domElement.toBlob((blob) => {
+          if (!blob || blob.size === 0) {
+            reject(new Error('Screenshot capture returned an empty blob'))
+            return
+          }
+          resolve(blob)
+        }, SCREENSHOT_MIME_TYPE)
       })
 
     onReady(capture)
