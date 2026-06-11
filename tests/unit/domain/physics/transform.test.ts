@@ -7,7 +7,10 @@ import {
   bricksOutsideBaseplate,
   mirrorBricks,
 } from '@/domain/physics/transform'
-import { getOccupiedCells } from '@/domain/parts/footprint'
+import {
+  getOccupiedCells,
+  getOccupiedHalfStudCells,
+} from '@/domain/parts/footprint'
 import type { PlacedBrick } from '@/domain/model/types'
 
 describe('Transform Physics', () => {
@@ -215,6 +218,167 @@ describe('Transform Physics', () => {
       const origW = b.rot % 2 === 0 ? def.width : def.length
       const newW = mirrored.rot % 2 === 0 ? def.width : def.length
       expect(newW).toBe(origW)
+    })
+
+    it('reflects half-stud offset cells across the X bounding box and recalculates the offset', () => {
+      // A classic 1x1 at x=0 and a half-stud-offset 1x1 sharing the same
+      // selection. The offset brick physically occupies half-stud cells 11,12.
+      const classic: PlacedBrick = {
+        id: 'classic',
+        partId: 'brick-1x1',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        color: 'red',
+      }
+      const offsetBrick: PlacedBrick = {
+        id: 'offset',
+        partId: 'brick-1x1',
+        x: 5,
+        y: 0,
+        z: 0,
+        rot: 0,
+        color: 'blue',
+        offset: { x: 1, z: 0 },
+      }
+
+      const def = PART_CATALOG['brick-1x1']
+      // Half-stud bounding box X: classic cells 0,1; offset cells 11,12 → 0..12
+      const reflect = (c: number) => 12 - c
+
+      const mirrored = mirrorBricks([classic, offsetBrick], 'x', PART_CATALOG)
+      const mClassic = mirrored.find((b) => b.id === 'classic')!
+      const mOffset = mirrored.find((b) => b.id === 'offset')!
+
+      const mClassicCells = getOccupiedHalfStudCells(mClassic, def)
+        .map((c) => c.x)
+        .sort((a, b) => a - b)
+      const mOffsetCells = getOccupiedHalfStudCells(mOffset, def)
+        .map((c) => c.x)
+        .sort((a, b) => a - b)
+
+      const reflectedClassic = getOccupiedHalfStudCells(classic, def)
+        .map((c) => reflect(c.x))
+        .sort((a, b) => a - b)
+      const reflectedOffset = getOccupiedHalfStudCells(offsetBrick, def)
+        .map((c) => reflect(c.x))
+        .sort((a, b) => a - b)
+
+      expect(mClassicCells).toEqual(reflectedClassic)
+      expect(mOffsetCells).toEqual(reflectedOffset)
+
+      // The classic brick lands on the offset slot; the offset brick lands flush.
+      expect(mClassic.x).toBe(5)
+      expect(mClassic.offset).toEqual({ x: 1, z: 0 })
+      expect(mOffset.x).toBe(0)
+      expect(mOffset.offset).toBeUndefined()
+    })
+
+    it('reflects half-stud offset cells across the Z bounding box and recalculates the offset', () => {
+      const classic: PlacedBrick = {
+        id: 'classic',
+        partId: 'brick-1x1',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        color: 'red',
+      }
+      const offsetBrick: PlacedBrick = {
+        id: 'offset',
+        partId: 'brick-1x1',
+        x: 0,
+        y: 0,
+        z: 5,
+        rot: 0,
+        color: 'blue',
+        offset: { x: 0, z: 1 },
+      }
+
+      const def = PART_CATALOG['brick-1x1']
+      const reflect = (c: number) => 12 - c
+
+      const mirrored = mirrorBricks([classic, offsetBrick], 'z', PART_CATALOG)
+      const mClassic = mirrored.find((b) => b.id === 'classic')!
+      const mOffset = mirrored.find((b) => b.id === 'offset')!
+
+      const mClassicCells = getOccupiedHalfStudCells(mClassic, def)
+        .map((c) => c.z)
+        .sort((a, b) => a - b)
+      const mOffsetCells = getOccupiedHalfStudCells(mOffset, def)
+        .map((c) => c.z)
+        .sort((a, b) => a - b)
+
+      const reflectedClassic = getOccupiedHalfStudCells(classic, def)
+        .map((c) => reflect(c.z))
+        .sort((a, b) => a - b)
+      const reflectedOffset = getOccupiedHalfStudCells(offsetBrick, def)
+        .map((c) => reflect(c.z))
+        .sort((a, b) => a - b)
+
+      expect(mClassicCells).toEqual(reflectedClassic)
+      expect(mOffsetCells).toEqual(reflectedOffset)
+
+      expect(mClassic.z).toBe(5)
+      expect(mClassic.offset).toEqual({ x: 0, z: 1 })
+      expect(mOffset.z).toBe(0)
+      expect(mOffset.offset).toBeUndefined()
+    })
+
+    it('preserves the non-mirrored offset axis when mirroring an offset brick', () => {
+      // Offset on both axes; mirroring on X must reflect only x and keep z.
+      const offsetBrick: PlacedBrick = {
+        id: 'offset',
+        partId: 'brick-1x1',
+        x: 3,
+        y: 0,
+        z: 4,
+        rot: 0,
+        color: 'blue',
+        offset: { x: 1, z: 1 },
+      }
+
+      const [mirrored] = mirrorBricks([offsetBrick], 'x', PART_CATALOG)
+      // Single brick: bounding box equals its own footprint, so it maps onto
+      // itself and the offset is unchanged.
+      expect(mirrored.offset).toEqual({ x: 1, z: 1 })
+      expect(mirrored.z).toBe(4)
+    })
+
+    it('mirroring an offset selection twice returns the original placement (involution)', () => {
+      const classic: PlacedBrick = {
+        id: 'classic',
+        partId: 'brick-1x1',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+        color: 'red',
+      }
+      const offsetBrick: PlacedBrick = {
+        id: 'offset',
+        partId: 'brick-1x1',
+        x: 5,
+        y: 0,
+        z: 0,
+        rot: 0,
+        color: 'blue',
+        offset: { x: 1, z: 0 },
+      }
+
+      const twice = mirrorBricks(
+        mirrorBricks([classic, offsetBrick], 'x', PART_CATALOG),
+        'x',
+        PART_CATALOG,
+      )
+      const tClassic = twice.find((b) => b.id === 'classic')!
+      const tOffset = twice.find((b) => b.id === 'offset')!
+
+      expect(tClassic.x).toBe(0)
+      expect(tClassic.offset).toBeUndefined()
+      expect(tOffset.x).toBe(5)
+      expect(tOffset.offset).toEqual({ x: 1, z: 0 })
     })
 
     it('mirroring the same group twice across the same axis returns original bricks (involution)', () => {
