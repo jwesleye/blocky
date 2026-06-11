@@ -1,4 +1,5 @@
 import type { PlacedBrick } from '@/domain/model/types'
+import type { PartType } from '@/domain/parts/catalog'
 
 export const STUD_SCENE_UNIT = 1
 export const PLATE_SCENE_UNIT = 1
@@ -13,7 +14,9 @@ export type RenderBrick = Pick<
   PlacedBrick,
   'partId' | 'color' | 'x' | 'y' | 'z' | 'rot'
 > &
-  Partial<Pick<PlacedBrick, 'id'>>
+  Partial<Pick<PlacedBrick, 'id'>> & {
+    partType: PartType
+  }
 
 export type PartDimsResolver = (partId: string) => PartDims
 
@@ -25,6 +28,7 @@ export interface BrickInstance {
 export interface InstanceBucket {
   key: string
   partId: string
+  partType: PartType
   color: string
   size: [number, number, number]
   instances: BrickInstance[]
@@ -55,13 +59,14 @@ export function groupBricksForInstancing(
 
   for (const brick of bricks) {
     const dims = getDims(brick.partId)
-    const key = `${brick.partId}::${brick.color}`
+    const key = `${brick.partType}::${brick.partId}::${brick.color}`
     const bucket =
       buckets.get(key) ??
       (() => {
         const nextBucket: InstanceBucket = {
           key,
           partId: brick.partId,
+          partType: brick.partType,
           color: brick.color,
           size: [
             dims.w * STUD_SCENE_UNIT,

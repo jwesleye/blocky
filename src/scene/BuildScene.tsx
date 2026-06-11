@@ -7,7 +7,11 @@ import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
 import { getBrickColor } from '@/domain/model/colors'
 import type { PlacedBrick, HalfStudOffset } from '@/domain/model/types'
-import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
+import {
+  CATALOG_BY_ID as PART_CATALOG,
+  getPart,
+  type PartType,
+} from '@/domain/parts/catalog'
 import { isValidPlacement } from '@/domain/physics/validity'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
@@ -28,6 +32,15 @@ const CollapseSimulation = lazy(() =>
     default: m.CollapseSimulation,
   })),
 )
+
+function toRenderPartType(partId: string): PartType | null {
+  const part = getPart(partId)
+  if (!part || part.category === 'baseplate') {
+    return null
+  }
+
+  return part.category
+}
 
 function GhostBrickMesh({
   grid,
@@ -181,6 +194,14 @@ export function BuildScene() {
   }, [activeCollapse])
 
   const placedBricks = useMemo(() => Object.values(bricks), [bricks])
+  const renderBricks = useMemo(
+    () =>
+      placedBricks.flatMap((brick) => {
+        const partType = toRenderPartType(brick.partId)
+        return partType ? [{ ...brick, partType }] : []
+      }),
+    [placedBricks],
+  )
   const ghostValid = useMemo(() => {
     if (!ghostGrid) return false
     const ghost: PlacedBrick = {
@@ -253,7 +274,7 @@ export function BuildScene() {
         onPointerEnterEmpty={() => setHoveredBrickId(null)}
       />
       <InstancedBricks
-        bricks={placedBricks}
+        bricks={renderBricks}
         getDims={(partId) => {
           const part = PART_CATALOG[partId]
           if (!part) {
