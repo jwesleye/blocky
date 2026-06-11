@@ -56,7 +56,9 @@ export function getOccupiedHalfStudCells(
  */
 export function getOccupiedCells(brick: PlacedBrick, def: PartDef): Cell[] {
   const [W, L] =
-    brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
+    brick.rot % 2 === 0
+      ? [def.widthX, def.widthZ]
+      : [def.widthZ, def.widthX]
   const cells: Cell[] = []
   for (let dx = 0; dx < W; dx++) {
     for (let dz = 0; dz < L; dz++) {

@@ -1,371 +1,62 @@
-import type { PartDef, PartCategory } from './types'
-export { partDefSchema } from './types'
-export type { PartDef, PartCategory } from './types'
+import { PartCategory, partDefSchema, type PartCatalog, type PartDef } from './types'
 
-/**
- * Physics-facing bounding-box shape for catalog record lookups.
- * Derived from PartDef and used by physics/placement modules.
- */
-export interface PhysicsPartDef {
-  width: number
-  length: number
-  height: number
-  hasTopStuds: boolean
+export type { PartCatalog, PartDef } from './types'
+
+function createPartDef(
+  id: string,
+  category: PartCategory,
+  widthX: number,
+  widthZ: number,
+  heightY: number,
+  hasTopStuds: boolean,
+): PartDef {
+  return partDefSchema.parse({ id, category, widthX, widthZ, heightY, hasTopStuds })
 }
 
-export type PartCatalog = Record<string, PhysicsPartDef>
+const B = (id: string, widthX: number, widthZ: number): PartDef =>
+  createPartDef(id, PartCategory.brick, widthX, widthZ, 3, true)
+const P = (id: string, widthX: number, widthZ: number): PartDef =>
+  createPartDef(id, PartCategory.plate, widthX, widthZ, 1, true)
+const T = (id: string, widthX: number, widthZ: number): PartDef =>
+  createPartDef(id, PartCategory.tile, widthX, widthZ, 1, false)
+const S = (id: string, widthX: number, widthZ: number): PartDef =>
+  createPartDef(id, PartCategory.slope, widthX, widthZ, 3, true)
+const R = (
+  id: string,
+  widthX: number,
+  widthZ: number,
+  heightY: number,
+  hasTopStuds: boolean,
+): PartDef => createPartDef(id, PartCategory.round, widthX, widthZ, heightY, hasTopStuds)
 
-export type PartType = 'brick' | 'plate' | 'tile' | 'slope' | 'round'
-
-export const PART_TYPE_LABELS: Record<PartType, string> = {
-  brick: 'Bricks',
-  plate: 'Plates',
-  tile: 'Tiles',
-  slope: 'Slopes',
-  round: 'Rounds & Specials',
-}
-
-export const PART_CATALOG: readonly PartDef[] = [
-  // Bricks (heightY = 3 plate units, hasTopStuds = true)
-  {
-    id: 'brick-1x1',
-    label: 'Brick 1×1',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 1,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-1x2',
-    label: 'Brick 1×2',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 2,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-1x3',
-    label: 'Brick 1×3',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 3,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-1x4',
-    label: 'Brick 1×4',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 4,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-1x6',
-    label: 'Brick 1×6',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 6,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-1x8',
-    label: 'Brick 1×8',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 8,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-2x2',
-    label: 'Brick 2×2',
-    category: 'brick',
-    widthX: 2,
-    widthZ: 2,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-2x3',
-    label: 'Brick 2×3',
-    category: 'brick',
-    widthX: 2,
-    widthZ: 3,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-2x4',
-    label: 'Brick 2×4',
-    category: 'brick',
-    widthX: 2,
-    widthZ: 4,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-2x6',
-    label: 'Brick 2×6',
-    category: 'brick',
-    widthX: 2,
-    widthZ: 6,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-2x8',
-    label: 'Brick 2×8',
-    category: 'brick',
-    widthX: 2,
-    widthZ: 8,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-1x10',
-    label: 'Brick 1×10',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 10,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'brick-1x12',
-    label: 'Brick 1×12',
-    category: 'brick',
-    widthX: 1,
-    widthZ: 12,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  // Plates (heightY = 1, hasTopStuds = true)
-  {
-    id: 'plate-1x1',
-    label: 'Plate 1×1',
-    category: 'plate',
-    widthX: 1,
-    widthZ: 1,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-1x2',
-    label: 'Plate 1×2',
-    category: 'plate',
-    widthX: 1,
-    widthZ: 2,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-1x4',
-    label: 'Plate 1×4',
-    category: 'plate',
-    widthX: 1,
-    widthZ: 4,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-2x2',
-    label: 'Plate 2×2',
-    category: 'plate',
-    widthX: 2,
-    widthZ: 2,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-2x4',
-    label: 'Plate 2×4',
-    category: 'plate',
-    widthX: 2,
-    widthZ: 4,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-2x6',
-    label: 'Plate 2×6',
-    category: 'plate',
-    widthX: 2,
-    widthZ: 6,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-2x8',
-    label: 'Plate 2×8',
-    category: 'plate',
-    widthX: 2,
-    widthZ: 8,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-4x4',
-    label: 'Plate 4×4',
-    category: 'plate',
-    widthX: 4,
-    widthZ: 4,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'plate-4x6',
-    label: 'Plate 4×6',
-    category: 'plate',
-    widthX: 4,
-    widthZ: 6,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  // Tiles (heightY = 1, smooth top — no top studs)
-  {
-    id: 'tile-1x1',
-    label: 'Tile 1×1',
-    category: 'tile',
-    widthX: 1,
-    widthZ: 1,
-    heightY: 1,
-    hasTopStuds: false,
-  },
-  {
-    id: 'tile-1x2',
-    label: 'Tile 1×2',
-    category: 'tile',
-    widthX: 1,
-    widthZ: 2,
-    heightY: 1,
-    hasTopStuds: false,
-  },
-  {
-    id: 'tile-2x2',
-    label: 'Tile 2×2',
-    category: 'tile',
-    widthX: 2,
-    widthZ: 2,
-    heightY: 1,
-    hasTopStuds: false,
-  },
-  {
-    id: 'tile-2x4',
-    label: 'Tile 2×4',
-    category: 'tile',
-    widthX: 2,
-    widthZ: 4,
-    heightY: 1,
-    hasTopStuds: false,
-  },
-  // Slopes (heightY = 3, hasTopStuds = true)
-  {
-    id: 'slope-2x1',
-    label: 'Slope 2×1',
-    category: 'slope',
-    widthX: 2,
-    widthZ: 1,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'slope-2x2',
-    label: 'Slope 2×2',
-    category: 'slope',
-    widthX: 2,
-    widthZ: 2,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'slope-corner',
-    label: 'Corner Slope',
-    category: 'slope',
-    widthX: 2,
-    widthZ: 2,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'slope-inverted',
-    label: 'Inverted Slope',
-    category: 'slope',
-    widthX: 2,
-    widthZ: 1,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  // Rounds & specials
-  {
-    id: 'round-brick-1x1',
-    label: 'Round Brick 1×1',
-    category: 'round',
-    widthX: 1,
-    widthZ: 1,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  {
-    id: 'round-plate-1x1',
-    label: 'Round Plate 1×1',
-    category: 'round',
-    widthX: 1,
-    widthZ: 1,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-  {
-    id: 'cone-1x1',
-    label: 'Cone 1×1',
-    category: 'round',
-    widthX: 1,
-    widthZ: 1,
-    heightY: 3,
-    hasTopStuds: true,
-  },
-  // Baseplate
-  {
-    id: 'baseplate-32x32',
-    label: 'Baseplate 32×32',
-    category: 'baseplate',
-    widthX: 32,
-    widthZ: 32,
-    heightY: 1,
-    hasTopStuds: true,
-  },
-]
-
-/**
- * Physics-facing lookup map keyed by part id.
- * Uses legacy width/length/height field names expected by physics modules.
- */
-export const CATALOG_BY_ID: PartCatalog = Object.fromEntries(
-  PART_CATALOG.map((part) => [
-    part.id,
-    {
-      width: part.widthX,
-      length: part.widthZ,
-      height: part.heightY,
-      hasTopStuds: part.hasTopStuds,
-    },
-  ]),
-)
-
-export const DEFAULT_PART_ID = 'brick-2x4'
-
-export function getPart(id: string): PartDef | undefined {
-  return PART_CATALOG.find((p) => p.id === id)
-}
-
-export function isValidPartId(id: string): boolean {
-  return PART_CATALOG.some((p) => p.id === id)
-}
-
-export function getPartsByCategory(category: PartCategory): readonly PartDef[] {
-  return PART_CATALOG.filter((p) => p.category === category)
+export const PART_CATALOG: PartCatalog = {
+  'brick-1x1': B('brick-1x1', 1, 1),
+  'brick-1x2': B('brick-1x2', 1, 2),
+  'brick-1x3': B('brick-1x3', 1, 3),
+  'brick-1x4': B('brick-1x4', 1, 4),
+  'brick-1x6': B('brick-1x6', 1, 6),
+  'brick-1x8': B('brick-1x8', 1, 8),
+  'brick-2x2': B('brick-2x2', 2, 2),
+  'brick-2x3': B('brick-2x3', 2, 3),
+  'brick-2x4': B('brick-2x4', 2, 4),
+  'brick-2x6': B('brick-2x6', 2, 6),
+  'brick-2x8': B('brick-2x8', 2, 8),
+  'plate-1x1': P('plate-1x1', 1, 1),
+  'plate-1x2': P('plate-1x2', 1, 2),
+  'plate-1x4': P('plate-1x4', 1, 4),
+  'plate-2x2': P('plate-2x2', 2, 2),
+  'plate-2x4': P('plate-2x4', 2, 4),
+  'plate-2x6': P('plate-2x6', 2, 6),
+  'plate-2x8': P('plate-2x8', 2, 8),
+  'tile-1x1': T('tile-1x1', 1, 1),
+  'tile-1x2': T('tile-1x2', 1, 2),
+  'tile-2x2': T('tile-2x2', 2, 2),
+  'tile-2x4': T('tile-2x4', 2, 4),
+  'slope-2x1': S('slope-2x1', 2, 1),
+  'slope-2x2': S('slope-2x2', 2, 2),
+  'slope-corner': S('slope-corner', 2, 2),
+  'slope-inverted': S('slope-inverted', 2, 1),
+  'round-brick-1x1': R('round-brick-1x1', 1, 1, 3, true),
+  'round-plate-1x1': R('round-plate-1x1', 1, 1, 1, true),
+  'cone-1x1': R('cone-1x1', 1, 1, 3, false),
 }

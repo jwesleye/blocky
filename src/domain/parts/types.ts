@@ -1,5 +1,20 @@
 import { z } from 'zod'
 
+export enum PartCategory {
+  brick = 'brick',
+  plate = 'plate',
+  tile = 'tile',
+  slope = 'slope',
+  round = 'round',
+  baseplate = 'baseplate',
+}
+
+export const partDefSchema = z.object({
+  id: z.string(),
+  category: z.nativeEnum(PartCategory),
+  widthX: z.number(),
+  widthZ: z.number(),
+  heightY: z.number(),
 export const partCategorySchema = z.enum([
   'brick',
   'plate',
@@ -22,3 +37,5 @@ export const partDefSchema = z.object({
 })
 
 export type PartDef = z.infer<typeof partDefSchema>
+
+export type PartCatalog = Record<string, PartDef>
