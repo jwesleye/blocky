@@ -2,20 +2,9 @@ import { useState } from 'react'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { useBuildStore } from '@/state/store'
 
-interface Props {
-  onExportScreenshot?: (() => Promise<void>) | null
-}
-
-export function PersistenceControls({ onExportScreenshot }: Props = {}) {
-  const { exportToJSON, importFromJSON, createShareLink, publishToGallery } =
-    useBuildPersistence()
+export function PersistenceControls() {
+  const { exportToJSON, importFromJSON } = useBuildPersistence()
   const placeBrick = useBuildStore((state) => state.placeBrick)
-  const [screenshotError, setScreenshotError] = useState<string | null>(null)
-  const [publishStatus, setPublishStatus] = useState<
-    'idle' | 'publishing' | 'success' | 'error'
-  >('idle')
-  const [publishMessage, setPublishMessage] = useState('')
-  const [shareUrl, setShareUrl] = useState('')
 
   const handleAddSample = () => {
     placeBrick({
