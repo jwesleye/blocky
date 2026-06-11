@@ -90,18 +90,6 @@ export function App() {
     setIsCaptureReady(true)
   }, [])
 
-  const handleExportScreenshot = isCaptureReady
-    ? async () => {
-        const capture = captureScreenshotRef.current
-        if (!capture) return
-        const blob = await capture()
-        await downloadScreenshot(blob)
-      }
-    : undefined
-
-  const currentColor = getBrickColor(colorId)
-  const currentPart = getPart(partId)
-
   const handleMirror = (axis: 'x' | 'z') => {
     const ok = mirrorSelection(axis)
     if (!ok) {

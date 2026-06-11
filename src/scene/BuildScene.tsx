@@ -255,7 +255,7 @@ export function BuildScene({
       offset,
     }
     return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
-  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot, offset])
+  }, [baseplateSize, colorId, ghostGrid, offset, partId, placedBricks, rot])
 
   const handlePlace = () => {
     if (editingTool !== 'place') return
@@ -295,7 +295,6 @@ export function BuildScene({
         position: CAMERA_DEFAULT_POSITION,
       }}
       gl={{ preserveDrawingBuffer: true }}
-      onClick={handlePlace}
       onPointerLeave={() => {
         setGhostGrid(null)
         setHoveredBrickId(null)
@@ -303,6 +302,24 @@ export function BuildScene({
       tabIndex={0}
       style={{ outline: 'none' }}
     >
+      <group onClick={handlePlace}>
+        <color attach="background" args={[BACKGROUND_COLOR]} />
+        <Lighting />
+        <CameraRig />
+        <CameraControls />
+        <ThreeDevExpose />
+        <Baseplate
+          size={baseplateSize}
+          onPointerPos={setGhostGrid}
+          onPointerEnterEmpty={() => setHoveredBrickId(null)}
+        />
+        <InstancedBricks
+          bricks={placedBricks}
+          getDims={(partId) => {
+            const part = PART_CATALOG[partId]
+            if (!part) {
+              throw new Error(`unknown partId "${partId}"`)
+            }
       <SceneEnvironment presetId={presetId} />
       <CameraRig />
       <CameraControls />
@@ -324,47 +341,48 @@ export function BuildScene({
             throw new Error(`unknown partId "${partId}"`)
           }
 
-          return {
-            w: part.width,
-            d: part.length,
-            h: part.height,
-          }
-        }}
-        getColor={(color) => getBrickColor(color)?.hex ?? color}
-        onInstanceClick={(brick, event) => {
-          event.stopPropagation()
-          if (brick.id) {
-            handleBrickClick(brick.id)
-          }
-        }}
-        onInstancePointerMove={(brick, event) => {
-          event.stopPropagation()
-          if (brick.id) setHoveredBrickId(brick.id)
-          const grid = brickPointerToGhostGrid(brick, event)
-          if (grid) setGhostGrid(grid)
-        }}
-        onInstancePointerDown={(brick, event) => {
-          event.stopPropagation()
-          if (brick.id) setHoveredBrickId(brick.id)
-          const grid = brickPointerToGhostGrid(brick, event)
-          if (grid) setGhostGrid(grid)
-        }}
-        onInstanceContextMenu={(brick, event) => {
-          event.stopPropagation()
-          if (brick.id) {
-            deleteBrick(brick.id)
-          }
-        }}
-      />
-      {ghostGrid && (
-        <GhostBrickMesh
-          grid={ghostGrid}
-          valid={ghostValid}
-          partId={partId}
-          rot={rot}
-          offset={offset}
+            return {
+              w: part.width,
+              d: part.length,
+              h: part.height,
+            }
+          }}
+          getColor={(color) => getBrickColor(color)?.hex ?? color}
+          onInstanceClick={(brick, event) => {
+            event.stopPropagation()
+            if (brick.id) {
+              handleBrickClick(brick.id)
+            }
+          }}
+          onInstancePointerMove={(brick, event) => {
+            event.stopPropagation()
+            if (brick.id) setHoveredBrickId(brick.id)
+            const grid = brickPointerToGhostGrid(brick, event)
+            if (grid) setGhostGrid(grid)
+          }}
+          onInstancePointerDown={(brick, event) => {
+            event.stopPropagation()
+            if (brick.id) setHoveredBrickId(brick.id)
+            const grid = brickPointerToGhostGrid(brick, event)
+            if (grid) setGhostGrid(grid)
+          }}
+          onInstanceContextMenu={(brick, event) => {
+            event.stopPropagation()
+            if (brick.id) {
+              deleteBrick(brick.id)
+            }
+          }}
         />
-      )}
+        {ghostGrid && (
+          <GhostBrickMesh
+            grid={ghostGrid}
+            valid={ghostValid}
+            partId={partId}
+            rot={rot}
+            offset={offset}
+          />
+        )}
+      </group>
       {activeCollapse && (
         <Suspense fallback={null}>
           <CollapseSimulation
