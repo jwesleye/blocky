@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { buildToBricks, validateBuild } from '@/domain/model/build'
 import { type GalleryBuildSummary, type GalleryClient } from '@/domain/persistence/galleryClient'
@@ -19,7 +19,7 @@ export interface GalleryState {
 }
 
 export function useGallery(client?: GalleryClient): GalleryState {
-  const defaultGallery = resolveDefaultGalleryClient()
+  const defaultGallery = useMemo(() => resolveDefaultGalleryClient(), [])
   const resolvedClient = client ?? defaultGallery.client
   const mode = client ? 'live' : defaultGallery.mode
   const [builds, setBuilds] = useState<GalleryBuildSummary[]>([])

@@ -6,6 +6,7 @@ import { Gallery } from '@/components/Gallery'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import type { Build } from '@/domain/model/build'
 import type { GalleryClient } from '@/domain/persistence/galleryClient'
+import * as galleryConfig from '@/domain/persistence/galleryConfig'
 import { SHARED_BUILD_CONTRACT_VERSION } from '@/domain/persistence/sharedBuildContract'
 import type { SharedBuildPayload } from '@/domain/persistence/sharedBuildContract'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
@@ -80,6 +81,7 @@ const resetStore = () => {
 describe('Gallery', () => {
   beforeEach(resetStore)
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllEnvs()
   })
 
@@ -170,5 +172,34 @@ describe('Gallery', () => {
 
     expect(await screen.findByText('Starter House')).toBeInTheDocument()
     expect(screen.getByText('Demo gallery')).toBeInTheDocument()
+  })
+
+  it('loads the default gallery client once when no client prop is provided', async () => {
+    vi.stubEnv('VITE_GALLERY_URL', '')
+
+    const list = vi.fn(async () => ({
+      ok: true as const,
+      builds: [
+        {
+          id: 'fixture-house',
+          title: 'Fixture House',
+          author: 'Casey',
+          brickCount: 2,
+          updatedAt: '2026-06-08T00:00:00.000Z',
+        },
+      ],
+    }))
+
+    vi.spyOn(galleryConfig, 'resolveDefaultGalleryClient').mockReturnValue({
+      client: makeClient({ list }),
+      mode: 'demo',
+    })
+
+    render(<Gallery />)
+
+    expect(await screen.findByText('Fixture House')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(list).toHaveBeenCalledTimes(1)
+    })
   })
 })
