@@ -47,8 +47,8 @@ over when you push it too far.
   collapses are simulated, and only briefly.
 - Not a CAD / instructions tool: no part numbers, BOM export, or building-step
   generation.
-- Not SNOT / Technic: no sideways building, hinges, pins, angled joints, or
-  half-stud offsets (see §6 building grammar).
+- Not full Technic or angled building: hinges, pins, and angled joints remain
+  deferred; half-stud offsets and SNOT are supported slices (see §6).
 - No mobile-first design (desktop-first; touch is a stretch goal).
 
 ---
