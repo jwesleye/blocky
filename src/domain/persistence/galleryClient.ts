@@ -127,7 +127,18 @@ const parsePayloadList = (json: string): SharedBuildPayload[] | null => {
     return null
   }
 
-  const result = SharedBuildPayloadSchema.array().safeParse(data)
+  if (
+    data === null ||
+    typeof data !== 'object' ||
+    !('builds' in data) ||
+    !Array.isArray((data as { builds: unknown }).builds)
+  ) {
+    return null
+  }
+
+  const result = SharedBuildPayloadSchema.array().safeParse(
+    (data as { builds: unknown }).builds,
+  )
   return result.success ? result.data : null
 }
 
