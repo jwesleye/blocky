@@ -2,10 +2,15 @@ import { useState } from 'react'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { useBuildStore } from '@/state/store'
 
-export function PersistenceControls() {
+interface Props {
+  onExportScreenshot?: (() => Promise<void>) | null
+}
+
+export function PersistenceControls({ onExportScreenshot }: Props = {}) {
   const { exportToJSON, importFromJSON, createShareLink, publishToGallery } =
     useBuildPersistence()
   const placeBrick = useBuildStore((state) => state.placeBrick)
+  const [screenshotError, setScreenshotError] = useState<string | null>(null)
   const [publishStatus, setPublishStatus] = useState<
     'idle' | 'publishing' | 'success' | 'error'
   >('idle')
@@ -21,6 +26,18 @@ export function PersistenceControls() {
       z: Math.floor(Math.random() * 20),
       rot: 0,
     })
+  }
+
+  const handleExportScreenshot = async () => {
+    if (!onExportScreenshot) return
+    setScreenshotError(null)
+    try {
+      await onExportScreenshot()
+    } catch (err) {
+      setScreenshotError(
+        'Screenshot failed: ' + (err instanceof Error ? err.message : String(err)),
+      )
+    }
   }
 
   const handleShare = () => {
@@ -59,6 +76,9 @@ export function PersistenceControls() {
       <h3>Persistence Controls</h3>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <button onClick={handleAddSample}>Add Sample Brick</button>
+        <button onClick={handleExportScreenshot} disabled={!onExportScreenshot}>
+          Export Screenshot
+        </button>
         <button onClick={exportToJSON}>Export JSON</button>
         <button onClick={importFromJSON}>Import JSON</button>
         <button onClick={handleShare}>Share Link</button>
@@ -80,6 +100,9 @@ export function PersistenceControls() {
           onFocus={(e) => e.currentTarget.select()}
           style={{ marginTop: '0.5rem', width: '100%' }}
         />
+      )}
+      {screenshotError && (
+        <p style={{ marginTop: '0.5rem', color: 'red' }}>{screenshotError}</p>
       )}
       {publishMessage && (
         <p

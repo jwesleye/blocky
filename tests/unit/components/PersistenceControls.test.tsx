@@ -130,6 +130,62 @@ describe('useBuildPersistence.loadFromShareUrl', () => {
   })
 })
 
+describe('PersistenceControls - screenshot export', () => {
+  beforeEach(resetStore)
+
+  it('renders an Export Screenshot button', () => {
+    render(<PersistenceControls />)
+    expect(
+      screen.getByRole('button', { name: 'Export Screenshot' }),
+    ).toBeInTheDocument()
+  })
+
+  it('Export Screenshot button is disabled when no capture function is provided', () => {
+    render(<PersistenceControls />)
+    expect(
+      screen.getByRole('button', { name: 'Export Screenshot' }),
+    ).toBeDisabled()
+  })
+
+  it('Export Screenshot button is enabled when a capture function is provided', () => {
+    const onExportScreenshot = vi.fn().mockResolvedValue(undefined)
+    render(<PersistenceControls onExportScreenshot={onExportScreenshot} />)
+    expect(
+      screen.getByRole('button', { name: 'Export Screenshot' }),
+    ).toBeEnabled()
+  })
+
+  it('calls onExportScreenshot when the button is clicked', async () => {
+    const onExportScreenshot = vi.fn().mockResolvedValue(undefined)
+    render(<PersistenceControls onExportScreenshot={onExportScreenshot} />)
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Export Screenshot' }),
+      )
+    })
+
+    expect(onExportScreenshot).toHaveBeenCalledOnce()
+  })
+
+  it('shows an error message when the capture function rejects', async () => {
+    const onExportScreenshot = vi
+      .fn()
+      .mockRejectedValue(new Error('empty capture'))
+    render(<PersistenceControls onExportScreenshot={onExportScreenshot} />)
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Export Screenshot' }),
+      )
+    })
+
+    expect(
+      await screen.findByText(/screenshot failed|empty capture/i),
+    ).toBeInTheDocument()
+  })
+})
+
 describe('PersistenceControls - publish failure paths', () => {
   beforeEach(() => {
     resetStore()

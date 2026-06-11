@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { BaseplateSizePicker } from '@/components/BaseplateSizePicker'
 import { ColorPicker } from '@/components/ColorPicker'
 import { EditingToolbar } from '@/components/EditingToolbar'
@@ -19,7 +19,8 @@ import {
   loadBuildFromShareSearch,
 } from '@/domain/persistence'
 import { useScenePresetPreference } from '@/hooks/useScenePresetPreference'
-import { BuildScene } from '@/scene/BuildScene'
+import { BuildScene, type CaptureScreenshot } from '@/scene/BuildScene'
+import { downloadScreenshot } from '@/lib/screenshotExport'
 import { useCursorStore } from '@/state/cursor'
 import { useSceneSettingsStore } from '@/state/sceneSettings'
 import { useBuildStore } from '@/state/store'
@@ -33,6 +34,8 @@ export function App() {
   const [mirrorFeedback, setMirrorFeedback] = useState<string | null>(null)
   const [galleryOpen, setGalleryOpen] = useState(false)
   useScenePresetPreference()
+  const captureScreenshotRef = useRef<CaptureScreenshot | null>(null)
+  const [isCaptureReady, setIsCaptureReady] = useState(false)
 
   const colorId = useCursorStore((s) => s.colorId)
   const partId = useCursorStore((s) => s.partId)
@@ -82,6 +85,20 @@ export function App() {
       autosaver.cancel()
     }
   }, [])
+
+  const handleCaptureFnReady = useCallback((fn: CaptureScreenshot) => {
+    captureScreenshotRef.current = fn
+    setIsCaptureReady(true)
+  }, [])
+
+  const handleExportScreenshot = isCaptureReady
+    ? async () => {
+        const capture = captureScreenshotRef.current
+        if (!capture) return
+        const blob = await capture()
+        await downloadScreenshot(blob)
+      }
+    : undefined
 
   const currentColor = getBrickColor(colorId)
   const currentPart = getPart(partId)
@@ -307,13 +324,13 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <BuildScene presetId={selectedPresetId} />
+          <BuildScene presetId={selectedPresetId} onCaptureFnReady={handleCaptureFnReady} />
           <ViewControls />
           <HUD />
           <TouchToolbar />
         </div>
         <div style={{ padding: '1rem' }}>
-          <PersistenceControls />
+          <PersistenceControls onExportScreenshot={handleExportScreenshot} />
           <button
             type="button"
             className="gallery-toggle"

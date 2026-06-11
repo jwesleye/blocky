@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import { Vector3, type PerspectiveCamera } from 'three'
@@ -26,7 +26,10 @@ import {
 import type { RenderBrick } from './instancing'
 import { InstancedBricks } from './InstancedBricks'
 import { SceneEnvironment } from './SceneEnvironment'
+import { ScreenshotCaptureBridge, type CaptureScreenshot } from './ScreenshotCaptureBridge'
 import { CAMERA_DEFAULT_FOV, CAMERA_DEFAULT_POSITION } from './sceneConfig'
+
+export type { CaptureScreenshot }
 
 const CollapseSimulation = lazy(() =>
   import('./CollapseSimulation').then((m) => ({
@@ -169,15 +172,19 @@ function brickPointerToGhostGrid(
   }
 }
 
+interface BuildSceneProps {
+  presetId?: SceneEnvironmentPresetId
+  onCaptureFnReady?: (fn: CaptureScreenshot) => void
+}
+
 /**
  * Renders the live build as static meshes, overlays the ghost placement cursor,
  * and runs the Rapier collapse simulation while a collapse is in flight.
  */
 export function BuildScene({
   presetId = DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
-}: {
-  presetId?: SceneEnvironmentPresetId
-}) {
+  onCaptureFnReady,
+}: BuildSceneProps = {}) {
   const bricks = useBuildStore((state) => state.bricks)
   const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const activeCollapse = useBuildStore((state) => state.activeCollapse)
@@ -193,6 +200,11 @@ export function BuildScene({
   const sampleBrick = useCursorStore((state) => state.sampleBrick)
   const setHoveredBrickId = useCursorStore((state) => state.setHoveredBrickId)
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
+
+  const stableOnCaptureFnReady = useCallback(
+    (fn: CaptureScreenshot) => onCaptureFnReady?.(fn),
+    [onCaptureFnReady],
+  )
 
   useEffect(() => {
     collapseDebug.dynamicBodyCount = activeCollapse
@@ -275,6 +287,9 @@ export function BuildScene({
       <CameraRig />
       <CameraControls />
       <ThreeDevExpose />
+      {onCaptureFnReady && (
+        <ScreenshotCaptureBridge onReady={stableOnCaptureFnReady} />
+      )}
       <Baseplate
         size={baseplateSize}
         color={preset.groundColor}
