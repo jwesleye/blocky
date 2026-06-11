@@ -126,6 +126,26 @@ describe('galleryClient.publish', () => {
     }
   })
 
+  it('returns network-error result with stable Network error prefix when fetch throws WebKit-style error', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('Load failed'))
+
+    const client = createGalleryClient('http://localhost:4000')
+    const result = await client.publish({
+      build: makeBuild(),
+      gallery: {
+        title: 'Test',
+        visibility: 'public',
+        author: { identityMode: 'anonymous' },
+      },
+    })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.reason).toBe('network-error')
+      expect(result.message).toMatch(/network error/i)
+    }
+  })
+
   it('returns unauthorized result when server responds 401', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response('Unauthorized', { status: 401 }),

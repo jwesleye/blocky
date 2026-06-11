@@ -194,7 +194,7 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
         return {
           ok: false,
           reason: 'network-error',
-          message: err instanceof Error ? err.message : 'Network error',
+          message: `Network error: ${err instanceof Error ? err.message : 'request failed'}`,
         }
       }
 
