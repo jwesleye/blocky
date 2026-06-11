@@ -82,7 +82,7 @@ async function seedBricks(
       lastCollapse: null,
     })
   }, bricks)
-  await expect(page.locator('h2:has-text("Build Status") + p')).toHaveText(
+  await expect(page.locator('.brick-count')).toHaveText(
     `Bricks in build: ${bricks.length}`,
   )
 }
@@ -181,7 +181,7 @@ test('restores a half-stud (v2) build from persisted storage after reload', asyn
           .bricks ?? {},
       ).length === 1,
   )
-  await expect(page.locator('h2:has-text("Build Status") + p')).toHaveText(
+  await expect(page.locator('.brick-count')).toHaveText(
     'Bricks in build: 1',
   )
 
