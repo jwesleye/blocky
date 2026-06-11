@@ -175,6 +175,26 @@ test('ghost click-to-place: hovering baseplate and clicking places exactly one b
   expect(await getBrickCount(page)).toBe(1)
 })
 
+test('ghost click-to-place: clicking on an invalid (out-of-bounds) position does not add a brick', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await waitForStores(page)
+
+  expect(await getBrickCount(page)).toBe(0)
+
+  // Move pointer way off the baseplate (size 32)
+  const oobPos = await projectToCanvas(page, 100, 0, 100)
+  await page.mouse.move(oobPos.x, oobPos.y)
+  await page.mouse.click(oobPos.x, oobPos.y)
+
+  // Wait a bit to ensure no placement happens
+  await page.waitForTimeout(500)
+
+  // Brick count should still be 0
+  expect(await getBrickCount(page)).toBe(0)
+})
+
 test('ghost click-to-place: clicking in paint mode does not add a brick', async ({
   page,
 }) => {

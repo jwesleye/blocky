@@ -28,7 +28,7 @@ const CollapseSimulation = lazy(() =>
   })),
 )
 
-function GhostBrickMesh({
+export function GhostBrickMesh({
   grid,
   valid,
   partId,
@@ -52,7 +52,7 @@ function GhostBrickMesh({
   ]
 
   return (
-    <mesh position={position} raycast={() => null}>
+    <mesh position={position} raycast={() => null} data-testid="ghost-brick">
       <boxGeometry args={[width * 0.97, part.height * 0.97, depth * 0.97]} />
       <meshStandardMaterial
         color={valid ? '#00ee55' : '#ff3333'}
@@ -64,7 +64,7 @@ function GhostBrickMesh({
   )
 }
 
-function Baseplate({
+export function Baseplate({
   size,
   onPointerMove,
 }: {
@@ -75,15 +75,19 @@ function Baseplate({
 
   return (
     <mesh
+      data-testid="baseplate"
       position={[sceneSize / 2, 0, sceneSize / 2]}
       rotation={[-Math.PI / 2, 0, 0]}
       receiveShadow
-      onPointerMove={(event) => {
-        event.stopPropagation()
+      onPointerMove={(event: any) => {
+        event.stopPropagation?.()
+        const point = event.point
+        if (!point) return
+
         onPointerMove({
-          x: Math.round(event.point.x / STUD),
+          x: Math.round(point.x / STUD),
           y: 0,
-          z: Math.round(event.point.z / STUD),
+          z: Math.round(point.z / STUD),
         })
       }}
     >
