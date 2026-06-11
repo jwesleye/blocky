@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { touchPointerDrag } from './touch-gestures'
 
 test.describe('touch camera controls', () => {
   test.use({ hasTouch: true })
@@ -30,11 +31,7 @@ test.describe('touch camera controls', () => {
     const cx = box!.x + box!.width / 2
     const cy = box!.y + box!.height / 2
 
-    // Simulate a drag (orbit)
-    await page.mouse.move(cx, cy)
-    await page.mouse.down()
-    await page.mouse.move(cx + 120, cy + 60, { steps: 15 })
-    await page.mouse.up()
+    await touchPointerDrag(page, { x: cx, y: cy }, { x: cx + 120, y: cy + 60 })
 
     // Allow the camera update to propagate
     await page.waitForTimeout(150)
@@ -48,7 +45,6 @@ test.describe('touch camera controls', () => {
       return { x: cam.position.x, y: cam.position.y, z: cam.position.z }
     })
 
-    // At least one camera axis should have changed
     const moved =
       Math.abs(after.x - before.x) > 0.01 ||
       Math.abs(after.y - before.y) > 0.01 ||

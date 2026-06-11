@@ -4,6 +4,7 @@ import {
   projectToCanvas,
   type DevWindow,
 } from './support/devWindow'
+import { touchPointerTap } from './touch-gestures'
 
 test('paint mode recolors a placed brick and undo restores the original color', async ({
   page,
@@ -195,7 +196,7 @@ test('switching back to place mode allows normal placement after eyedropper', as
   )
 
   const eyedropperPos = await projectToCanvas(page, 1, 1.5, 2)
-  await page.mouse.click(eyedropperPos.x, eyedropperPos.y)
+  await touchPointerTap(page, eyedropperPos)
 
   await page.click('[data-testid="tool-place"]')
   await expect(page.locator('[data-testid="tool-place"]')).toHaveAttribute(
@@ -210,8 +211,7 @@ test('switching back to place mode allows normal placement after eyedropper', as
   expect(activeTool).toBe('place')
 
   const placePos = await projectToCanvas(page, 4, 0, 0)
-  await page.mouse.move(placePos.x, placePos.y)
-  await page.mouse.click(placePos.x, placePos.y)
+  await touchPointerTap(page, placePos)
 
   await page.waitForFunction(
     () =>
