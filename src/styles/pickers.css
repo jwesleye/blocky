@@ -79,6 +79,10 @@
   height: 14px;
 }
 
+.part-btn__compact {
+  display: none;
+}
+
 .part-btn:hover {
   background: #3a3a3a;
 }
@@ -115,6 +119,10 @@
   flex-shrink: 0;
   width: 14px;
   height: 14px;
+}
+
+.baseplate-size-btn__compact {
+  display: none;
 }
 
 .baseplate-size-btn:hover {

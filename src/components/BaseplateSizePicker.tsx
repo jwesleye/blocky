@@ -106,6 +106,9 @@ export function BaseplateSizePicker() {
             <span className="baseplate-size-btn__label">
               {size} × {size}
             </span>
+            <span className="baseplate-size-btn__compact" aria-hidden={true}>
+              {size}
+            </span>
           </button>
         )
       })}
