@@ -130,9 +130,14 @@ return a network error but will not affect local autosave or imported builds.
 
 ### Storage Durability
 
-The current backend uses in-memory storage — all builds are lost on server
-restart. For production, replace the in-memory maps in `backend/src/store.ts`
-with a durable backend (database or object storage).
+The backend persists published builds, tombstones, report records, and the
+build-id counter to a JSON file under `GALLERY_DATA_DIR`. By default, that data
+directory is `backend/.gallery-data`, which keeps process restarts from losing
+gallery state during local development or single-instance deployments.
+
+For containerized or multi-host deployments, mount `GALLERY_DATA_DIR` to durable
+storage so the gallery data file survives container replacement and host
+failover.
 
 ### Migrating From Static-Only Hosting
 
