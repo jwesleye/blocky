@@ -166,4 +166,23 @@ describe('PersistenceControls - publish failure paths', () => {
     ).toBeInTheDocument()
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
   })
+
+  it('shows error message when backend is unavailable with WebKit-style error (Load failed) without mutating bricks', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('Load failed'))
+
+    render(<PersistenceControls />)
+    fireEvent.click(screen.getByRole('button', { name: 'Add Sample Brick' }))
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Publish to Gallery' }),
+      )
+    })
+
+    expect(
+      await screen.findByText(/failed to fetch|network error|error/i),
+    ).toBeInTheDocument()
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
+  })
 })
