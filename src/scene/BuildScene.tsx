@@ -13,7 +13,11 @@ import { Vector3, type PerspectiveCamera } from 'three'
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
 import { getBrickColor } from '@/domain/model/colors'
-import type { BrickMount, HalfStudOffset, PlacedBrick } from '@/domain/model/types'
+import type {
+  BrickMount,
+  HalfStudOffset,
+  PlacedBrick,
+} from '@/domain/model/types'
 import {
   CATALOG_BY_ID as PART_CATALOG,
   getPart,
@@ -296,7 +300,16 @@ export function BuildScene({
       mount,
     }
     return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
-  }, [baseplateSize, colorId, ghostGrid, partId, placedBricks, rot, offset, mount])
+  }, [
+    baseplateSize,
+    colorId,
+    ghostGrid,
+    partId,
+    placedBricks,
+    rot,
+    offset,
+    mount,
+  ])
 
   const handlePlace = () => {
     if (editingTool !== 'place') return
