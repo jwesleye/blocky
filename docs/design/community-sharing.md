@@ -102,8 +102,8 @@ accepts report submissions via `POST /builds/:id/reports`.
   response.
 - Reporting an unknown build id returns `404`.
 - Filing a report **never mutates the stored `SharedBuildPayload`**: reports are
-  stored beside the build data in a separate in-memory map, not inside the
-  payload itself.
+  stored beside the build data in a separate persisted collection, not inside
+  the payload itself.
 
 ## Privacy, Ownership, And Deletion
 
@@ -143,7 +143,8 @@ accepts report submissions via `POST /builds/:id/reports`.
 ### Backend Service
 
 The gallery backend (`backend/src/server.ts`) is a Node.js HTTP server that
-stores published builds in memory. It is a separate service from the static SPA.
+stores published builds in a JSON file on disk. It is a separate service from
+the static SPA.
 
 Run it locally:
 
@@ -157,10 +158,15 @@ Default port: `4000` (override with `PORT` env var).
 
 ### Storage
 
-The current implementation uses in-memory storage — builds are lost on server
-restart. A production deployment should replace the in-memory maps in
-`backend/src/store.ts` with a durable store (e.g. a database volume or
-object-storage bucket).
+The backend persists published builds, tombstones, report records, and the
+build-id counter to a JSON file under `GALLERY_DATA_DIR`. By default that data
+directory is `backend/.gallery-data`, which keeps process restarts from losing
+gallery state during local development or single-instance deployments.
+
+For containerized or multi-host deployments, mount `GALLERY_DATA_DIR` to a
+durable volume. The storage format intentionally keeps the canonical
+`SharedBuildPayload` separate from moderation reports so report submission never
+mutates the stored build payload.
 
 ### Environment Variables
 
@@ -168,6 +174,7 @@ object-storage bucket).
 | ------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `VITE_GALLERY_URL` | Frontend (Vite build) | Base URL of the gallery backend, e.g. `http://localhost:4000`. Leave unset to run the SPA without a gallery backend. |
 | `PORT`             | Backend               | Port for the gallery HTTP server. Defaults to `4000`.                                                                |
+| `GALLERY_DATA_DIR` | Backend               | Directory for the durable gallery data file. Defaults to `backend/.gallery-data`. Mount this path to durable storage in containers. |
 
 ### Migration From Static-Only Hosting
 

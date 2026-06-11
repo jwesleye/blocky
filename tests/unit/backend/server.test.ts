@@ -1,9 +1,14 @@
+import { mkdtempSync, rmSync } from 'node:fs'
 import { createServer } from 'node:http'
 import type { Server } from 'node:http'
-import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { beforeAll, afterAll, beforeEach, afterEach, describe, expect, it } from 'vitest'
 import { handler, MAX_BODY_BYTES } from '../../../backend/src/server'
 import {
   clearStore,
+  getReports,
+  reloadStore,
   storeBuild,
   generateBuildId,
 } from '../../../backend/src/store'
@@ -92,7 +97,18 @@ afterAll(async () => {
 })
 
 beforeEach(() => {
+  process.env['GALLERY_DATA_DIR'] = mkdtempSync(
+    join(tmpdir(), 'blocky-gallery-server-test-'),
+  )
   clearStore()
+})
+
+afterEach(() => {
+  const dataDir = process.env['GALLERY_DATA_DIR']
+  if (dataDir) {
+    rmSync(dataDir, { recursive: true, force: true })
+  }
+  delete process.env['GALLERY_DATA_DIR']
 })
 
 describe('POST /builds — publish', () => {
@@ -145,6 +161,27 @@ describe('POST /builds — publish', () => {
     })
     expect(res.status).toBe(422)
   })
+
+  it('keeps a published build loadable after the store reloads', async () => {
+    const res = await req('/builds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        build: validBuild,
+        gallery: validGallery,
+      }),
+    })
+
+    expect(res.status).toBe(201)
+    const published = (await res.json()) as SharedBuildPayload
+
+    reloadStore()
+
+    const getRes = await req(`/builds/${published.buildId}`)
+    expect(getRes.status).toBe(200)
+    const reloaded = (await getRes.json()) as SharedBuildPayload
+    expect(reloaded).toEqual(published)
+  })
 })
 
 describe('GET /builds/:id — load', () => {
@@ -175,6 +212,22 @@ describe('GET /builds/:id — load', () => {
     const res = await req(`/builds/${payload.buildId}`)
     expect(res.status).toBe(410)
   })
+
+  it('returns 410 for a deleted build after the store reloads', async () => {
+    const payload = makeAuthored('user1')
+    storeBuild(payload)
+
+    const deleteRes = await req(`/builds/${payload.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'user1' },
+    })
+    expect(deleteRes.status).toBe(200)
+
+    reloadStore()
+
+    const res = await req(`/builds/${payload.buildId}`)
+    expect(res.status).toBe(410)
+  })
 })
 
 describe('GET /builds — list', () => {
@@ -188,6 +241,27 @@ describe('GET /builds — list', () => {
       method: 'DELETE',
       headers: { 'x-user-id': 'owner1' },
     })
+
+    const res = await req('/builds')
+    const body = (await res.json()) as { builds: SharedBuildPayload[] }
+    const ids = body.builds.map((b) => b.buildId)
+    expect(ids).toContain(kept.buildId)
+    expect(ids).not.toContain(toDelete.buildId)
+  })
+
+  it('still excludes deleted builds after the store reloads', async () => {
+    const kept = makeAnonymous()
+    const toDelete = makeAuthored('owner1')
+    storeBuild(kept)
+    storeBuild(toDelete)
+
+    const deleteRes = await req(`/builds/${toDelete.buildId}`, {
+      method: 'DELETE',
+      headers: { 'x-user-id': 'owner1' },
+    })
+    expect(deleteRes.status).toBe(200)
+
+    reloadStore()
 
     const res = await req('/builds')
     const body = (await res.json()) as { builds: SharedBuildPayload[] }
@@ -336,6 +410,28 @@ describe('POST /builds/:id/reports — report', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason: 'spam' }),
     })
+
+    const getRes = await req(`/builds/${payload.buildId}`)
+    const fetched = (await getRes.json()) as unknown
+    expect(JSON.stringify(fetched)).toBe(payloadBefore)
+  })
+
+  it('persists reports across a store reload without mutating the build payload', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+    const payloadBefore = JSON.stringify(payload)
+
+    const reportRes = await req(`/builds/${payload.buildId}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'spam' }),
+    })
+    expect(reportRes.status).toBe(201)
+
+    reloadStore()
+
+    expect(getReports(payload.buildId)).toHaveLength(1)
+    expect(getReports(payload.buildId)[0]?.reason).toBe('spam')
 
     const getRes = await req(`/builds/${payload.buildId}`)
     const fetched = (await getRes.json()) as unknown
