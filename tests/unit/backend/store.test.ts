@@ -105,7 +105,7 @@ describe('gallery store durability', () => {
     expect(secondId).not.toBe(firstId)
   })
 
-  it('keeps tombstoned build ids deleted after a reload', () => {
+  it('keeps builds intact when delete lacks an authenticated principal', () => {
     const payload = makePayload(generateBuildId())
     payload.gallery.author = {
       identityMode: 'authenticated',
@@ -114,12 +114,15 @@ describe('gallery store durability', () => {
     }
 
     storeBuild(payload)
-    expect(deleteBuild(payload.buildId, 'owner-1')).toEqual({ success: true })
+    expect(deleteBuild(payload.buildId)).toEqual({
+      success: false,
+      reason: 'unauthorized',
+    })
 
     reloadStore()
 
-    expect(isBuildDeleted(payload.buildId)).toBe(true)
-    expect(getBuild(payload.buildId)).toBeUndefined()
+    expect(isBuildDeleted(payload.buildId)).toBe(false)
+    expect(getBuild(payload.buildId)).toEqual(payload)
   })
 
   it('persists reports beside build data without mutating the payload', () => {

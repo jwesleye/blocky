@@ -40,6 +40,12 @@ describe('docs/design/community-sharing.md — community sharing hardening guard
       expect(doc).toMatch(/delet/i)
     })
 
+    it('does not describe x-user-id as sufficient delete authorization', () => {
+      const doc = readFileSync(DOC_PATH, 'utf-8')
+      expect(doc).not.toMatch(/x-user-id/i)
+      expect(doc).toMatch(/authenticated principal|disabled until auth/i)
+    })
+
     it('documents deleted-content (tombstone/410) behavior', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(doc).toMatch(/410|tombstone|deleted.*build|build.*deleted/i)

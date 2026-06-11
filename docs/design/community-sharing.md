@@ -122,10 +122,10 @@ accepts report submissions via `POST /builds/:id/reports`.
 
 **Deletion authorization:**
 
-- `DELETE /builds/:id` succeeds only when the `x-user-id` request header
-  matches the build's `gallery.author.userId`.
-- `anonymous`-authored builds cannot be deleted via this endpoint (`403`).
-- A mismatched `userId` returns `403`.
+- `DELETE /builds/:id` is disabled until the backend has real authenticated
+  principal binding.
+- Caller-controlled headers are not treated as proof of ownership.
+- Existing builds return `403` until authenticated principal middleware exists.
 - An unknown build id returns `404`.
 
 **Deleted-content (tombstone) behavior:**
