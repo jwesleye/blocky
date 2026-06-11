@@ -2,6 +2,8 @@ import type { SharedBuildPayload } from './validation.js'
 import type { ReportRecord, ReportRequest } from './moderation.js'
 import { buildReportRecord } from './moderation.js'
 
+export const MAX_STORED_BUILDS = 1000
+
 const builds = new Map<string, SharedBuildPayload>()
 const deleted = new Set<string>()
 const reports = new Map<string, ReportRecord[]>()
@@ -15,6 +17,13 @@ export function generateBuildId(): string {
 
 export function storeBuild(payload: SharedBuildPayload): void {
   builds.set(payload.buildId, payload)
+  if (builds.size > MAX_STORED_BUILDS) {
+    const oldestBuildId = builds.keys().next().value
+    if (oldestBuildId !== undefined) {
+      builds.delete(oldestBuildId)
+      reports.delete(oldestBuildId)
+    }
+  }
 }
 
 export function getBuild(id: string): SharedBuildPayload | undefined {

@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import type { Server } from 'node:http'
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest'
-import { handler } from '../../../backend/src/server'
+import { handler, MAX_BODY_BYTES } from '../../../backend/src/server'
 import {
   clearStore,
   storeBuild,
@@ -97,15 +97,32 @@ beforeEach(() => {
 
 describe('POST /builds — publish', () => {
   it('returns 201 with the stored payload on valid request', async () => {
+    const requestBody = JSON.stringify({
+      build: validBuild,
+      gallery: validGallery,
+    })
+    expect(Buffer.byteLength(requestBody, 'utf8')).toBeLessThanOrEqual(
+      MAX_BODY_BYTES,
+    )
+
     const res = await req('/builds', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ build: validBuild, gallery: validGallery }),
+      body: requestBody,
     })
     expect(res.status).toBe(201)
     const body = (await res.json()) as SharedBuildPayload
     expect(body.buildId).toBeTruthy()
     expect(body.gallery.title).toBe('Test Build')
+  })
+
+  it('returns 413 when the request body exceeds the byte cap', async () => {
+    const res = await req('/builds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'x'.repeat(MAX_BODY_BYTES + 1),
+    })
+    expect(res.status).toBe(413)
   })
 
   it('returns 422 for invalid publish payload', async () => {
@@ -286,6 +303,18 @@ describe('POST /builds/:id/reports — report', () => {
       body: JSON.stringify({ reason: 'other', details: 'x'.repeat(2001) }),
     })
     expect(res.status).toBe(422)
+  })
+
+  it('returns 413 when the report request body exceeds the byte cap', async () => {
+    const payload = makeAnonymous()
+    storeBuild(payload)
+
+    const res = await req(`/builds/${payload.buildId}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'x'.repeat(MAX_BODY_BYTES + 1),
+    })
+    expect(res.status).toBe(413)
   })
 
   it('returns 404 for an unknown build id', async () => {

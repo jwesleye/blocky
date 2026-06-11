@@ -21,6 +21,18 @@ import type { SharedBuildPayload } from './validation.js'
 
 const PORT = process.env['PORT'] ? parseInt(process.env['PORT']) : 4000
 
+export const MAX_BODY_BYTES = 1_048_576
+
+class BodyTooLargeError extends Error {
+  constructor() {
+    super('body-too-large')
+  }
+}
+
+function isBodyTooLargeError(error: unknown): error is BodyTooLargeError {
+  return error instanceof BodyTooLargeError
+}
+
 function sendJSON(res: ServerResponse, status: number, body: unknown): void {
   const payload = JSON.stringify(body)
   res.writeHead(status, {
@@ -32,11 +44,35 @@ function sendJSON(res: ServerResponse, status: number, body: unknown): void {
   res.end(payload)
 }
 
+function sendBodyTooLarge(req: IncomingMessage, res: ServerResponse): void {
+  res.once('finish', () => req.destroy())
+  sendJSON(res, 413, { error: 'Request body too large' })
+}
+
 async function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => chunks.push(chunk))
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+    let totalBytes = 0
+    let bodyTooLarge = false
+
+    req.on('data', (chunk: Buffer) => {
+      if (bodyTooLarge) {
+        return
+      }
+      totalBytes += chunk.byteLength
+      if (totalBytes > MAX_BODY_BYTES) {
+        bodyTooLarge = true
+        req.pause()
+        reject(new BodyTooLargeError())
+        return
+      }
+      chunks.push(chunk)
+    })
+    req.on('end', () => {
+      if (!bodyTooLarge) {
+        resolve(Buffer.concat(chunks).toString('utf8'))
+      }
+    })
     req.on('error', reject)
   })
 }
@@ -61,7 +97,11 @@ export async function handler(
     let raw: string
     try {
       raw = await readBody(req)
-    } catch {
+    } catch (error) {
+      if (isBodyTooLargeError(error)) {
+        sendBodyTooLarge(req, res)
+        return
+      }
       sendJSON(res, 400, { error: 'Failed to read request body' })
       return
     }
@@ -155,7 +195,11 @@ export async function handler(
     let raw: string
     try {
       raw = await readBody(req)
-    } catch {
+    } catch (error) {
+      if (isBodyTooLargeError(error)) {
+        sendBodyTooLarge(req, res)
+        return
+      }
       sendJSON(res, 400, { error: 'Failed to read request body' })
       return
     }
