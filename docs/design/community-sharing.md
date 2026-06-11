@@ -170,10 +170,10 @@ mutates the stored build payload.
 
 ### Environment Variables
 
-| Variable           | Where used            | Purpose                                                                                                              |
-| ------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `VITE_GALLERY_URL` | Frontend (Vite build) | Base URL of the gallery backend, e.g. `http://localhost:4000`. Leave unset to run the SPA without a gallery backend. |
-| `PORT`             | Backend               | Port for the gallery HTTP server. Defaults to `4000`.                                                                |
+| Variable           | Where used            | Purpose                                                                                                                             |
+| ------------------ | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_GALLERY_URL` | Frontend (Vite build) | Base URL of the gallery backend, e.g. `http://localhost:4000`. Leave unset to run the SPA without a gallery backend.                |
+| `PORT`             | Backend               | Port for the gallery HTTP server. Defaults to `4000`.                                                                               |
 | `GALLERY_DATA_DIR` | Backend               | Directory for the durable gallery data file. Defaults to `backend/.gallery-data`. Mount this path to durable storage in containers. |
 
 ### Migration From Static-Only Hosting
