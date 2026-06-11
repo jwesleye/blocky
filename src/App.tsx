@@ -19,7 +19,7 @@ import {
   loadBuildFromShareSearch,
 } from '@/domain/persistence'
 import { useScenePresetPreference } from '@/hooks/useScenePresetPreference'
-import { BuildScene } from '@/scene/BuildScene'
+import { Scene } from '@/scene/Scene'
 import { useCursorStore } from '@/state/cursor'
 import { useSceneSettingsStore } from '@/state/sceneSettings'
 import { useBuildStore } from '@/state/store'
@@ -307,7 +307,7 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <BuildScene presetId={selectedPresetId} />
+          <Scene presetId={selectedPresetId} />
           <ViewControls />
           <HUD />
           <TouchToolbar />

@@ -11,13 +11,13 @@ import {
 } from '@/domain/persistence'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
-// jsdom has no WebGL context, so mock the r3f <Canvas> (see BuildScene.test.tsx).
+// jsdom has no WebGL context, so mock the canonical scene surface.
 vi.mock('@react-three/fiber', () => ({
   Canvas: () => <canvas data-testid="scene-canvas" />,
 }))
 
-vi.mock('@/scene/BuildScene', () => ({
-  BuildScene: () => <canvas data-testid="interactive-scene" />,
+vi.mock('@/scene/Scene', () => ({
+  Scene: () => <canvas data-testid="interactive-scene" />,
 }))
 
 const resetBuildStore = () => {
@@ -67,9 +67,7 @@ describe('App', () => {
 
   it('mirror controls have a labeled group and accessible button names', () => {
     const { getByRole } = render(<App />)
-    expect(
-      getByRole('group', { name: 'Mirror selection' }),
-    ).toBeInTheDocument()
+    expect(getByRole('group', { name: 'Mirror selection' })).toBeInTheDocument()
     expect(
       getByRole('button', { name: 'Mirror along X axis' }),
     ).toBeInTheDocument()
