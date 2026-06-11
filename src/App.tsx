@@ -6,6 +6,7 @@ import { Gallery } from '@/components/Gallery'
 import { HUD } from '@/components/HUD'
 import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
+import { SoundToggle } from '@/components/SoundToggle'
 import { ViewControls } from '@/components/ViewControls'
 import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import { bricksToBuild, buildToBricks } from '@/domain/model/build'
@@ -257,6 +258,22 @@ export function App() {
               {mirrorFeedback}
             </div>
           )}
+        </div>
+
+        <div style={{ borderTop: '1px solid #333', padding: '8px' }}>
+          <div
+            style={{
+              padding: '0 0 6px',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#888',
+            }}
+          >
+            Sound
+          </div>
+          <SoundToggle />
         </div>
       </aside>
 

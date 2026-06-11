@@ -7,6 +7,7 @@ import Graph from 'graphology'
 
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { createBrickId } from '@/domain/model/ids'
+import { playSoundEffect } from '@/lib/soundEffects'
 import {
   buildConnectionGraph,
   translateBrick,
@@ -180,19 +181,23 @@ export const useBuildStore = create<BuildStore>()(
               state.selection,
             ),
           )
+          playSoundEffect('place')
           return id
         },
 
-        deleteBrick: (id) =>
+        deleteBrick: (id) => {
+          if (!(id in get().bricks)) return
+
           set((state) => {
-            if (!(id in state.bricks)) return state
             const selection = new Set(state.selection)
             selection.delete(id)
             const bricks = Object.values(state.bricks).filter(
               (brick) => brick.id !== id,
             )
             return applyCollapse(bricks, selection)
-          }),
+          })
+          playSoundEffect('delete')
+        },
 
         recolorBrick: (id, color) =>
           set((state) => {
@@ -383,22 +388,20 @@ export const useBuildStore = create<BuildStore>()(
 
         setBaseplateSize: (size) => set({ baseplateSize: size }),
 
-        triggerCollapse: () =>
-          set((state) => {
-            const allBricks = Object.values(state.bricks)
-            const nextState = applyCollapse(
+        triggerCollapse: () => {
+          const state = get()
+          const allBricks = Object.values(state.bricks)
+          if (selectCollapsingBricks(allBricks).size === 0) return
+
+          set((currentState) =>
+            applyCollapse(
               allBricks,
-              state.selection,
-              state.bricks,
-            )
-            if (
-              nextState.bricks === state.bricks &&
-              nextState.selection === state.selection
-            ) {
-              return state
-            }
-            return nextState
-          }),
+              currentState.selection,
+              currentState.bricks,
+            ),
+          )
+          playSoundEffect('collapse')
+        },
 
         completeCollapse: () => set({ activeCollapse: null }),
 
