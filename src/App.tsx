@@ -12,8 +12,11 @@ import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
 import { bricksToBuild, buildToBricks } from '@/domain/model/build'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
-import { createAutosaver, loadBuild } from '@/domain/persistence'
-import { useBuildPersistence } from '@/hooks/useBuildPersistence'
+import {
+  createAutosaver,
+  loadBuild,
+  loadBuildFromShareSearch,
+} from '@/domain/persistence'
 import { BuildScene } from '@/scene/BuildScene'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
@@ -42,15 +45,21 @@ export function App() {
   const [hasHydratedPersistence, setHasHydratedPersistence] = useState(false)
 
   useEffect(() => {
-    const savedBuild = loadBuild()
-    if (savedBuild) {
-      const restoredBricks = buildToBricks(savedBuild)
+    const sharedBuild =
+      typeof window === 'undefined'
+        ? null
+        : loadBuildFromShareSearch(window.location.search)
+    const initialBuild = sharedBuild ?? loadBuild()
+
+    if (initialBuild) {
+      const restoredBricks = buildToBricks(initialBuild)
       useBuildStore.setState({
         bricks: Object.fromEntries(
           restoredBricks.map((brick) => [brick.id, brick]),
         ),
         selection: new Set(),
         lastCollapse: null,
+        baseplateSize: initialBuild.baseplate.size,
       })
     }
     setHasHydratedPersistence(true)
@@ -71,16 +80,6 @@ export function App() {
 
   const currentColor = getBrickColor(colorId)
   const currentPart = getPart(partId)
-
-  const { loadFromShareUrl } = useBuildPersistence()
-
-  // On initial mount, restore a build encoded in a share link (PRD section 7.3).
-  // Invalid or absent share payloads leave the current build untouched.
-  useEffect(() => {
-    loadFromShareUrl()
-    // Run once on mount; loadFromShareUrl reads window.location directly.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const handleMirror = (axis: 'x' | 'z') => {
     const ok = mirrorSelection(axis)
