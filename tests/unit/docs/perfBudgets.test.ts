@@ -68,21 +68,29 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
 
     it('does not claim npm run test:perf without the script and spec both existing', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      // Guard: if the doc lists `npm run test:perf` as a runnable command, both the
-      // package.json script and the owning spec must be present on this branch.
-      if (doc.match(/`npm run test:perf`/)) {
-        const pkg = JSON.parse(
-          readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
-        ) as {
-          scripts?: Record<string, string>
-        }
+      expect(doc, 'PERF_BUDGETS.md must reference the test:perf script').toMatch(/test:perf/)
+      const pkg = JSON.parse(
+        readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
+      ) as {
+        scripts?: Record<string, string>
+      }
+      expect(
+        pkg.scripts?.['test:perf'],
+        'package.json must define scripts["test:perf"]',
+      ).toBeDefined()
+      expect(
+        existsSync(join(process.cwd(), 'tests/perf/load-perf.spec.ts')),
+        'tests/perf/load-perf.spec.ts not found — owning spec for the load budget',
+      ).toBe(true)
+    })
+
+    it('does not reference a nonexistent perf spec', () => {
+      const doc = readFileSync(DOC_PATH, 'utf-8')
+      const specRefs = [...doc.matchAll(/tests\/perf\/[\w-]+\.spec\.ts/g)].map(m => m[0])
+      for (const specRef of specRefs) {
         expect(
-          pkg.scripts?.['test:perf'],
-          'doc claims `npm run test:perf` but script is absent from package.json',
-        ).toBeDefined()
-        expect(
-          existsSync(join(process.cwd(), 'tests/perf/load-budget.spec.ts')),
-          'doc claims `npm run test:perf` but tests/perf/load-budget.spec.ts is absent',
+          existsSync(join(process.cwd(), specRef)),
+          `doc references ${specRef} which does not exist on disk`,
         ).toBe(true)
       }
     })

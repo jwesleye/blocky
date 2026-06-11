@@ -81,7 +81,7 @@ time-to-first-interaction under simulated broadband throttling is planned for
 npm run build        # fails if entry bundle exceeds the 500 KiB gzip ceiling
 ```
 
-**Owning spec:** Vite bundle-size gate (enforced now); `tests/perf/load-budget.spec.ts`
+**Owning spec:** Vite bundle-size gate (enforced now); `tests/perf/load-perf.spec.ts`
 and the `test:perf` npm script land with [#53](https://github.com/jwesleye/blocky/issues/53).
 
 ### 3a. Async / runtime chunk warning threshold - documented exception
