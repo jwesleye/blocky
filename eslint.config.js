@@ -8,9 +8,13 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      'build',
       'coverage',
       'playwright-report',
       'test-results',
+      '.vite',
+      '.cache',
+      'logs',
       '.agentshore',
       'tmp',
     ],
