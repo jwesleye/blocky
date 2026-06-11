@@ -11,10 +11,21 @@ interface DevBuildStore {
     selection: { size: number }
     bricks: Record<
       string,
-      { id: string; partId: string; color: string; x: number; y: number; z: number }
+      {
+        id: string
+        partId: string
+        color: string
+        x: number
+        y: number
+        z: number
+      }
     >
   }
-  setState: (fn: (state: ReturnType<DevBuildStore['getState']>) => Partial<ReturnType<DevBuildStore['getState']>>) => void
+  setState: (
+    fn: (
+      state: ReturnType<DevBuildStore['getState']>,
+    ) => Partial<ReturnType<DevBuildStore['getState']>>,
+  ) => void
 }
 
 interface DevCursorStore {
@@ -34,7 +45,8 @@ async function waitForStores(page: import('@playwright/test').Page) {
   await page.waitForFunction(
     () =>
       (window as unknown as Partial<DevWindow>).__blockyStore !== undefined &&
-      (window as unknown as Partial<DevWindow>).__blockyCursorStore !== undefined,
+      (window as unknown as Partial<DevWindow>).__blockyCursorStore !==
+        undefined,
   )
 }
 
@@ -45,27 +57,24 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
   // Switch to paint via keyboard shortcut B
   await page.keyboard.press('b')
   const toolAfterB = await page.evaluate(() => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyCursorStore.getState().editingTool
+    return (window as unknown as DevWindow).__blockyCursorStore.getState()
+      .editingTool
   })
   expect(toolAfterB).toBe('paint')
 
   // Switch to eyedropper via keyboard shortcut I
   await page.keyboard.press('i')
   const toolAfterI = await page.evaluate(() => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyCursorStore.getState().editingTool
+    return (window as unknown as DevWindow).__blockyCursorStore.getState()
+      .editingTool
   })
   expect(toolAfterI).toBe('eyedropper')
 
   // Switch to place via keyboard shortcut P
   await page.keyboard.press('p')
   const toolAfterP = await page.evaluate(() => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyCursorStore.getState().editingTool
+    return (window as unknown as DevWindow).__blockyCursorStore.getState()
+      .editingTool
   })
   expect(toolAfterP).toBe('place')
 
@@ -76,9 +85,8 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
     'true',
   )
   const toolAfterClick = await page.evaluate(() => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyCursorStore.getState().editingTool
+    return (window as unknown as DevWindow).__blockyCursorStore.getState()
+      .editingTool
   })
   expect(toolAfterClick).toBe('paint')
 })
@@ -122,17 +130,16 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   }, ids)
 
   const selectionSize = await page.evaluate(() => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyStore.getState().selection.size
+    return (window as unknown as DevWindow).__blockyStore.getState().selection
+      .size
   })
   expect(selectionSize).toBe(2)
 
   // Move the selection
   const moveOk = await page.evaluate(() => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyStore.getState().moveSelection({ dx: 1, dy: 0, dz: 0 })
+    return (window as unknown as DevWindow).__blockyStore
+      .getState()
+      .moveSelection({ dx: 1, dy: 0, dz: 0 })
   })
   expect(moveOk).toBe(true)
 
@@ -146,21 +153,20 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
 
   // Switch to paint and recolor id1
   await page.evaluate(() => {
-    ;(
-      window as unknown as DevWindow
-    ).__blockyCursorStore.getState().setEditingTool('paint')
+    ;(window as unknown as DevWindow).__blockyCursorStore
+      .getState()
+      .setEditingTool('paint')
   })
   await page.evaluate((ids) => {
-    ;(window as unknown as DevWindow).__blockyStore.getState().recolorBrick(
-      ids[0],
-      'green',
-    )
+    ;(window as unknown as DevWindow).__blockyStore
+      .getState()
+      .recolorBrick(ids[0], 'green')
   }, ids)
 
   const colorAfterPaint = await page.evaluate((ids) => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyStore.getState().bricks[ids[0]].color
+    return (window as unknown as DevWindow).__blockyStore.getState().bricks[
+      ids[0]
+    ].color
   }, ids)
   expect(colorAfterPaint).toBe('green')
 
@@ -176,9 +182,9 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
     ;(window as unknown as DevWindow).__blockyStore.getState().undo()
   })
   const colorAfterUndo1 = await page.evaluate((ids) => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyStore.getState().bricks[ids[0]].color
+    return (window as unknown as DevWindow).__blockyStore.getState().bricks[
+      ids[0]
+    ].color
   }, ids)
   expect(colorAfterUndo1).toBe('red')
 
@@ -211,9 +217,9 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
     ;(window as unknown as DevWindow).__blockyStore.getState().redo()
   })
   const colorAfterRedo2 = await page.evaluate((ids) => {
-    return (
-      window as unknown as DevWindow
-    ).__blockyStore.getState().bricks[ids[0]].color
+    return (window as unknown as DevWindow).__blockyStore.getState().bricks[
+      ids[0]
+    ].color
   }, ids)
   expect(colorAfterRedo2).toBe('green')
 })

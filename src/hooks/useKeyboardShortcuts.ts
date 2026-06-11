@@ -45,7 +45,12 @@ export const useKeyboardShortcuts = (
         } else if (key === 'y' && !event.shiftKey) {
           handler = handlers.redo
         }
-      } else if (!event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey) {
+      } else if (
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
         if (key === 'r') {
           handler = handlers.rotate
         } else if (event.key === 'Home') {

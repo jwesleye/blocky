@@ -15,7 +15,11 @@ import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
 import type { PlacedBrick, HalfStudOffset } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
-import { toBrickFootprint, type FootprintRect, rectsOverlap } from '../parts/footprint'
+import {
+  toBrickFootprint,
+  type FootprintRect,
+  rectsOverlap,
+} from '../parts/footprint'
 
 interface PlacementGraph {
   mergeNode: (id: string) => void
