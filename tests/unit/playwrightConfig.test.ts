@@ -40,6 +40,12 @@ describe('playwright e2e defaults (issue #191)', () => {
     })
   })
 
+  it('always starts a fresh server (issue #303)', () => {
+    expect(playwrightConfig.webServer).toMatchObject({
+      reuseExistingServer: false,
+    })
+  })
+
   it('installs Playwright browsers before test:e2e runs', () => {
     const pkg = readPackageJson()
     expect(pkg.scripts?.['pretest:e2e']).toBe('playwright install')
@@ -93,6 +99,14 @@ describe('playwright.config.ts default matrix', () => {
         expect(matchesTestIgnore(project?.testIgnore, WEBGL2_E2E)).toBe(false)
       })
     }
+  })
+})
+
+describe('playwright.perf.config.ts fresh server (issue #303)', () => {
+  it('always starts a fresh server', () => {
+    expect(perfConfig.webServer).toMatchObject({
+      reuseExistingServer: false,
+    })
   })
 })
 
