@@ -3,14 +3,8 @@ import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { useBuildStore } from '@/state/store'
 
 export function PersistenceControls() {
-  const { exportToJSON, importFromJSON, createShareLink, publishToGallery } =
-    useBuildPersistence()
+  const { exportToJSON, importFromJSON } = useBuildPersistence()
   const placeBrick = useBuildStore((state) => state.placeBrick)
-  const [publishStatus, setPublishStatus] = useState<
-    'idle' | 'publishing' | 'success' | 'error'
-  >('idle')
-  const [publishMessage, setPublishMessage] = useState('')
-  const [shareUrl, setShareUrl] = useState('')
 
   const handleAddSample = () => {
     placeBrick({
@@ -21,6 +15,19 @@ export function PersistenceControls() {
       z: Math.floor(Math.random() * 20),
       rot: 0,
     })
+  }
+
+  const handleExportScreenshot = async () => {
+    if (!onExportScreenshot) return
+    setScreenshotError(null)
+    try {
+      await onExportScreenshot()
+    } catch (err) {
+      setScreenshotError(
+        'Screenshot failed: ' +
+          (err instanceof Error ? err.message : String(err)),
+      )
+    }
   }
 
   const handleShare = () => {
@@ -59,6 +66,9 @@ export function PersistenceControls() {
       <h3>Persistence Controls</h3>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <button onClick={handleAddSample}>Add Sample Brick</button>
+        <button onClick={handleExportScreenshot} disabled={!onExportScreenshot}>
+          Export Screenshot
+        </button>
         <button onClick={exportToJSON}>Export JSON</button>
         <button onClick={importFromJSON}>Import JSON</button>
         <button onClick={handleShare}>Share Link</button>
@@ -67,10 +77,13 @@ export function PersistenceControls() {
           disabled={publishStatus === 'publishing'}
         >
           {publishStatus === 'publishing'
-            ? 'Publishing…'
+            ? 'Publishing...'
             : 'Publish to Gallery'}
         </button>
       </div>
+      {screenshotError && (
+        <p style={{ marginTop: '0.5rem', color: 'red' }}>{screenshotError}</p>
+      )}
       {shareUrl && (
         <input
           readOnly

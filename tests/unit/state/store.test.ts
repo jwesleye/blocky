@@ -448,6 +448,63 @@ describe('useBuildStore', () => {
     })
   })
 
+  describe('multi-select undo/redo sequencing', () => {
+    it('selectBrick additive builds a multi-brick selection', () => {
+      const id1 = placeBrick({ ...sampleBrick, x: 0 })
+      const id2 = placeBrick({ ...sampleBrick, partId: 'brick-1x1', x: 8 })
+
+      useBuildStore.getState().selectBrick(id1)
+      useBuildStore.getState().selectBrick(id2, true)
+
+      expect(useBuildStore.getState().selection.size).toBe(2)
+      expect(useBuildStore.getState().selection).toEqual(new Set([id1, id2]))
+    })
+
+    it('undo/redo round-trips move then recolor across the full sequence', () => {
+      const id1 = placeBrick({ ...sampleBrick, x: 0, color: 'red' })
+      const id2 = placeBrick({
+        ...sampleBrick,
+        partId: 'brick-1x1',
+        color: 'blue',
+        x: 8,
+      })
+
+      useBuildStore.getState().selectBrick(id1)
+      useBuildStore.getState().selectBrick(id2, true)
+
+      // Move both bricks
+      const moved = useBuildStore
+        .getState()
+        .moveSelection({ dx: 1, dy: 0, dz: 0 })
+      expect(moved).toBe(true)
+      expect(useBuildStore.getState().bricks[id1].x).toBe(1)
+      expect(useBuildStore.getState().bricks[id2].x).toBe(9)
+
+      // Recolor one brick
+      useBuildStore.getState().recolorBrick(id1, 'green')
+      expect(useBuildStore.getState().bricks[id1].color).toBe('green')
+
+      // Undo recolor → color back to red, positions unchanged
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().bricks[id1].color).toBe('red')
+      expect(useBuildStore.getState().bricks[id1].x).toBe(1)
+
+      // Undo moveSelection → positions restored
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().bricks[id1].x).toBe(0)
+      expect(useBuildStore.getState().bricks[id2].x).toBe(8)
+
+      // Redo moveSelection → positions re-applied
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().bricks[id1].x).toBe(1)
+      expect(useBuildStore.getState().bricks[id2].x).toBe(9)
+
+      // Redo recolor → color re-applied
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().bricks[id1].color).toBe('green')
+    })
+  })
+
   describe('recolorBrick', () => {
     it('changes only the color field and preserves all other fields', () => {
       const id = placeBrick(sampleBrick)

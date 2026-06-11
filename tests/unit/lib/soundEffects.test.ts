@@ -6,18 +6,21 @@ import {
 } from '@/lib/soundEffects'
 
 type FakeAudioParam = {
-  setValueAtTime: ReturnType<typeof vi.fn>
-  exponentialRampToValueAtTime: ReturnType<typeof vi.fn>
-  linearRampToValueAtTime: ReturnType<typeof vi.fn>
+  setValueAtTime: (value: number, startTime: number) => void
+  exponentialRampToValueAtTime: (value: number, endTime: number) => void
+  linearRampToValueAtTime: (value: number, endTime: number) => void
 }
 
 type FakeAudioContext = ReturnType<typeof createFakeAudioContext>
 
 function createFakeAudioParam(): FakeAudioParam {
   return {
-    setValueAtTime: vi.fn(),
-    exponentialRampToValueAtTime: vi.fn(),
-    linearRampToValueAtTime: vi.fn(),
+    setValueAtTime: vi.fn<(value: number, startTime: number) => void>(),
+    exponentialRampToValueAtTime:
+      vi.fn<(value: number, endTime: number) => void>(),
+    linearRampToValueAtTime: vi.fn<
+      (value: number, endTime: number) => void
+    >(),
   }
 }
 

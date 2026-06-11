@@ -2,7 +2,7 @@ import type Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
 import { polygonContains, polygonHull } from 'd3-polygon'
 import type { PlacedBrick } from '../model/types'
-import type { PartCatalog } from '../parts/catalog'
+import type { PartCatalog } from '../parts/types'
 import { getOccupiedCells } from '../parts/footprint'
 
 export type Point2D = [number, number]
@@ -172,7 +172,41 @@ export function getUnbalancedBricks(
     const isGrounded = componentBricks.some((b) => b.y === 0)
     if (!isGrounded) continue
 
-    if (!isBalanced(componentBricks, catalog)) {
+    // Collect support corners (the 4 XZ corners of each cell touching y=0)
+    const supportCorners: Point2D[] = []
+    for (const brick of componentBricks) {
+      if (brick.y !== 0) continue
+      const def = catalog[brick.partId]
+      if (!def) continue
+      for (const { x, z } of getOccupiedCells(brick, def)) {
+        supportCorners.push([x, z], [x + 1, z], [x, z + 1], [x + 1, z + 1])
+      }
+    }
+
+    if (supportCorners.length === 0) continue
+
+    // Compute center of mass (mass ∝ footprint area × height)
+    let totalMass = 0
+    let comX = 0
+    let comZ = 0
+
+    for (const brick of componentBricks) {
+      const def = catalog[brick.partId]
+      if (!def) continue
+      const cells = getOccupiedCells(brick, def)
+      const mass = cells.length * def.heightY
+      const cx = cells.reduce((s, c) => s + c.x + 0.5, 0) / cells.length
+      const cz = cells.reduce((s, c) => s + c.z + 0.5, 0) / cells.length
+      comX += cx * mass
+      comZ += cz * mass
+      totalMass += mass
+    }
+
+    if (totalMass === 0) continue
+    comX /= totalMass
+    comZ /= totalMass
+
+    if (isOutsideSupport(supportCorners, comX, comZ)) {
       for (const id of component) {
         unbalanced.add(id)
       }

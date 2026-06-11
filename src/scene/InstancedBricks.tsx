@@ -2,8 +2,11 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { Instance, Instances } from '@react-three/drei'
 import { useMemo } from 'react'
 
+import { getPartGeometry } from './parts/geometries'
 import {
   groupBricksForInstancing,
+  PLATE_SCENE_UNIT,
+  STUD_SCENE_UNIT,
   type PartDimsResolver,
   type RenderBrick,
 } from './instancing'
@@ -41,7 +44,7 @@ export function InstancedBricks({
     const groupedSourceBricks = new Map<string, RenderBrick[]>()
 
     for (const brick of bricks) {
-      const key = `${brick.partId}::${brick.color}`
+      const key = `${brick.partType}::${brick.partId}::${brick.color}`
       const bucketBricks = groupedSourceBricks.get(key) ?? []
       bucketBricks.push(brick)
       groupedSourceBricks.set(key, bucketBricks)
@@ -63,7 +66,14 @@ export function InstancedBricks({
           castShadow
           receiveShadow
         >
-          <boxGeometry args={bucket.size} />
+          <primitive
+            object={getPartGeometry(bucket.partId, {
+              w: bucket.size[0] / STUD_SCENE_UNIT,
+              h: bucket.size[1] / PLATE_SCENE_UNIT,
+              d: bucket.size[2] / STUD_SCENE_UNIT,
+            })}
+            attach="geometry"
+          />
           <meshStandardMaterial color={getColor(bucket.color)} />
           {bucket.instances.map((instance, index) => {
             const brick = sourceBricksByKey.get(bucket.key)?.[index]

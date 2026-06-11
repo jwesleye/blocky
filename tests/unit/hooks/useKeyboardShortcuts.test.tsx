@@ -64,4 +64,76 @@ describe('useKeyboardShortcuts', () => {
     fireEvent.keyDown(window, { key: 'r' })
     expect(handlers.rotate).not.toHaveBeenCalled()
   })
+
+  it('maps p/b/i to tool-switch handlers', () => {
+    const handlers = {
+      setPlaceTool: vi.fn(),
+      setPaintTool: vi.fn(),
+      setEyedropperTool: vi.fn(),
+    }
+
+    render(<Host handlers={handlers} />)
+
+    fireEvent.keyDown(window, { key: 'p' })
+    fireEvent.keyDown(window, { key: 'b' })
+    fireEvent.keyDown(window, { key: 'i' })
+
+    expect(handlers.setPlaceTool).toHaveBeenCalledTimes(1)
+    expect(handlers.setPaintTool).toHaveBeenCalledTimes(1)
+    expect(handlers.setEyedropperTool).toHaveBeenCalledTimes(1)
+  })
+
+  it('p/b/i are ignored when the event target is an editable element', () => {
+    const handlers = {
+      setPlaceTool: vi.fn(),
+      setPaintTool: vi.fn(),
+      setEyedropperTool: vi.fn(),
+    }
+
+    const { getByRole } = render(<Host handlers={handlers} />)
+
+    fireEvent.keyDown(getByRole('textbox', { name: 'Name' }), { key: 'p' })
+    fireEvent.keyDown(getByRole('textbox', { name: 'Notes' }), { key: 'b' })
+    fireEvent.keyDown(getByRole('textbox', { name: 'Name' }), { key: 'i' })
+
+    expect(handlers.setPlaceTool).not.toHaveBeenCalled()
+    expect(handlers.setPaintTool).not.toHaveBeenCalled()
+    expect(handlers.setEyedropperTool).not.toHaveBeenCalled()
+  })
+
+  it('p/b/i are ignored when enabled is false', () => {
+    const handlers = {
+      setPlaceTool: vi.fn(),
+      setPaintTool: vi.fn(),
+      setEyedropperTool: vi.fn(),
+    }
+
+    render(<Host handlers={handlers} enabled={false} />)
+
+    fireEvent.keyDown(window, { key: 'p' })
+    fireEvent.keyDown(window, { key: 'b' })
+    fireEvent.keyDown(window, { key: 'i' })
+
+    expect(handlers.setPlaceTool).not.toHaveBeenCalled()
+    expect(handlers.setPaintTool).not.toHaveBeenCalled()
+    expect(handlers.setEyedropperTool).not.toHaveBeenCalled()
+  })
+
+  it('p/b/i are ignored when a modifier key is held', () => {
+    const handlers = {
+      setPlaceTool: vi.fn(),
+      setPaintTool: vi.fn(),
+      setEyedropperTool: vi.fn(),
+    }
+
+    render(<Host handlers={handlers} />)
+
+    fireEvent.keyDown(window, { key: 'p', shiftKey: true })
+    fireEvent.keyDown(window, { key: 'b', ctrlKey: true })
+    fireEvent.keyDown(window, { key: 'i', altKey: true })
+
+    expect(handlers.setPlaceTool).not.toHaveBeenCalled()
+    expect(handlers.setPaintTool).not.toHaveBeenCalled()
+    expect(handlers.setEyedropperTool).not.toHaveBeenCalled()
+  })
 })
