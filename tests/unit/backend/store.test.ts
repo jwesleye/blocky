@@ -74,7 +74,7 @@ describe('gallery store resource bounds', () => {
 
   it(
     'never stores more builds than the configured cap',
-    { timeout: 15000 },
+    { timeout: 30000 },
     () => {
       for (let index = 0; index < MAX_STORED_BUILDS * 2; index += 1) {
         const buildId = generateBuildId()

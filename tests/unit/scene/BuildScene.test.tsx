@@ -64,8 +64,8 @@ vi.mock('@/scene/InstancedBricks', () => ({
   },
 }))
 
-vi.mock('@/scene/Lighting', () => ({
-  Lighting: () => null,
+vi.mock('@/scene/SceneEnvironment', () => ({
+  SceneEnvironment: () => null,
 }))
 
 const resetBuildStore = () => {

@@ -1,4 +1,3 @@
-import { BRICK_COLORS } from '@/domain/model/colors'
 import { contrastRatio } from '@/lib/contrast'
 
 export interface SceneLight {
@@ -118,10 +117,3 @@ export const isReadableBrickColorOnPreset = (
     ) >= MIN_SURFACE_CONTRAST
   )
 }
-
-export const allPresetSurfacesKeepPaletteReadable = (): boolean =>
-  SCENE_ENVIRONMENT_PRESETS.every((preset) =>
-    BRICK_COLORS.every((color) =>
-      isReadableBrickColorOnPreset(color.hex, preset),
-    ),
-  )
