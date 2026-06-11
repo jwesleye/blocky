@@ -23,11 +23,17 @@ vi.mock('@react-three/fiber', async () => {
     Canvas: ({
       children,
       onClick,
+      onPointerDown,
+      onPointerMove,
     }: {
       children: ReactNode
       onClick?: () => void
+      onPointerDown?: (event: { clientX?: number; clientY?: number }) => void
+      onPointerMove?: (event: { clientX?: number; clientY?: number }) => void
     }) => {
       lastCanvasOnClick = onClick
+      lastCanvasOnPointerDown = onPointerDown
+      lastCanvasOnPointerMove = onPointerMove
       return <>{children}</>
     },
     useThree: () => ({
@@ -56,6 +62,12 @@ vi.mock('@/scene/CameraRig', () => ({
 
 let lastInstancedBricksProps: InstancedBricksProps | null = null
 let lastCanvasOnClick: (() => void) | undefined = undefined
+let lastCanvasOnPointerDown:
+  | ((event: { clientX?: number; clientY?: number }) => void)
+  | undefined = undefined
+let lastCanvasOnPointerMove:
+  | ((event: { clientX?: number; clientY?: number }) => void)
+  | undefined = undefined
 
 vi.mock('@/scene/InstancedBricks', () => ({
   InstancedBricks: (props: InstancedBricksProps) => {
@@ -110,6 +122,8 @@ describe('BuildScene', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true
     lastInstancedBricksProps = null
     lastCanvasOnClick = undefined
+    lastCanvasOnPointerDown = undefined
+    lastCanvasOnPointerMove = undefined
     resetBuildStore()
     resetCursorStore()
   })
@@ -345,6 +359,99 @@ describe('BuildScene', () => {
     const bricks = Object.values(useBuildStore.getState().bricks)
     expect(bricks).toHaveLength(1)
     expect(bricks[0]?.mount).toBe('px')
+
+    await renderer.unmount()
+  })
+
+  it('does not place a brick after a canvas drag gesture', async () => {
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+      stopPropagation: () => {},
+    })
+
+    lastCanvasOnPointerDown?.({ clientX: 100, clientY: 100 })
+    lastCanvasOnPointerMove?.({ clientX: 112, clientY: 100 })
+    lastCanvasOnClick?.()
+
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(0)
+
+    await renderer.unmount()
+  })
+
+  it('places a brick after a non-drag canvas tap', async () => {
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+      stopPropagation: () => {},
+    })
+
+    lastCanvasOnPointerDown?.({ clientX: 100, clientY: 100 })
+    lastCanvasOnPointerMove?.({ clientX: 102, clientY: 101 })
+    lastCanvasOnClick?.()
+
+    const bricks = Object.values(useBuildStore.getState().bricks)
+    expect(bricks).toHaveLength(1)
+    expect(bricks[0]).toMatchObject({ x: 2, y: 0, z: 3 })
+
+    await renderer.unmount()
+  })
+
+  it('does not place a brick after a touch tap starts on an existing brick', async () => {
+    useBuildStore.setState({
+      bricks: {
+        existing: {
+          id: 'existing',
+          partId: DEFAULT_PART_ID,
+          color: DEFAULT_COLOR_ID,
+          x: 2,
+          y: 0,
+          z: 3,
+          rot: 0,
+        },
+      },
+    })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    expect(lastInstancedBricksProps).not.toBeNull()
+
+    await ReactThreeTestRenderer.act(async () => {
+      await lastInstancedBricksProps?.onInstancePointerDown?.(
+        {
+          id: 'existing',
+          partId: DEFAULT_PART_ID,
+          partType: 'brick',
+          color: DEFAULT_COLOR_ID,
+          x: 2,
+          y: 0,
+          z: 3,
+          rot: 0,
+        },
+        {
+          pointerType: 'touch',
+          face: { normal: { x: 0, y: 1, z: 0 } },
+          point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+          stopPropagation: () => {},
+        } as never,
+      )
+    })
+
+    lastCanvasOnClick?.()
+
+    expect(Object.values(useBuildStore.getState().bricks)).toHaveLength(1)
 
     await renderer.unmount()
   })
