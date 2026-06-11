@@ -77,7 +77,6 @@ describe('App', () => {
       getByRole('button', { name: 'Mirror along Z axis' }),
     ).toBeInTheDocument()
   })
-
   it('hydrates the build store from the share URL before autosave', async () => {
     const autosavedBuild = seedBuild(
       {

@@ -35,7 +35,8 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
       await onExportScreenshot()
     } catch (err) {
       setScreenshotError(
-        'Screenshot failed: ' + (err instanceof Error ? err.message : String(err)),
+        'Screenshot failed: ' +
+          (err instanceof Error ? err.message : String(err)),
       )
     }
   }
@@ -87,10 +88,13 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
           disabled={publishStatus === 'publishing'}
         >
           {publishStatus === 'publishing'
-            ? 'Publishing…'
+            ? 'Publishing...'
             : 'Publish to Gallery'}
         </button>
       </div>
+      {screenshotError && (
+        <p style={{ marginTop: '0.5rem', color: 'red' }}>{screenshotError}</p>
+      )}
       {shareUrl && (
         <input
           readOnly
@@ -100,9 +104,6 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
           onFocus={(e) => e.currentTarget.select()}
           style={{ marginTop: '0.5rem', width: '100%' }}
         />
-      )}
-      {screenshotError && (
-        <p style={{ marginTop: '0.5rem', color: 'red' }}>{screenshotError}</p>
       )}
       {publishMessage && (
         <p
