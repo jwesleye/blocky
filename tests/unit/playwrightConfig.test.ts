@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import defaultConfig from '../../playwright.config'
+import playwrightConfig from '../../playwright.config'
 import perfConfig from '../../playwright.perf.config'
 
 type PackageJson = {
@@ -30,9 +30,9 @@ function matchesTestIgnore(testIgnore: unknown, path: string): boolean {
 
 describe('playwright e2e defaults (issue #191)', () => {
   it('uses the preview server instead of the Vite dev server', () => {
-    expect(defaultConfig.workers).toBe(4)
-    expect(defaultConfig.use?.baseURL).toBe('http://127.0.0.1:4174')
-    expect(defaultConfig.webServer).toMatchObject({
+    expect(playwrightConfig.workers).toBe(4)
+    expect(playwrightConfig.use?.baseURL).toBe('http://127.0.0.1:4174')
+    expect(playwrightConfig.webServer).toMatchObject({
       command:
         'npm run build -- --mode e2e && npm run preview -- --host 127.0.0.1 --port 4174',
       url: 'http://127.0.0.1:4174',
@@ -49,7 +49,7 @@ describe('playwright e2e defaults (issue #191)', () => {
 
 describe('playwright.config.ts default matrix', () => {
   it('defines chromium, firefox, webkit, and tablet projects', () => {
-    const names = defaultConfig.projects?.map(p => p.name) ?? []
+    const names = playwrightConfig.projects?.map(p => p.name) ?? []
     expect(names).toContain('chromium')
     expect(names).toContain('firefox')
     expect(names).toContain('webkit')
@@ -57,7 +57,7 @@ describe('playwright.config.ts default matrix', () => {
   })
 
   it('chromium project does not exclude load-perf.spec.ts', () => {
-    const chromium = defaultConfig.projects?.find(p => p.name === 'chromium')
+    const chromium = playwrightConfig.projects?.find(p => p.name === 'chromium')
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_POSIX)).toBe(false)
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_WIN)).toBe(false)
   })
@@ -67,19 +67,19 @@ describe('playwright.config.ts default matrix', () => {
 
     for (const projectName of nonChromiumProjects) {
       it(`${projectName}: testIgnore matches POSIX path ${LOAD_PERF_POSIX}`, () => {
-        const project = defaultConfig.projects?.find(p => p.name === projectName)
+        const project = playwrightConfig.projects?.find(p => p.name === projectName)
         expect(project, `project "${projectName}" not found`).toBeDefined()
         expect(matchesTestIgnore(project!.testIgnore, LOAD_PERF_POSIX)).toBe(true)
       })
 
       it(`${projectName}: testIgnore matches Windows path ${LOAD_PERF_WIN}`, () => {
-        const project = defaultConfig.projects?.find(p => p.name === projectName)
+        const project = playwrightConfig.projects?.find(p => p.name === projectName)
         expect(project, `project "${projectName}" not found`).toBeDefined()
         expect(matchesTestIgnore(project!.testIgnore, LOAD_PERF_WIN)).toBe(true)
       })
 
       it(`${projectName}: testIgnore does not suppress E2E spec ${WEBGL2_E2E}`, () => {
-        const project = defaultConfig.projects?.find(p => p.name === projectName)
+        const project = playwrightConfig.projects?.find(p => p.name === projectName)
         expect(matchesTestIgnore(project?.testIgnore, WEBGL2_E2E)).toBe(false)
       })
     }
