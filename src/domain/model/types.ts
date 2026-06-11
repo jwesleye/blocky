@@ -1,3 +1,10 @@
+import type Graph from 'graphology'
+
+export interface HalfStudOffset {
+  x: 0 | 1
+  z: 0 | 1
+}
+
 export interface PlacedBrick {
   id: string
   partId: string
@@ -6,6 +13,26 @@ export interface PlacedBrick {
   y: number
   z: number
   rot: 0 | 1 | 2 | 3
+  offset?: HalfStudOffset
+}
+
+/**
+ * Runtime build model: every placed brick keyed by its id, plus the set of
+ * currently selected brick ids. Selection is transient and is not serialized.
+ */
+export interface BuildState {
+  bricks: Record<string, PlacedBrick>
+  selection: Set<string>
+  connectionGraph: Graph
+  /**
+   * Metadata for the most recent collapse transaction, or `null` if the last
+   * history entry was not a collapse. Rides the same zundo history entry as the
+   * collapse itself so undo clears it and redo restores it, letting the UI label
+   * the action (e.g. "Undo collapse").
+   */
+  lastCollapse: { count: number; label: string } | null
+  /** Active baseplate side length in studs; defaults to 32. */
+  baseplateSize: number
 }
 
 export interface BrickBodySnapshot {

@@ -4,3 +4,23 @@ playwright-report
 test-results
 package-lock.json
 pnpm-lock.yaml
+# Exclude large minified test fixtures to prevent diff bloat
+fixtures
+# Tool-generated directories (minified JSON, not source)
+.beads
+.agentshore
+# Temporary/script-generated files
+*.cjs
+*_final.json
+*_fixed.json
+*_new.json
+bd_list.json
+check_*.cjs
+closed_issues*.json
+find_ids.cjs
+groom_phase*.cjs
+merged_prs.json
+open_*.json
+phase*.cjs
+reconcile.cjs
+verify*.cjs

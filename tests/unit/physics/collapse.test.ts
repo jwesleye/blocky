@@ -68,7 +68,7 @@ describe('selectCollapsingBricks', () => {
     expect(result).toEqual(new Set())
   })
 
-  it('marks an unbalanced component as collapsing (whole-component topple)', () => {
+  it('shears only the unsupported sub-region from an unbalanced component', () => {
     // b1: 1x1 at (0,0,0) — supports the stack; CoM support = [0,1]x[0,1]
     // b2: plate-1x4 at (0,3,0) rot=0 — cells (0,0)..(0,3); extends far in Z
     // The stack CoM.z will fall outside the 1x1 support footprint
@@ -77,9 +77,8 @@ describe('selectCollapsingBricks', () => {
       brick('b2', 'plate-1x4', 0, 3, 0),
     ]
     const result = selectCollapsingBricks(bricks)
-    // Both bricks are in the same component and it's unbalanced
-    expect(result).toContain('b1')
     expect(result).toContain('b2')
+    expect(result).not.toContain('b1')
   })
 
   it('does not collapse a balanced wide-base structure', () => {
@@ -106,8 +105,8 @@ describe('selectCollapsingBricks', () => {
     const result = selectCollapsingBricks(bricks)
     expect(result).not.toContain('a1')
     expect(result).not.toContain('a2')
-    expect(result).toContain('b1')
     expect(result).toContain('b2')
+    expect(result).not.toContain('b1')
   })
 
   it('a brick connected to grounded brick is not floating', () => {
@@ -138,5 +137,40 @@ describe('selectCollapsingBricks', () => {
       brick('b2', 'brick-2x4', 0, 3, 0),
     ]
     expect(selectCollapsingBricks(bricks)).toEqual(new Set())
+  })
+
+  it('collapses an offset brick whose +0.5 shift pushes its component CoM outside the support', () => {
+    // base: brick-1x1 at (0,0,0) → support footprint X [0,1].
+    // top: brick-1x2 (rot=1, two cells in X: (0,0)&(1,0)) at (0,3,0) with offset.x=1.
+    // Without offset awareness: CoM_x = (0.5*3 + 1.0*6)/9 = 0.833 → inside [0,1] → no collapse.
+    // With offset: CoM_x = (0.5*3 + 1.5*6)/9 = 1.167 → outside [0,1] → top shears off.
+    const bricks: PlacedBrick[] = [
+      { id: 'base', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
+      {
+        id: 'top',
+        partId: 'brick-1x2',
+        color: 'red',
+        x: 0,
+        y: 3,
+        z: 0,
+        rot: 1,
+        offset: { x: 1, z: 0 },
+      },
+    ]
+    const result = selectCollapsingBricks(bricks)
+    expect(result).toContain('top')
+    expect(result).not.toContain('base')
+  })
+
+  it('treats a brick resting only on a tile (hasTopStuds=false) as floating', () => {
+    // tile at y=0 is grounded but has no top studs — the plate above cannot couple
+    // through it, so the plate has no path to the baseplate and must collapse.
+    const bricks = [
+      brick('base', 'tile-1x1', 0, 0, 0),
+      brick('top', 'plate-1x1', 0, 1, 0),
+    ]
+    const result = selectCollapsingBricks(bricks)
+    expect(result).toContain('top')
+    expect(result).not.toContain('base')
   })
 })

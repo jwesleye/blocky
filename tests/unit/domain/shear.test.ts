@@ -1,0 +1,127 @@
+import { describe, expect, it } from 'vitest'
+
+import type { HalfStudOffset, PlacedBrick } from '@/domain/model/types'
+import { findShearRegion, recursiveShear } from '@/domain/physics/shear'
+
+function brick(
+  id: string,
+  partId: string,
+  x: number,
+  y: number,
+  z: number,
+  rot: 0 | 1 | 2 | 3 = 0,
+  offset?: HalfStudOffset,
+): PlacedBrick {
+  return { id, partId, color: 'red', x, y, z, rot, offset }
+}
+
+describe('findShearRegion', () => {
+  it('removes only the unsupported overhang brick from a cantilever', () => {
+    const component = [
+      brick('base', 'brick-1x2', 0, 0, 0, 1),
+      brick('bridge', 'plate-1x4', 0, 3, 0, 1),
+      brick('tip', 'brick-1x2', 3, 4, 0, 1),
+    ]
+
+    const { shear, remainder } = findShearRegion(component)
+
+    expect(shear.map((brick) => brick.id)).toEqual(['tip'])
+    expect(remainder.map((brick) => brick.id)).toEqual(['base', 'bridge'])
+  })
+
+  it('expands the shear when needed to keep the remainder connected', () => {
+    const component = [
+      brick('base', 'brick-1x1', 0, 0, 0),
+      brick('bridge', 'plate-1x4', 0, 3, 0, 1),
+      brick('tip', 'brick-1x2', 2, 4, 0, 1),
+    ]
+
+    const { shear, remainder } = findShearRegion(component)
+
+    expect(shear.map((brick) => brick.id)).toEqual(['tip', 'bridge'])
+    expect(remainder.map((brick) => brick.id)).toEqual(['base'])
+  })
+
+  it('handles a single overhang brick as the minimal shear region', () => {
+    const component = [
+      brick('base', 'brick-1x1', 0, 0, 0),
+      brick('overhang', 'plate-1x4', 0, 3, 0, 1),
+    ]
+
+    const { shear, remainder } = findShearRegion(component)
+
+    expect(shear.map((brick) => brick.id)).toEqual(['overhang'])
+    expect(remainder.map((brick) => brick.id)).toEqual(['base'])
+  })
+
+  it('uses half-stud offsets when choosing the outermost shear candidate', () => {
+    const component = [
+      brick('base', 'brick-1x1', 0, 0, 0),
+      brick('a-centered', 'brick-1x2', 0, 3, 0, 1),
+      brick('z-offset', 'brick-1x2', 0, 3, 0, 1, { x: 1, z: 0 }),
+    ]
+
+    const { shear, remainder } = findShearRegion(component)
+
+    expect(shear.map((brick) => brick.id)).toEqual(['z-offset'])
+    expect(remainder.map((brick) => brick.id)).toEqual(['base', 'a-centered'])
+  })
+})
+
+describe('recursiveShear', () => {
+  it('performs a two-stage collapse', () => {
+    const bricks = [
+      brick('base', 'brick-1x1', 0, 0, 0),
+      brick('bridge', 'plate-1x4', 0, 3, 0, 1),
+      brick('tip', 'brick-1x2', 2, 4, 0, 1),
+    ]
+
+    const { collapsed, stable } = recursiveShear(bricks)
+
+    expect(collapsed.map((batch) => batch.map((b) => b.id))).toEqual([
+      ['tip'],
+      ['bridge'],
+    ])
+    expect(stable.map((b) => b.id)).toEqual(['base'])
+  })
+
+  it('returns empty collapsed array for already-stable input', () => {
+    const bricks = [brick('base', 'brick-1x1', 0, 0, 0)]
+
+    const { collapsed, stable } = recursiveShear(bricks)
+
+    expect(collapsed).toEqual([])
+    expect(stable.map((b) => b.id)).toEqual(['base'])
+  })
+
+  it('handles multi-component builds independently', () => {
+    const bricks = [
+      // Component 1: Stable
+      brick('c1-base', 'brick-1x1', 0, 0, 0),
+      // Component 2: Unstable cantilever
+      brick('c2-base', 'brick-1x1', 10, 0, 10),
+      brick('c2-overhang', 'plate-1x4', 10, 3, 10, 1),
+    ]
+
+    const { collapsed, stable } = recursiveShear(bricks)
+
+    expect(collapsed.map((batch) => batch.map((b) => b.id))).toEqual([
+      ['c2-overhang'],
+    ])
+    expect(stable.map((b) => b.id).sort()).toEqual(
+      ['c1-base', 'c2-base'].sort(),
+    )
+  })
+
+  it('is a pure function and does not mutate input', () => {
+    const bricks = [
+      brick('base', 'brick-1x1', 0, 0, 0),
+      brick('overhang', 'plate-1x4', 0, 3, 0, 1),
+    ]
+    const originalInput = JSON.stringify(bricks)
+
+    recursiveShear(bricks)
+
+    expect(JSON.stringify(bricks)).toBe(originalInput)
+  })
+})
