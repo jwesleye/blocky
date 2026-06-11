@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "gen:stress-build": "tsx scripts/gen-stress-build.ts",
-    "test:perf": "playwright test --config playwright.perf.config.ts"
+    "test:perf": "playwright test --config playwright.perf.config.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.0",
@@ -53,12 +54,22 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
     "graphology-types": "^0.24.8",
+    "husky": "^9.1.7",
     "jsdom": "^25.0.1",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.4.2",
     "tsx": "^4.22.4",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5",
     "vitest": "^4.1.8"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ],
+    "*.{ts,tsx,js,jsx,json,css,md}": [
+      "prettier --write"
+    ]
   }
 }
