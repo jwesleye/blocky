@@ -358,9 +358,7 @@ export function BuildScene({
 
     const deltaX = event.clientX - start.x
     const deltaY = event.clientY - start.y
-    if (
-      Math.hypot(deltaX, deltaY) > DRAG_GESTURE_THRESHOLD_PX
-    ) {
+    if (Math.hypot(deltaX, deltaY) > DRAG_GESTURE_THRESHOLD_PX) {
       draggedSincePointerDownRef.current = true
     }
   }

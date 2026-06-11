@@ -35,7 +35,9 @@ const makeMountBuild = (): Build => ({
   ],
 })
 
-const makePublishResponse = (build: Build = makeBuild()): SharedBuildPayload => ({
+const makePublishResponse = (
+  build: Build = makeBuild(),
+): SharedBuildPayload => ({
   contractVersion: SHARED_BUILD_CONTRACT_VERSION,
   buildId: 'srv_abc123',
   build,

@@ -199,7 +199,11 @@ describe('gallery store durability', () => {
     expect(listBuilds()).toHaveLength(1)
 
     const dataDir = process.env['GALLERY_DATA_DIR'] as string
-    writeFileSync(join(dataDir, 'store.json'), '{ this is not valid json', 'utf8')
+    writeFileSync(
+      join(dataDir, 'store.json'),
+      '{ this is not valid json',
+      'utf8',
+    )
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {

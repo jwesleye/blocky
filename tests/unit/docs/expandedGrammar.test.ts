@@ -74,12 +74,9 @@ describe('docs/PRD.md — expanded-grammar scope drift guard', () => {
   })
 
   describe('still-excluded connection types', () => {
-    it.each(['Technic', 'angled'])(
-      'names %s as out of scope',
-      (term) => {
-        expect(doc()).toMatch(new RegExp(term, 'i'))
-      },
-    )
+    it.each(['Technic', 'angled'])('names %s as out of scope', (term) => {
+      expect(doc()).toMatch(new RegExp(term, 'i'))
+    })
   })
 
   describe('stale non-goal language removed', () => {
