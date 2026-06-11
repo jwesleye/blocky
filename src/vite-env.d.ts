@@ -6,6 +6,7 @@ declare global {
     __blockyCursorStore?: typeof import('./state/cursor').useCursorStore
     __blockyCollapseDebug?: import('./scene/collapseDebug').CollapseDebug
     __blockyCamera?: import('three').PerspectiveCamera
+    __blockyGhostGrid?: import('./domain/grid').GridCoord | null
     __blockyProjectToCanvas?: (
       worldX: number,
       worldY: number,

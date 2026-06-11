@@ -38,6 +38,7 @@ export interface DevWindow {
   __blockyStore: DevStore
   __blockyCursorStore: DevCursorStore
   __blockyCamera: unknown
+  __blockyGhostGrid: { x: number; y: number; z: number } | null
   __blockyProjectToCanvas: (
     worldX: number,
     worldY: number,
