@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { PlacedBrick } from '@/domain/model/types'
+import type { HalfStudOffset, PlacedBrick } from '@/domain/model/types'
 import { findShearRegion, recursiveShear } from '@/domain/physics/shear'
 
 function brick(
@@ -10,8 +10,9 @@ function brick(
   y: number,
   z: number,
   rot: 0 | 1 | 2 | 3 = 0,
+  offset?: HalfStudOffset,
 ): PlacedBrick {
-  return { id, partId, color: 'red', x, y, z, rot }
+  return { id, partId, color: 'red', x, y, z, rot, offset }
 }
 
 describe('findShearRegion', () => {
@@ -51,6 +52,19 @@ describe('findShearRegion', () => {
 
     expect(shear.map((brick) => brick.id)).toEqual(['overhang'])
     expect(remainder.map((brick) => brick.id)).toEqual(['base'])
+  })
+
+  it('uses half-stud offsets when choosing the outermost shear candidate', () => {
+    const component = [
+      brick('base', 'brick-1x1', 0, 0, 0),
+      brick('a-centered', 'brick-1x2', 0, 3, 0, 1),
+      brick('z-offset', 'brick-1x2', 0, 3, 0, 1, { x: 1, z: 0 }),
+    ]
+
+    const { shear, remainder } = findShearRegion(component)
+
+    expect(shear.map((brick) => brick.id)).toEqual(['z-offset'])
+    expect(remainder.map((brick) => brick.id)).toEqual(['base', 'a-centered'])
   })
 })
 

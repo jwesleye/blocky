@@ -49,8 +49,11 @@ function getOutermostProjection(
   const def = PART_CATALOG[brick.partId]
   if (!def) return Number.NEGATIVE_INFINITY
 
+  const ox = 0.5 * (brick.offset?.x ?? 0)
+  const oz = 0.5 * (brick.offset?.z ?? 0)
   const projections = getOccupiedCells(brick, def).map(
-    ({ x, z }) => (x + 0.5) * direction.x + (z + 0.5) * direction.z,
+    ({ x, z }) =>
+      (x + 0.5 + ox) * direction.x + (z + 0.5 + oz) * direction.z,
   )
 
   return projections.length > 0
