@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { Grid3X3 } from 'lucide-react'
 import { SUPPORTED_BASEPLATE_SIZES } from '@/domain/grid'
 import { bricksOutsideBaseplate } from '@/domain/physics'
 import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
@@ -96,7 +97,15 @@ export function BaseplateSizePicker() {
             className={`baseplate-size-btn${selected ? ' baseplate-size-btn--selected' : ''}`}
             onClick={() => handleSelect(size)}
           >
-            {size} × {size}
+            <Grid3X3
+              className="baseplate-size-btn__icon"
+              size={14}
+              aria-hidden={true}
+              focusable={false}
+            />
+            <span className="baseplate-size-btn__label">
+              {size} × {size}
+            </span>
           </button>
         )
       })}

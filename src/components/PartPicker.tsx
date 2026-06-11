@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from 'react'
+import { BrickWall } from 'lucide-react'
 import {
   PART_CATALOG,
   PART_TYPE_LABELS,
@@ -73,7 +74,13 @@ export function PartPicker({ selected, onSelect }: PartPickerProps) {
                   onClick={() => onSelect(part.id)}
                   onKeyDown={(e) => handleKeyDown(e, index, parts)}
                 >
-                  {part.label}
+                  <BrickWall
+                    className="part-btn__icon"
+                    size={14}
+                    aria-hidden={true}
+                    focusable={false}
+                  />
+                  <span className="part-btn__label">{part.label}</span>
                 </button>
               ))}
             </div>

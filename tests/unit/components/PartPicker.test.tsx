@@ -12,6 +12,13 @@ describe('PartPicker', () => {
     )
   })
 
+  it('renders a decorative svg icon inside the Brick 2×4 radio button', () => {
+    render(<PartPicker selected="brick-2x4" onSelect={() => undefined} />)
+    const btn = screen.getByRole('radio', { name: 'Brick 2×4' })
+    const icon = btn.querySelector('svg[aria-hidden="true"]')
+    expect(icon).not.toBeNull()
+  })
+
   it('renders a button for every inventory part in the catalog', () => {
     render(<PartPicker selected="brick-2x4" onSelect={() => undefined} />)
     expect(screen.getByRole('radio', { name: 'Tile 1×1' })).toBeInTheDocument()

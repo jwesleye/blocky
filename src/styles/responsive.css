@@ -16,8 +16,8 @@
   }
 
   /* Hide text labels in the sidebar at narrow widths; icons remain. */
-  .app-sidebar .part-btn,
-  .app-sidebar .baseplate-size-btn,
+  .app-sidebar .part-btn__label,
+  .app-sidebar .baseplate-size-btn__label,
   .app-sidebar .color-swatch__label {
     font-size: 0;
   }
