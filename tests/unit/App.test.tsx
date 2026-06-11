@@ -7,6 +7,7 @@ import type { Build } from '@/domain/model/build'
 import {
   AUTOSAVE_STORAGE_KEY,
   createShareUrl,
+  loadBuild,
   saveBuild,
 } from '@/domain/persistence'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
@@ -67,9 +68,7 @@ describe('App', () => {
 
   it('mirror controls have a labeled group and accessible button names', () => {
     const { getByRole } = render(<App />)
-    expect(
-      getByRole('group', { name: 'Mirror selection' }),
-    ).toBeInTheDocument()
+    expect(getByRole('group', { name: 'Mirror selection' })).toBeInTheDocument()
     expect(
       getByRole('button', { name: 'Mirror along X axis' }),
     ).toBeInTheDocument()
@@ -121,6 +120,10 @@ describe('App', () => {
         }),
       ])
       expect(useBuildStore.getState().baseplateSize).toBe(48)
+    })
+
+    await waitFor(() => {
+      expect(loadBuild()?.baseplate.size).toBe(48)
     })
   })
 

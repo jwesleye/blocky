@@ -9,7 +9,7 @@ import { PartPicker } from '@/components/PartPicker'
 import { PersistenceControls } from '@/components/PersistenceControls'
 import { SoundToggle } from '@/components/SoundToggle'
 import { ViewControls } from '@/components/ViewControls'
-import { BASEPLATE_SIZE_STUDS } from '@/domain/grid'
+import { assertSupportedBaseplateSize } from '@/domain/grid'
 import { bricksToBuild, buildToBricks } from '@/domain/model/build'
 import { getBrickColor } from '@/domain/model/colors'
 import { getPart } from '@/domain/parts/catalog'
@@ -46,6 +46,7 @@ export function App() {
 
   const bricksById = useBuildStore((state) => state.bricks)
   const bricks = Object.values(bricksById)
+  const baseplateSize = useBuildStore((state) => state.baseplateSize)
   const mirrorSelection = useBuildStore((s) => s.mirrorSelection)
   const selectionSize = useBuildStore((s) => s.selection.size)
   const selectedPresetId = useSceneSettingsStore((s) => s.selectedPresetId)
@@ -75,8 +76,9 @@ export function App() {
 
   useEffect(() => {
     if (!hasHydratedPersistence) return
-    autosaverRef.current.schedule(bricksToBuild(bricks, BASEPLATE_SIZE_STUDS))
-  }, [bricks, hasHydratedPersistence])
+    assertSupportedBaseplateSize(baseplateSize)
+    autosaverRef.current.schedule(bricksToBuild(bricks, baseplateSize))
+  }, [baseplateSize, bricks, hasHydratedPersistence])
 
   useEffect(() => {
     const autosaver = autosaverRef.current
@@ -324,7 +326,10 @@ export function App() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <BuildScene presetId={selectedPresetId} onCaptureFnReady={handleCaptureFnReady} />
+          <BuildScene
+            presetId={selectedPresetId}
+            onCaptureFnReady={handleCaptureFnReady}
+          />
           <ViewControls />
           <HUD />
           <TouchToolbar />
