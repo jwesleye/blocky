@@ -17,74 +17,12 @@
 
 import { test, expect } from '@playwright/test'
 
+import { generateStressBuildPlacedBricks } from '@/testing/stressBuild'
 import {
   BUDGET_DOC_URL,
   MIN_SAMPLE_FRAMES as SAMPLE_FRAMES,
   P95_FRAME_BUDGET_MS as P95_BUDGET_MS,
 } from './budgets'
-
-// Mirror of constants from src/domain/grid — inlined so this file needs no
-// node built-ins and remains within tsconfig.app.json's browser type context.
-const BASEPLATE_SIZE_STUDS = 32
-const BRICK_HEIGHT_PLATES = 3
-const COLORS = [
-  'red',
-  'blue',
-  'yellow',
-  'green',
-  'white',
-  'black',
-  'orange',
-  'light-gray',
-] as const
-
-interface SerializedBrick {
-  partId: string
-  color: string
-  x: number
-  y: number
-  z: number
-  rot: 0 | 1 | 2 | 3
-}
-
-interface PlacedBrick extends SerializedBrick {
-  id: string
-}
-
-/**
- * Deterministic stress-build generator — same algorithm as
- * scripts/gen-stress-build.ts. Produces N 1×1 bricks placed layer by layer
- * across the 32×32 stud grid.
- */
-function generateBricks(count: number): PlacedBrick[] {
-  const bricks: PlacedBrick[] = []
-  const cellsPerLayer = BASEPLATE_SIZE_STUDS * BASEPLATE_SIZE_STUDS
-
-  let remaining = count
-  let layer = 0
-
-  while (remaining > 0) {
-    const bricksThisLayer = Math.min(remaining, cellsPerLayer)
-    for (let i = 0; i < bricksThisLayer; i++) {
-      const x = i % BASEPLATE_SIZE_STUDS
-      const z = Math.floor(i / BASEPLATE_SIZE_STUDS)
-      const colorIndex = (x + z + layer) % COLORS.length
-      bricks.push({
-        id: `perf-${layer}-${i}`,
-        partId: 'brick-1x1',
-        color: COLORS[colorIndex],
-        x,
-        y: layer * BRICK_HEIGHT_PLATES,
-        z,
-        rot: 0,
-      })
-    }
-    remaining -= bricksThisLayer
-    layer++
-  }
-
-  return bricks
-}
 
 test('p95 frame time ≤ 17ms with 2 000-brick stress build', async ({
   page,
@@ -93,7 +31,7 @@ test('p95 frame time ≤ 17ms with 2 000-brick stress build', async ({
 
   // Inject stress build into the canonical Zustand store via the dev-mode
   // window handle exposed in src/main.tsx when import.meta.env.DEV is true.
-  const bricks = generateBricks(2000)
+  const bricks = generateStressBuildPlacedBricks(2000)
   await page.evaluate((bricksJson) => {
     const store = (
       window as Window & {
