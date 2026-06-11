@@ -172,33 +172,15 @@ test('canvas click places brick on a valid baseplate position', async ({
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
-  await page.waitForFunction(
-    () =>
-      (window as unknown as { __blockyStore: unknown }).__blockyStore !==
-      undefined,
-  )
+  await waitForSceneDebugHandles(page)
 
   const canvas = page.locator('canvas')
   await expect(canvas).toBeVisible()
 
-  await page.waitForFunction(
-    () => {
-      const el = document.querySelector('canvas') as HTMLCanvasElement | null
-      return el !== null && el.width > 0 && el.height > 0
-    },
-    undefined,
-    { timeout: 10000 },
-  )
-
-  const bounds = await canvas.boundingBox()
-  if (!bounds) throw new Error('canvas bounding box unavailable')
-
-  const cx = bounds.x + bounds.width * 0.5
-  const cy = bounds.y + bounds.height * 0.65
-
-  await page.mouse.move(cx, cy)
+  const baseplatePos = await projectToCanvas(page, 4, 0, 4)
+  await page.mouse.move(baseplatePos.x, baseplatePos.y)
   await page.waitForTimeout(200)
-  await page.mouse.click(cx, cy)
+  await page.mouse.click(baseplatePos.x, baseplatePos.y)
 
   await page.waitForFunction(
     () => {
