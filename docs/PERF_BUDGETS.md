@@ -67,22 +67,40 @@ npm run test:e2e -- tests/perf/collapse-perf.spec.ts
 ## 3. Load budget
 
 **Budget:** first meaningful interaction within a couple of seconds on broadband;
-entry bundle gzip size must stay under the documented ceiling enforced by the Vite
-build gate.
+entry bundle gzip size must stay under **500 KiB** (the ceiling enforced by the Vite
+build gate).
 
 **Measurement method:** The Vite build step rejects the bundle if any entry chunk
-exceeds the gzip ceiling. A Playwright perf spec measuring time-to-first-interaction
-under simulated broadband throttling is planned for
+exceeds the 500 KiB gzip ceiling. A Playwright perf spec measuring
+time-to-first-interaction under simulated broadband throttling is planned for
 [#53](https://github.com/jwesleye/blocky/issues/53).
 
 **Verification command (currently enforceable):**
 
 ```sh
-npm run build        # fails if entry bundle exceeds the gzip ceiling
+npm run build        # fails if entry bundle exceeds the 500 KiB gzip ceiling
 ```
 
 **Owning spec:** Vite bundle-size gate (enforced now); `tests/perf/load-budget.spec.ts`
 and the `test:perf` npm script land with [#53](https://github.com/jwesleye/blocky/issues/53).
+
+### 3a. Async / runtime chunk warning threshold — documented exception
+
+**Budget:** 1500 KiB uncompressed per async chunk (`BUNDLE_CHUNK_WARNING_LIMIT_KIB`).
+
+**Rationale:** Three.js, @react-three/fiber/@react-three/drei, and Rapier physics
+produce large uncompressed runtime chunks. These are grouped into dedicated Rollup
+manual chunks (`react-vendor`, `three-vendor`, `physics-vendor`) so each chunk can
+be cached independently. Despite their uncompressed size, the chunks still satisfy
+the 500 KiB gzip entry ceiling. The 1500 KiB uncompressed threshold is a deliberate,
+documented exception for the current 3D/physics stack and is enforced separately from
+the entry gzip budget.
+
+**Verification command:**
+
+```sh
+npm run build        # must not emit "Some chunks are larger than 500 kB after minification"
+```
 
 ---
 
@@ -121,7 +139,8 @@ Quick reference:
 | Render p95          | ≤ 17 ms                         | `test:e2e -- render-perf.spec.ts`   |
 | Collapse long-frame | < 50 ms                         | `test:e2e -- collapse-perf.spec.ts` |
 | Collapse p95        | ≤ 17 ms                         | `test:e2e -- collapse-perf.spec.ts` |
-| Bundle gzip         | see Vite gate                   | `npm run build`                     |
+| Bundle gzip         | ≤ 500 KiB (entry chunk)         | `npm run build`                     |
+| Chunk warning       | ≤ 1500 KiB uncompressed (async) | `npm run build` (no warn)           |
 | Load TTI            | couple of seconds (planned #53) | test:perf script (lands with #53)   |
 | Browser matrix      | Chrome/Edge/Firefox/WebKit      | `npm run test:e2e`                  |
 | WebGL2              | supported in all browsers       | `test:e2e -- webgl2.spec.ts`        |

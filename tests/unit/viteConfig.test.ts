@@ -22,4 +22,22 @@ describe('vite.config chunkSizeWarningLimit', () => {
       /chunkSizeWarningLimit\s*:\s*BUNDLE_ENTRY_BUDGET_KIB/,
     )
   })
+
+  it('uses BUNDLE_CHUNK_WARNING_LIMIT_KIB for chunkSizeWarningLimit', () => {
+    expect(configSource).toMatch(
+      /chunkSizeWarningLimit\s*:\s*BUNDLE_CHUNK_WARNING_LIMIT_KIB/,
+    )
+  })
+
+  it('defines a react-vendor manual chunk group', () => {
+    expect(configSource).toMatch(/react-vendor/)
+  })
+
+  it('defines a three-vendor manual chunk group', () => {
+    expect(configSource).toMatch(/three-vendor/)
+  })
+
+  it('defines a physics-vendor manual chunk group', () => {
+    expect(configSource).toMatch(/physics-vendor/)
+  })
 })

@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { BUNDLE_CHUNK_WARNING_LIMIT_KIB } from '../../perf/budgets'
 
 const DOC_PATH = join(process.cwd(), 'docs/PERF_BUDGETS.md')
 
@@ -44,6 +45,18 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
         existsSync(join(process.cwd(), 'tests/perf/collapse-perf.spec.ts')),
         'tests/perf/collapse-perf.spec.ts not found — doc references it',
       ).toBe(true)
+    })
+  })
+
+  describe('bundle chunk warning budget', () => {
+    it('documents the uncompressed chunk warning threshold', () => {
+      const doc = readFileSync(DOC_PATH, 'utf-8')
+      expect(doc).toMatch(new RegExp(String(BUNDLE_CHUNK_WARNING_LIMIT_KIB)))
+    })
+
+    it('still documents the 500 KiB gzip entry ceiling', () => {
+      const doc = readFileSync(DOC_PATH, 'utf-8')
+      expect(doc).toMatch(/500\s*KiB/)
     })
   })
 

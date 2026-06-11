@@ -26,11 +26,16 @@ This document outlines the performance budgets for the Blocky application. These
 
 ## Loading & Payload
 
-### Main Bundle Size: ≤ 500KB
+### Main Bundle Size: ≤ 500KB (Gzip)
 
-- **Budget:** 500KB (Gzip)
+- **Budget:** 500 KiB gzip for the main entry chunk
 - **Rationale:** Keeping the initial JavaScript payload small is critical for fast Time-to-Interactive (TTI), especially on mobile devices or slower networks.
-- **Enforcement:** `tests/perf/load-perf.spec.ts`
+- **Enforcement:** `tests/perf/load-perf.spec.ts` and the Vite `enforceBundleBudget` plugin.
+
+### Async / Runtime Chunk Warning Threshold: 1500 KiB (uncompressed) — documented exception
+
+- **Budget:** 1500 KiB uncompressed per async chunk (`BUNDLE_CHUNK_WARNING_LIMIT_KIB`)
+- **Rationale:** Three.js, @react-three/fiber, @react-three/drei, and Rapier physics produce large uncompressed runtime chunks. These are split into dedicated vendor chunks (`react-vendor`, `three-vendor`, `physics-vendor`) and still pass the 500 KiB gzip entry gate. The 1500 KiB threshold is a deliberate exception for the current 3D/physics stack and is separate from the entry gzip ceiling.
 
 ### Time-to-Interactive (TTI): ≤ 3000ms
 
