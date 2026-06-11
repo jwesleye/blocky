@@ -39,6 +39,26 @@ function makePayload(buildId: string): SharedBuildPayload {
   }
 }
 
+function makeAuthenticatedPayload(
+  buildId: string,
+  userId = 'owner-1',
+): SharedBuildPayload {
+  return {
+    ...makePayload(buildId),
+    gallery: {
+      title: `Build ${buildId}`,
+      visibility: 'public',
+      author: {
+        identityMode: 'authenticated',
+        userId,
+        displayName: 'Owner',
+      },
+      publishedAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  }
+}
+
 beforeEach(() => {
   process.env['GALLERY_DATA_DIR'] = mkdtempSync(
     join(tmpdir(), 'blocky-gallery-store-test-'),
@@ -87,6 +107,22 @@ describe('gallery store resource bounds', () => {
       }
     },
   )
+
+  it('evicts the oldest deleted tombstone when the delete cap is exceeded', () => {
+    const deletedIds: string[] = []
+
+    for (let index = 0; index < MAX_STORED_BUILDS + 1; index += 1) {
+      const buildId = generateBuildId()
+      deletedIds.push(buildId)
+      storeBuild(makeAuthenticatedPayload(buildId))
+      expect(deleteBuild(buildId, { userId: 'owner-1' })).toEqual({
+        success: true,
+      })
+    }
+
+    expect(isBuildDeleted(deletedIds[0] as string)).toBe(false)
+    expect(isBuildDeleted(deletedIds.at(-1) as string)).toBe(true)
+  })
 })
 
 describe('gallery store durability', () => {
@@ -110,12 +146,7 @@ describe('gallery store durability', () => {
   })
 
   it('keeps builds intact when delete lacks an authenticated principal', () => {
-    const payload = makePayload(generateBuildId())
-    payload.gallery.author = {
-      identityMode: 'authenticated',
-      userId: 'owner-1',
-      displayName: 'Owner',
-    }
+    const payload = makeAuthenticatedPayload(generateBuildId())
 
     storeBuild(payload)
     expect(deleteBuild(payload.buildId)).toEqual({
@@ -127,6 +158,33 @@ describe('gallery store durability', () => {
 
     expect(isBuildDeleted(payload.buildId)).toBe(false)
     expect(getBuild(payload.buildId)).toEqual(payload)
+  })
+
+  it('does not create tombstones for failed deletes', () => {
+    const anonymousPayload = makePayload(generateBuildId())
+    const ownedPayload = makeAuthenticatedPayload(generateBuildId(), 'owner-1')
+
+    storeBuild(anonymousPayload)
+    storeBuild(ownedPayload)
+
+    expect(deleteBuild('missing-build', { userId: 'owner-1' })).toEqual({
+      success: false,
+      reason: 'not-found',
+    })
+    expect(deleteBuild(anonymousPayload.buildId, { userId: 'owner-1' })).toEqual(
+      {
+        success: false,
+        reason: 'unauthorized',
+      },
+    )
+    expect(deleteBuild(ownedPayload.buildId, { userId: 'owner-2' })).toEqual({
+      success: false,
+      reason: 'unauthorized',
+    })
+
+    expect(isBuildDeleted('missing-build')).toBe(false)
+    expect(isBuildDeleted(anonymousPayload.buildId)).toBe(false)
+    expect(isBuildDeleted(ownedPayload.buildId)).toBe(false)
   })
 
   it('persists reports beside build data without mutating the payload', () => {
