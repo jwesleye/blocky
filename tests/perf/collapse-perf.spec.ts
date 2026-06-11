@@ -77,6 +77,13 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
     })
   }
 
+  await page.waitForFunction(
+    () =>
+      typeof (window as Window & typeof globalThis).__blockyCollapsePerf
+        ?.measureCollapsePerf === 'function',
+    { timeout: 10000 },
+  )
+
   const result = await page.evaluate(
     async ({
       brickData,
@@ -85,153 +92,9 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       brickData: FixtureBrick[]
       targetFrames: number
     }) => {
-      // Import the real app modules from the Vite dev server.
-      // String variables prevent TypeScript from statically resolving these
-      // dev-server URLs; the imports run in the browser's module cache so
-      // PART_CATALOG, buildConnectionGraph, graphology, and d3-polygon are the
-      // exact same instances the app uses.
-      const collapsePath: string = '/src/domain/physics/collapse.ts'
-      const simPath: string = '/src/domain/physics/collapseSimulation.ts'
-      const scenePath: string = '/src/scene/collapseSceneBodies.ts'
-      const storePath: string = '/src/state/store.ts'
-
-      const collapseModule = await import(collapsePath)
-      const simModule = await import(simPath)
-      const sceneModule = await import(scenePath)
-      const storeModule = await import(storePath)
-
-      type CollapseBodyInput = {
-        id: string
-        partId: string
-        color: string
-        position: [number, number, number]
-        size: [number, number, number]
-      }
-      type Transaction = {
-        phase: string
-        collapsingBodies: ReadonlyArray<{
-          id: string
-          settledAtMs: number | null
-        }>
-        fadeStartedAtMs: number | null
-      }
-
-      const selectCollapsingBricks = collapseModule.selectCollapsingBricks as (
-        bricks: FixtureBrick[],
-      ) => Set<string>
-      const createCollapseTransaction =
-        simModule.createCollapseTransaction as (input: {
-          allBricks: readonly FixtureBrick[]
-          collapsingBodies: readonly CollapseBodyInput[]
-          timings?: { settleDelayMs?: number; fadeDurationMs?: number }
-        }) => Transaction
-      const advanceCollapseTransaction =
-        simModule.advanceCollapseTransaction as (
-          t: Transaction,
-          nowMs: number,
-        ) => Transaction
-      const createCollapseSceneBodies =
-        sceneModule.createCollapseSceneBodies as (
-          t: Transaction,
-          staticBodies: readonly unknown[],
-        ) => unknown[]
-      const useBuildStore = storeModule.useBuildStore as {
-        getState: () => {
-          bricks: Record<string, FixtureBrick>
-        }
-        setState: (state: { bricks: Record<string, FixtureBrick> }) => void
-      }
-
-      // Load the stress build through the real app state.
-      useBuildStore.setState({
-        bricks: Object.fromEntries(brickData.map((brick) => [brick.id, brick])),
-      })
-      const loadedBricks = Object.values(useBuildStore.getState().bricks)
-      const setupFrameTimes: number[] = []
-      await new Promise<void>((resolve) => {
-        let frames = 0
-        let last: number | null = null
-        const settle = () => {
-          const now = performance.now()
-          if (last !== null) {
-            setupFrameTimes.push(now - last)
-          }
-          last = now
-          frames += 1
-          if (frames >= 10) {
-            resolve()
-            return
-          }
-          requestAnimationFrame(settle)
-        }
-        requestAnimationFrame(settle)
-      })
-
-      const frameTimes: number[] = []
-      let computeMs = 0
-      let collapsingCount = 0
-      let transaction: Transaction | null = null
-
-      await new Promise<void>((resolve) => {
-        let last: number | null = null
-        let count = 0
-
-        function tick(ts: number): void {
-          if (last !== null) {
-            frameTimes.push(ts - last)
-          }
-
-          if (count === 0) {
-            // First RAF: invoke the real selectCollapsingBricks — exercises
-            // PART_CATALOG, buildConnectionGraph (stud-connection geometry,
-            // rotation-aware cell footprint), getFloatingBricks (BFS from y=0),
-            // and getUnbalancedBricks (connected components, convex hull, CoM).
-            // Any main-thread stall appears as an extended next-frame delta.
-            const t0 = performance.now()
-            const collapsingSet = selectCollapsingBricks(loadedBricks)
-            computeMs = performance.now() - t0
-            collapsingCount = collapsingSet.size
-
-            const collapsingBodies: CollapseBodyInput[] = loadedBricks
-              .filter((b) => collapsingSet.has(b.id))
-              .map((b) => ({
-                id: b.id,
-                partId: b.partId,
-                color: b.color,
-                position: [b.x, b.y, b.z] as [number, number, number],
-                size: [2, 3, 4] as [number, number, number],
-              }))
-
-            // Create a real CollapseTransaction through the actual app pipeline.
-            transaction = createCollapseTransaction({
-              allBricks: loadedBricks,
-              collapsingBodies,
-              timings: { settleDelayMs: 0, fadeDurationMs: 100 },
-            })
-          }
-
-          if (count > 0 && transaction !== null) {
-            // Subsequent frames: advance the collapse animation state and rebuild
-            // scene bodies — exercises advanceCollapseTransaction phase logic and
-            // createCollapseSceneBodies (the dynamic body creation pipeline).
-            transaction = advanceCollapseTransaction(transaction, ts)
-            createCollapseSceneBodies(transaction, [])
-          }
-
-          last = ts
-          count++
-
-          if (count < targetFrames + 1) {
-            requestAnimationFrame(tick)
-          } else {
-            resolve()
-          }
-        }
-
-        requestAnimationFrame(tick)
-      })
-
-      return { frameTimes, setupFrameTimes, computeMs, collapsingCount }
+      const harness = (window as Window & typeof globalThis)
+        .__blockyCollapsePerf!
+      return harness.measureCollapsePerf({ brickData, targetFrames })
     },
     { brickData: bricks, targetFrames: MIN_SAMPLE_FRAMES },
   )

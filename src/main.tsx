@@ -22,4 +22,7 @@ if (shouldExposeTestHooks) {
   window.__blockyStore = useBuildStore
   window.__blockyCursorStore = useCursorStore
   window.__blockyCollapseDebug = collapseDebug
+  import('./testing/collapsePerfHarness').then((m) => {
+    window.__blockyCollapsePerf = m
+  })
 }
