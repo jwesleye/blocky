@@ -72,13 +72,17 @@ describe('gallery store resource bounds', () => {
     expect(getBuild(lastId)).toBeDefined()
   })
 
-  it('never stores more builds than the configured cap', { timeout: 15000 }, () => {
-    for (let index = 0; index < MAX_STORED_BUILDS * 2; index += 1) {
-      const buildId = generateBuildId()
-      storeBuild(makePayload(buildId))
-      expect(listBuilds().length).toBeLessThanOrEqual(MAX_STORED_BUILDS)
-    }
-  })
+  it(
+    'never stores more builds than the configured cap',
+    { timeout: 15000 },
+    () => {
+      for (let index = 0; index < MAX_STORED_BUILDS * 2; index += 1) {
+        const buildId = generateBuildId()
+        storeBuild(makePayload(buildId))
+        expect(listBuilds().length).toBeLessThanOrEqual(MAX_STORED_BUILDS)
+      }
+    },
+  )
 })
 
 describe('gallery store durability', () => {

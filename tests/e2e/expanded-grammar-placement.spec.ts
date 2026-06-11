@@ -41,7 +41,6 @@ async function placeBrick(
   }, brick)
 }
 
-
 test('places a baseplate-mounted brick and rejects an elevated mounted placement', async ({
   page,
 }) => {

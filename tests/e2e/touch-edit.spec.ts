@@ -32,7 +32,10 @@ test.describe('touch edit controls', () => {
 
   test('tap rotate button advances cursor rotation', async ({ page }) => {
     await page.goto('/')
-    await waitForDevWindow(page, { requireProjectToCanvas: true, timeout: 10000 })
+    await waitForDevWindow(page, {
+      requireProjectToCanvas: true,
+      timeout: 10000,
+    })
 
     const rotBefore = await page.evaluate(
       () =>
@@ -53,7 +56,10 @@ test.describe('touch edit controls', () => {
 
   test('tap delete button removes the hovered brick', async ({ page }) => {
     await page.goto('/')
-    await waitForDevWindow(page, { requireProjectToCanvas: true, timeout: 10000 })
+    await waitForDevWindow(page, {
+      requireProjectToCanvas: true,
+      timeout: 10000,
+    })
 
     // Place a brick via store
     const brickId = await page.evaluate(() => {
@@ -109,7 +115,10 @@ test.describe('touch edit controls', () => {
     page,
   }) => {
     await page.goto('/')
-    await waitForDevWindow(page, { requireProjectToCanvas: true, timeout: 10000 })
+    await waitForDevWindow(page, {
+      requireProjectToCanvas: true,
+      timeout: 10000,
+    })
 
     const brickId = await page.evaluate(() => {
       return (window as unknown as TouchEditWindow).__blockyStore
