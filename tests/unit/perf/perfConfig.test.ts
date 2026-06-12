@@ -39,4 +39,16 @@ describe('playwright.perf.config.ts', () => {
       'npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
     )
   })
+
+  it('launches chromium with the D3D11 ANGLE renderer for consistent GPU timing', async () => {
+    vi.resetModules()
+
+    const imported = await import('../../../playwright.perf.config')
+
+    expect(imported.default.use).toMatchObject({
+      launchOptions: {
+        args: ['--use-angle=d3d11'],
+      },
+    })
+  })
 })

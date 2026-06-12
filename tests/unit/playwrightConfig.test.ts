@@ -34,7 +34,7 @@ describe('playwright e2e defaults (issue #191)', () => {
     expect(playwrightConfig.use?.baseURL).toBe('http://localhost:4174')
     expect(playwrightConfig.webServer).toMatchObject({
       command:
-        'npm run build -- --mode e2e && npm run preview -- --host localhost --port 4174',
+        'npx vite build --mode e2e && npm run preview -- --host localhost --port 4174',
       url: 'http://localhost:4174',
       timeout: 120_000,
     })
@@ -86,6 +86,17 @@ describe('playwright.config.ts default matrix', () => {
     }
   })
 
+  it('chromium project prefers the D3D11 ANGLE renderer for perf coverage', () => {
+    const chromium = playwrightConfig.projects?.find(
+      (p) => p.name === 'chromium',
+    )
+    expect(chromium?.use).toMatchObject({
+      launchOptions: {
+        args: ['--use-angle=d3d11'],
+      },
+    })
+  })
+
   describe('no project suppresses e2e specs', () => {
     const allProjects = ['chromium', 'firefox', 'webkit', 'tablet'] as const
 
@@ -113,6 +124,14 @@ describe('playwright.perf.config.ts dedicated perf matrix', () => {
   it('has exactly one project: chromium', () => {
     expect(perfConfig.projects).toHaveLength(1)
     expect(perfConfig.projects![0].name).toBe('chromium')
+  })
+
+  it('uses the D3D11 ANGLE renderer for perf runs', () => {
+    expect(perfConfig.use).toMatchObject({
+      launchOptions: {
+        args: ['--use-angle=d3d11'],
+      },
+    })
   })
 
   it('testMatch targets load-perf.spec.ts', () => {

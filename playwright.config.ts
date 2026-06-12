@@ -17,7 +17,12 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: ['--use-angle=d3d11'],
+        },
+      },
     },
     {
       name: 'firefox',
@@ -34,7 +39,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      'npm run build -- --mode e2e && npm run preview -- --host localhost --port 4174',
+      'npx vite build --mode e2e && npm run preview -- --host localhost --port 4174',
     cwd: process.cwd(),
     url: 'http://localhost:4174',
     reuseExistingServer: false,
