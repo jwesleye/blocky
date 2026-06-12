@@ -29,7 +29,17 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        launchOptions: {
+          // Disable session restore to prevent Firefox teardown race:
+          // "can't access property _maybeDontRestoreTabs, this._windows[aWindow.__SSi] is undefined"
+          firefoxUserPrefs: {
+            'browser.sessionstore.resume_from_crash': false,
+            'browser.sessionstore.max_resumed_crashes': -1,
+          },
+        },
+      },
       testIgnore: PERF_SPECS,
     },
     {
