@@ -23,12 +23,6 @@ describe('formatter scope', () => {
   })
 
   it('ignores untracked scratch files while checking tracked files', () => {
-    const baseline = spawnSync(process.execPath, ['scripts/format.mjs', '--check'], {
-      cwd: process.cwd(),
-      encoding: 'utf-8',
-      timeout: 25_000,
-    })
-
     writeFileSync(SCRATCH_FILE_PATH, Buffer.from([0xff, 0xfe, 0x5b, 0x00]))
 
     const result = spawnSync(
