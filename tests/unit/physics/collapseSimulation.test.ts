@@ -9,7 +9,7 @@ import {
   markCollapseBodySettled,
   restoreCollapseUndoSnapshot,
 } from '@/domain/physics'
-import { getBrickColor } from '@/domain/model/colors'
+import { DEFAULT_COLOR_ID, getBrickColor } from '@/domain/model/colors'
 import { createCollapseSceneBodies } from '@/scene/collapseSceneBodies'
 
 function placedBrick(id: string): PlacedBrick {
@@ -83,6 +83,34 @@ describe('brickToBodySnapshot', () => {
         rot: 0,
       }),
     ).toThrow()
+  })
+
+  it('resolves unknown colors to the default palette hex', () => {
+    const snapshot = brickToBodySnapshot({
+      id: 'unknown-color',
+      partId: 'brick-1x1',
+      color: 'not-a-real-color',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+
+    expect(snapshot.color).toBe(getBrickColor(DEFAULT_COLOR_ID)?.hex)
+  })
+
+  it('resolves arbitrarily long colors to the default palette hex', () => {
+    const snapshot = brickToBodySnapshot({
+      id: 'long-color',
+      partId: 'brick-1x1',
+      color: 'x'.repeat(10_000),
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+
+    expect(snapshot.color).toBe(getBrickColor(DEFAULT_COLOR_ID)?.hex)
   })
 
   it('converts a batch of bricks preserving order and ids', () => {

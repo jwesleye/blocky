@@ -10,6 +10,8 @@ import {
   safeParseBuild,
   serializeBuild,
   validateBuild,
+  MAX_BRICKS_PER_BUILD,
+  MAX_BRICK_STRING_LENGTH,
 } from '@/domain/model/build'
 import type { Build } from '@/domain/model/build'
 import { createBrickId } from '@/domain/model/ids'
@@ -760,5 +762,48 @@ describe('safeParseBuild', () => {
     })
 
     expect(safeParseBuild(bad)).toBeNull()
+  })
+})
+
+describe('build schema bounds', () => {
+  const validBrick = { partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 as const }
+
+  it('rejects a bricks array that exceeds MAX_BRICKS_PER_BUILD', () => {
+    const oversized = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: Array(MAX_BRICKS_PER_BUILD + 1).fill(validBrick),
+    })
+    expect(safeParseBuild(oversized)).toBeNull()
+    expect(() => validateBuild(JSON.parse(oversized))).toThrow()
+  })
+
+  it('rejects a brick whose partId exceeds MAX_BRICK_STRING_LENGTH', () => {
+    const oversized = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [{ ...validBrick, partId: 'x'.repeat(MAX_BRICK_STRING_LENGTH + 1) }],
+    })
+    expect(safeParseBuild(oversized)).toBeNull()
+    expect(() => validateBuild(JSON.parse(oversized))).toThrow()
+  })
+
+  it('rejects a brick whose color exceeds MAX_BRICK_STRING_LENGTH', () => {
+    const oversized = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: [{ ...validBrick, color: 'x'.repeat(MAX_BRICK_STRING_LENGTH + 1) }],
+    })
+    expect(safeParseBuild(oversized)).toBeNull()
+    expect(() => validateBuild(JSON.parse(oversized))).toThrow()
+  })
+
+  it('accepts a build with exactly MAX_BRICKS_PER_BUILD bricks', () => {
+    const atLimit = JSON.stringify({
+      version: 1,
+      baseplate: { size: 32 },
+      bricks: Array(MAX_BRICKS_PER_BUILD).fill(validBrick),
+    })
+    expect(safeParseBuild(atLimit)).not.toBeNull()
   })
 })

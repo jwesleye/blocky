@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+// Must match MAX_BRICKS_PER_BUILD / MAX_BRICK_STRING_LENGTH from src/domain/model/build.ts.
+const MAX_BRICKS_PER_BUILD = 50_000
+const MAX_BRICK_STRING_LENGTH = 64
+
 const buildVersionSchema = z.union([
   z.literal(1),
   z.literal(2),
@@ -29,8 +33,8 @@ const brickMountSchema = z.union([
 const brickHingeSchema = z.union([z.literal('x'), z.literal('z')])
 
 const serializedBrickSchema = z.object({
-  partId: z.string(),
-  color: z.string(),
+  partId: z.string().max(MAX_BRICK_STRING_LENGTH),
+  color: z.string().max(MAX_BRICK_STRING_LENGTH),
   x: z.number().int(),
   y: z.number().int(),
   z: z.number().int(),
@@ -52,7 +56,7 @@ const BuildSchema = z
   .object({
     version: buildVersionSchema,
     baseplate: z.object({ size: supportedBaseplateSizeSchema }),
-    bricks: z.array(serializedBrickSchema),
+    bricks: z.array(serializedBrickSchema).max(MAX_BRICKS_PER_BUILD),
   })
   .superRefine((build, ctx) => {
     const maxCoordinate = build.baseplate.size - 1
