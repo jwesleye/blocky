@@ -272,4 +272,60 @@ describe('lateral connections (SNOT mount)', () => {
     const graph = buildConnectionGraph([standard, mounted], PART_CATALOG)
     expect(graph.hasEdge('std', 'mnt')).toBe(true)
   })
+
+  it("connects an elevated mounted 'px' brick to an elevated standard brick at the same level", () => {
+    // Standard at y=3 (stacked on a baseplate brick). Mounted 'px' at x=2, y=3.
+    // Anti-stud: xCenter(2.5) − H/2(1.5) = 1.0. Standard xHi = 1.0. Face matches.
+    // Y overlap: mounted bottomY=3, H=3, W=1 → mountedY [4.0, 5.0].
+    //            Standard bottomY=3, height=3 → Y [3, 6]. Overlap [4, 5] ✓.
+    const standard: PlacedBrick = {
+      id: 'std',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 3,
+      z: 0,
+      rot: 0,
+    }
+    const mounted: PlacedBrick = {
+      id: 'mnt',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 2,
+      y: 3,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    }
+
+    const graph = buildConnectionGraph([standard, mounted], PART_CATALOG)
+    expect(graph.hasEdge('std', 'mnt')).toBe(true)
+  })
+
+  it('does not connect a mounted brick when the standard brick Y range does not overlap', () => {
+    // 'px' mounted at y=9: mountedYCenter=10.5, mountedY [10.0, 11.0].
+    // Standard at y=0, height=3 → Y [0, 3]. mountedYLo(10) ≥ std top(3) → no overlap.
+    const standard: PlacedBrick = {
+      id: 'std',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+    const mounted: PlacedBrick = {
+      id: 'mnt',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 2,
+      y: 9,
+      z: 0,
+      rot: 0,
+      mount: 'px',
+    }
+
+    const graph = buildConnectionGraph([standard, mounted], PART_CATALOG)
+    expect(graph.hasEdge('std', 'mnt')).toBe(false)
+  })
 })

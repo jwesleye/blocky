@@ -41,7 +41,7 @@ async function placeBrick(
   }, brick)
 }
 
-test('places a baseplate-mounted brick and rejects an elevated mounted placement', async ({
+test('places a baseplate-mounted brick and rejects a floating elevated mounted placement', async ({
   page,
 }) => {
   await gotoWithStore(page)
@@ -62,7 +62,8 @@ test('places a baseplate-mounted brick and rejects an elevated mounted placement
 
   await expect(page.locator('canvas')).toBeVisible()
 
-  // Elevated mounted placement is still unsupported until mount-aware physics land.
+  // Floating elevated mount is rejected: no standard brick provides lateral
+  // contact at y=3 for this SNOT brick's anti-stud face.
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'red',
@@ -76,6 +77,49 @@ test('places a baseplate-mounted brick and rejects an elevated mounted placement
   // It should be rejected (count remains 1).
   count = await getBrickCount(page)
   expect(count).toBe(1)
+})
+
+test('rejects an elevated mounted brick when lateral support is still too unstable to survive collapse', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+
+  // Build a two-brick vertical stack so the top standard brick offers a valid
+  // lateral contact face for the mounted brick.
+  //
+  // Standard at x=0, y=3: xHi=1.0.
+  // Mounted 'px' at x=2, y=3: anti-stud = xCenter(2.5) - H/2(1.5) = 1.0.
+  // Even with that lateral contact, the store still runs collapse after
+  // placement and this narrow support stack is too unstable to keep the
+  // mounted brick in the build.
+  await placeBrick(page, {
+    partId: 'brick-1x1',
+    color: 'gray',
+    x: 0,
+    y: 0,
+    z: 0,
+    rot: 0,
+  })
+  await placeBrick(page, {
+    partId: 'brick-1x1',
+    color: 'gray',
+    x: 0,
+    y: 3,
+    z: 0,
+    rot: 0,
+  })
+  await placeBrick(page, {
+    partId: 'brick-1x1',
+    color: 'blue',
+    x: 2,
+    y: 3,
+    z: 0,
+    rot: 0,
+    mount: 'px',
+  })
+
+  const count = await getBrickCount(page)
+  expect(count).toBe(2)
 })
 
 test('places an offset brick and rejects overlapping offset placements', async ({

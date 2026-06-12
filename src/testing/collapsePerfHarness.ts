@@ -2,11 +2,11 @@ import { selectCollapsingBricks } from '../domain/physics/collapse'
 import {
   createCollapseTransaction,
   advanceCollapseTransaction,
+  type CollapseTransaction,
 } from '../domain/physics/collapseSimulation'
 import { createCollapseSceneBodies } from '../scene/collapseSceneBodies'
 import { useBuildStore } from '../state/store'
 import type { PlacedBrick, BrickBodySnapshot } from '../domain/model/types'
-import type { CollapseTransaction } from '../domain/physics/collapseSimulation'
 
 export interface MeasureCollapsePerfInput {
   brickData: PlacedBrick[]
