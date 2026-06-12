@@ -78,7 +78,12 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   }
 
   await page.waitForFunction(
-    () => (window as any).__blockyCollapsePerf?.measureCollapsePerf !== undefined,
+    () =>
+      (
+        window as Window & {
+          __blockyCollapsePerf?: { measureCollapsePerf?: unknown }
+        }
+      ).__blockyCollapsePerf?.measureCollapsePerf !== undefined,
   )
 
   const result = await page.evaluate(
@@ -89,7 +94,16 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       brickData: FixtureBrick[]
       targetFrames: number
     }) => {
-      return (window as any).__blockyCollapsePerf.measureCollapsePerf({
+      return (
+        window as Window & {
+          __blockyCollapsePerf: {
+            measureCollapsePerf: (input: {
+              brickData: typeof brickData
+              targetFrames: number
+            }) => unknown
+          }
+        }
+      ).__blockyCollapsePerf.measureCollapsePerf({
         brickData,
         targetFrames,
       })
