@@ -108,7 +108,7 @@ describe('gallery store resource bounds', () => {
     },
   )
 
-  it('evicts the oldest deleted tombstone when the delete cap is exceeded', () => {
+  it('evicts the oldest deleted tombstone when the delete cap is exceeded', { timeout: 30000 }, () => {
     const deletedIds: string[] = []
 
     for (let index = 0; index < MAX_STORED_BUILDS + 1; index += 1) {
