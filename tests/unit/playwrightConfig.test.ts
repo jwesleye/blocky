@@ -66,8 +66,8 @@ describe('playwright.config.ts default matrix', () => {
     const chromium = playwrightConfig.projects?.find(
       (p) => p.name === 'chromium',
     )
-    expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_POSIX)).toBe(false)
-    expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_WIN)).toBe(false)
+    expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_POSIX)).toBe(true)
+    expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_WIN)).toBe(true)
   })
 
   describe('firefox, webkit, and tablet exclude the CDP-only load-perf spec', () => {

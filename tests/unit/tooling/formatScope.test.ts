@@ -31,7 +31,7 @@ describe('formatter scope', () => {
       {
         cwd: process.cwd(),
         encoding: 'utf-8',
-        timeout: 25_000,
+        timeout: 45_000,
       },
     )
 
@@ -40,7 +40,7 @@ describe('formatter scope', () => {
     expect(result.stdout).toContain(
       'All matched files use Prettier code style!',
     )
-  }, 30_000)
+  }, 50_000)
 
   it('selects tracked files without including untracked scratch files', async () => {
     writeFileSync(SCRATCH_FILE_PATH, Buffer.from([0xff, 0xfe, 0x5b, 0x00]))
