@@ -30,16 +30,20 @@ describe('husky pre-commit hook (issue #293)', () => {
 
     it('has a failure message for lint-staged', () => {
       const hook = readFileSync(HOOK_PATH, 'utf-8')
-      expect(hook, 'pre-commit hook must print a clear error when lint-staged fails').toMatch(
+      expect(
+        hook,
+        'pre-commit hook must print a clear error when lint-staged fails',
+      ).toMatch(
         /lint-staged.*fail|fail.*lint-staged|pre-commit.*fail|lint.*fail/i,
       )
     })
 
     it('has a failure message for typecheck', () => {
       const hook = readFileSync(HOOK_PATH, 'utf-8')
-      expect(hook, 'pre-commit hook must print a clear error when typecheck fails').toMatch(
-        /typecheck.*fail|fail.*typecheck|type.*check.*fail/i,
-      )
+      expect(
+        hook,
+        'pre-commit hook must print a clear error when typecheck fails',
+      ).toMatch(/typecheck.*fail|fail.*typecheck|type.*check.*fail/i)
     })
   })
 
@@ -50,14 +54,17 @@ describe('husky pre-commit hook (issue #293)', () => {
 
     it('runs npm run test', () => {
       const hook = readFileSync(PRE_PUSH_PATH, 'utf-8')
-      expect(hook, 'pre-push hook must run npm run test').toMatch(/npm run test/)
+      expect(hook, 'pre-push hook must run npm run test').toMatch(
+        /npm run test/,
+      )
     })
 
     it('has a failure message for test failures', () => {
       const hook = readFileSync(PRE_PUSH_PATH, 'utf-8')
-      expect(hook, 'pre-push hook must print a clear error when tests fail').toMatch(
-        /test.*fail|fail.*test|pre-push.*fail/i,
-      )
+      expect(
+        hook,
+        'pre-push hook must print a clear error when tests fail',
+      ).toMatch(/test.*fail|fail.*test|pre-push.*fail/i)
     })
   })
 
