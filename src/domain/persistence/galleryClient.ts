@@ -97,6 +97,12 @@ export interface GalleryClient {
   deleteBuild(buildId: string): Promise<GalleryDeleteResult>
 }
 
+export const GALLERY_REQUEST_TIMEOUT_MS = 10_000
+
+interface GalleryClientOptions {
+  timeoutMs?: number
+}
+
 const authorLabel = (author: SharedBuildAuthorIdentity): string => {
   if (author.identityMode === 'authenticated') return author.displayName
   return author.displayName ?? 'Anonymous'
@@ -135,14 +141,19 @@ const parsePayloadList = (json: string): SharedBuildPayload[] | null => {
   return result.success ? result.data : null
 }
 
-export function createGalleryClient(baseUrl: string): GalleryClient {
+export function createGalleryClient(
+  baseUrl: string,
+  options?: GalleryClientOptions,
+): GalleryClient {
   const url = (path: string) => `${baseUrl.replace(/\/$/, '')}${path}`
+  const timeoutMs = options?.timeoutMs ?? GALLERY_REQUEST_TIMEOUT_MS
+  const requestSignal = () => AbortSignal.timeout(timeoutMs)
 
   return {
     async list() {
       let response: Response
       try {
-        response = await fetch(url('/builds'))
+        response = await fetch(url('/builds'), { signal: requestSignal() })
       } catch (err) {
         return {
           ok: false,
@@ -187,6 +198,7 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
       try {
         response = await fetch(url('/builds'), {
           method: 'POST',
+          signal: requestSignal(),
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(request),
         })
@@ -248,7 +260,9 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
     async load(buildId) {
       let response: Response
       try {
-        response = await fetch(url(`/builds/${encodeURIComponent(buildId)}`))
+        response = await fetch(url(`/builds/${encodeURIComponent(buildId)}`), {
+          signal: requestSignal(),
+        })
       } catch (err) {
         return {
           ok: false,
@@ -307,6 +321,7 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
           url(`/builds/${encodeURIComponent(buildId)}/reports`),
           {
             method: 'POST',
+            signal: requestSignal(),
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(report),
           },
@@ -347,6 +362,7 @@ export function createGalleryClient(baseUrl: string): GalleryClient {
       try {
         response = await fetch(url(`/builds/${encodeURIComponent(buildId)}`), {
           method: 'DELETE',
+          signal: requestSignal(),
         })
       } catch (err) {
         return {

@@ -671,6 +671,25 @@ describe('useBuildStore', () => {
       expect(useBuildStore.getState().mirrorSelection('x')).toBe(false)
       expect(useBuildStore.getState().bricks).toBe(bricksBefore)
     })
+
+    it('undo/redo reverses and reapplies setBaseplateSize', () => {
+      expect(useBuildStore.getState().baseplateSize).toBe(32)
+      useBuildStore.getState().setBaseplateSize(48)
+      expect(useBuildStore.getState().baseplateSize).toBe(48)
+      useBuildStore.getState().undo()
+      expect(useBuildStore.getState().baseplateSize).toBe(32)
+      useBuildStore.getState().redo()
+      expect(useBuildStore.getState().baseplateSize).toBe(48)
+    })
+
+    it('setBaseplateSize to the same value records no history entry', () => {
+      const pastStateCount = () =>
+        (useBuildStore as unknown as BuildStoreWithTemporal).temporal.getState()
+          .pastStates.length
+      const before = pastStateCount()
+      useBuildStore.getState().setBaseplateSize(32)
+      expect(pastStateCount()).toBe(before)
+    })
   })
 
   describe('grounding validation', () => {

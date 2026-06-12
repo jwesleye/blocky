@@ -237,6 +237,28 @@ describe('App', () => {
     )
   })
 
+  it('autosaves the shared baseplate size rather than the default after share hydration', async () => {
+    const sharedBuild = seedBuild(
+      { partId: 'brick-1x1', color: 'blue', x: 4, y: 0, z: 5, rot: 1 },
+      48,
+    )
+    const shareSearch = new URL(
+      createShareUrl(sharedBuild, window.location.href),
+    ).search
+    window.history.replaceState({}, '', `/${shareSearch}`)
+
+    const { unmount } = render(<App />)
+
+    await waitFor(() => {
+      expect(useBuildStore.getState().baseplateSize).toBe(48)
+    })
+
+    unmount()
+
+    const saved = loadBuild()
+    expect(saved?.baseplate.size).toBe(48)
+  })
+
   it('falls back to the autosaved build when no share URL is present', async () => {
     const autosavedBuild = seedBuild(
       {

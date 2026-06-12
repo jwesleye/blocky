@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { REPORT_REASON_VALUES } from '../../../backend/src/moderation'
 
 const DOC_PATH = join(process.cwd(), 'docs/design/community-sharing.md')
 
@@ -20,10 +21,13 @@ describe('docs/design/community-sharing.md — community sharing hardening guard
 
     it('documents accepted report reasons', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(/spam|abuse|copyright/i)
+      const reasons = REPORT_REASON_VALUES.filter((r) => r !== 'other')
+      for (const reason of reasons) {
+        expect(doc).toMatch(new RegExp(reason, 'i'))
+      }
     })
 
-    it('documents backend rejection of invalid reports', () => {
+    it('documents that invalid reports are rejected (422)', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(doc).toMatch(/422|invalid.*report|reject.*report/i)
     })
@@ -46,7 +50,7 @@ describe('docs/design/community-sharing.md — community sharing hardening guard
       expect(doc).toMatch(/authenticated principal|disabled until auth/i)
     })
 
-    it('documents deleted-content (tombstone/410) behavior', () => {
+    it('documents that deleted builds return 410 (tombstone)', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(doc).toMatch(/410|tombstone|deleted.*build|build.*deleted/i)
     })

@@ -174,11 +174,12 @@ function Baseplate({
 }
 
 function ThreeDevExpose() {
-  const { camera, gl } = useThree()
+  const { camera, gl, invalidate } = useThree()
 
   useEffect(() => {
     if (shouldExposeTestHooks) {
       window.__blockyCamera = camera as PerspectiveCamera
+      window.__blockyInvalidateScene = invalidate
       window.__blockyProjectToCanvas = (worldX, worldY, worldZ) => {
         const point = new Vector3(worldX, worldY, worldZ).project(
           camera as PerspectiveCamera,
@@ -193,10 +194,11 @@ function ThreeDevExpose() {
 
     return () => {
       if (shouldExposeTestHooks) {
+        delete window.__blockyInvalidateScene
         delete window.__blockyProjectToCanvas
       }
     }
-  }, [camera, gl])
+  }, [camera, gl, invalidate])
 
   return null
 }
@@ -253,6 +255,7 @@ export function BuildScene({
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
   const gestureStartRef = useRef<{ x: number; y: number } | null>(null)
   const draggedSincePointerDownRef = useRef(false)
+  const suppressNextPlaceRef = useRef(false)
 
   const stableOnCaptureFnReady = useCallback(
     (fn: CaptureScreenshot) => onCaptureFnReady?.(fn),
@@ -350,9 +353,12 @@ export function BuildScene({
   }
 
   const handlePlace = () => {
+    const shouldSuppressPlace = suppressNextPlaceRef.current
+    suppressNextPlaceRef.current = false
     const wasDragged = draggedSincePointerDownRef.current
     resetPlacementGesture()
 
+    if (shouldSuppressPlace) return
     if (wasDragged) return
     if (editingTool !== 'place') return
     if (!ghostGrid || !ghostValid) return
@@ -446,6 +452,9 @@ export function BuildScene({
         }}
         onInstancePointerDown={(brick, event) => {
           event.stopPropagation()
+          if (editingTool === 'place' && event.pointerType === 'touch') {
+            suppressNextPlaceRef.current = true
+          }
           if (brick.id) setHoveredBrickId(brick.id)
           const grid = brickPointerToGhostGrid(brick, event)
           if (grid) setGhostGrid(grid)

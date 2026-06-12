@@ -1,7 +1,13 @@
 /// <reference types="node" />
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { BUNDLE_CHUNK_WARNING_LIMIT_KIB } from '../../perf/budgets'
+import {
+  BUNDLE_CHUNK_WARNING_LIMIT_KIB,
+  BUNDLE_ENTRY_BUDGET_KIB,
+  COLLAPSE_BRICK_COUNT,
+  LONG_FRAME_THRESHOLD_MS,
+  P95_FRAME_BUDGET_MS,
+} from '../../perf/budgets'
 
 const DOC_PATH = join(process.cwd(), 'docs/PERF_BUDGETS.md')
 
@@ -11,9 +17,9 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
   })
 
   describe('render budget (issue #51)', () => {
-    it('records 17 ms p95 frame-time threshold', () => {
+    it('records p95 frame-time threshold', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(/17\s*ms/)
+      expect(doc).toMatch(new RegExp(String(P95_FRAME_BUDGET_MS) + '\\s*ms'))
     })
 
     it('references 2 000-brick stress build', () => {
@@ -30,14 +36,18 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
   })
 
   describe('collapse smoothness budget (issue #52)', () => {
-    it('records 50 ms long-frame threshold', () => {
+    it('records long-frame threshold', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(/50\s*ms/)
+      expect(doc).toMatch(
+        new RegExp(String(LONG_FRAME_THRESHOLD_MS) + '\\s*ms'),
+      )
     })
 
-    it('references ~300-brick collapse scenario', () => {
+    it('references collapse scenario brick count', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(/300\s*brick/i)
+      expect(doc).toMatch(
+        new RegExp(String(COLLAPSE_BRICK_COUNT) + '\\s*brick', 'i'),
+      )
     })
 
     it('owning spec file exists', () => {
@@ -54,9 +64,11 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
       expect(doc).toMatch(new RegExp(String(BUNDLE_CHUNK_WARNING_LIMIT_KIB)))
     })
 
-    it('still documents the 500 KiB gzip entry ceiling', () => {
+    it('still documents the gzip entry ceiling', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(/500\s*KiB/)
+      expect(doc).toMatch(
+        new RegExp(String(BUNDLE_ENTRY_BUDGET_KIB) + '\\s*KiB'),
+      )
     })
   })
 
