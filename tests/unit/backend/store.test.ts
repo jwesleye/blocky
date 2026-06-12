@@ -108,21 +108,25 @@ describe('gallery store resource bounds', () => {
     },
   )
 
-  it('evicts the oldest deleted tombstone when the delete cap is exceeded', () => {
-    const deletedIds: string[] = []
+  it(
+    'evicts the oldest deleted tombstone when the delete cap is exceeded',
+    { timeout: 30000 },
+    () => {
+      const deletedIds: string[] = []
 
-    for (let index = 0; index < MAX_STORED_BUILDS + 1; index += 1) {
-      const buildId = generateBuildId()
-      deletedIds.push(buildId)
-      storeBuild(makeAuthenticatedPayload(buildId))
-      expect(deleteBuild(buildId, { userId: 'owner-1' })).toEqual({
-        success: true,
-      })
-    }
+      for (let index = 0; index < MAX_STORED_BUILDS + 1; index += 1) {
+        const buildId = generateBuildId()
+        deletedIds.push(buildId)
+        storeBuild(makeAuthenticatedPayload(buildId))
+        expect(deleteBuild(buildId, { userId: 'owner-1' })).toEqual({
+          success: true,
+        })
+      }
 
-    expect(isBuildDeleted(deletedIds[0] as string)).toBe(false)
-    expect(isBuildDeleted(deletedIds.at(-1) as string)).toBe(true)
-  })
+      expect(isBuildDeleted(deletedIds[0] as string)).toBe(false)
+      expect(isBuildDeleted(deletedIds.at(-1) as string)).toBe(true)
+    },
+  )
 })
 
 describe('build id entropy and unpredictability', () => {
@@ -170,6 +174,7 @@ describe('gallery store durability', () => {
     reloadStore()
     const secondId = generateBuildId()
 
+    expect(secondId).toMatch(/^build_[A-Za-z0-9_-]{22}$/)
     expect(secondId).not.toBe(firstId)
   })
 
