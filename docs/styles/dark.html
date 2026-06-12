@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <title>blocky – Dark Theme Style Guide</title>
+    <style>
+      /* ── Token palette ─────────────────────────────────────────────── */
+      :root {
+        color-scheme: dark;
+
+        --color-bg: #05070d;
+        --color-text: #d8f3ff;
+        --color-panel: rgba(8, 12, 20, 0.92);
+        --color-panel-strong: #0d1725;
+        --color-muted: #8fa8b5;
+        --color-line: rgba(101, 223, 255, 0.28);
+        --color-ok: #29e3a9;
+        --color-danger: #ff6b5e;
+        --color-grid: #48b8ff;
+        --color-focus: #facc15;
+        --color-overlay: rgb(0 0 0 / 0.8);
+      }
+
+      /* ── Page chrome ───────────────────────────────────────────────── */
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem;
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 2rem;
+      }
+
+      h2 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 2rem 0 1rem;
+        color: var(--color-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      section {
+        margin-bottom: 3rem;
+      }
+
+      /* ── Swatch grid ───────────────────────────────────────────────── */
+      .swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .swatch {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .swatch__block {
+        width: 80px;
+        height: 56px;
+        border-radius: 6px;
+        border: 1px solid var(--color-line);
+      }
+
+      .swatch__name {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--color-muted);
+      }
+
+      .swatch__value {
+        font-size: 10px;
+        font-family: ui-monospace, monospace;
+        color: var(--color-muted);
+      }
+
+      /* ── Component demos ───────────────────────────────────────────── */
+
+      /* Toolbar */
+      .toolbar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem;
+        border: 1px solid var(--color-line);
+        border-radius: 8px;
+        background: var(--color-panel);
+        box-shadow: 0 10px 24px rgb(0 0 0 / 0.4);
+      }
+
+      .toolbar button,
+      .hud-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.35rem;
+        min-height: 2.35rem;
+        border: 1px solid var(--color-muted);
+        border-radius: 6px;
+        background: var(--color-panel-strong);
+        color: var(--color-text);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .toolbar button:hover,
+      .hud-button:hover {
+        background: color-mix(in srgb, var(--color-grid) 15%, var(--color-panel-strong));
+        border-color: var(--color-grid);
+      }
+
+      .hud-button--danger {
+        border-color: var(--color-danger);
+      }
+
+      /* Brick count */
+      .brick-count {
+        display: inline-block;
+        padding: 0.45rem 0.65rem;
+        border: 1px solid var(--color-line);
+        border-radius: 6px;
+        background: var(--color-panel-strong);
+        color: var(--color-text);
+        font-size: 0.875rem;
+        font-weight: 700;
+        box-shadow: 0 8px 20px rgb(0 0 0 / 0.4);
+      }
+
+      /* Pickers */
+      .picker-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        padding: 4px 8px;
+        border: 1px solid var(--color-line);
+        border-radius: 4px;
+        background: var(--color-panel);
+        color: var(--color-text);
+        cursor: pointer;
+      }
+
+      .picker-btn:hover {
+        background: color-mix(in srgb, var(--color-grid) 10%, var(--color-panel));
+      }
+
+      .picker-btn--selected {
+        border-color: var(--color-grid);
+        background: color-mix(in srgb, var(--color-grid) 25%, var(--color-panel-strong));
+      }
+
+      /* Gallery panel */
+      .gallery-panel {
+        max-width: 480px;
+        border: 1px solid var(--color-line);
+        border-radius: 6px;
+        background: var(--color-panel);
+        overflow: hidden;
+      }
+
+      .gallery-panel__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--color-line);
+        font-weight: 700;
+      }
+
+      .gallery-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem;
+        border: 1px solid var(--color-line);
+        border-radius: 6px;
+        background: var(--color-panel-strong);
+        margin: 0.75rem;
+      }
+
+      .gallery-item button {
+        padding: 0.4rem 0.7rem;
+        border: 1px solid var(--color-grid);
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--color-grid) 25%, var(--color-panel-strong));
+        color: var(--color-text);
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      /* Status colors */
+      .status {
+        display: inline-block;
+        padding: 0.25rem 0.6rem;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status--ok {
+        color: var(--color-ok);
+        background: color-mix(in srgb, var(--color-ok) 15%, var(--color-panel-strong));
+      }
+
+      .status--danger {
+        color: var(--color-danger);
+        background: color-mix(in srgb, var(--color-danger) 15%, var(--color-panel-strong));
+      }
+    </style>
+  </head>
+  <body>
+    <h1>blocky — Dark Theme Style Guide</h1>
+
+    <!-- ── Palette ──────────────────────────────────────────────── -->
+    <section>
+      <h2>Color Tokens</h2>
+      <div class="swatches">
+        <div class="swatch">
+          <div class="swatch__block" style="background: #05070d"></div>
+          <div class="swatch__name">--color-bg</div>
+          <div class="swatch__value">#05070d</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: #d8f3ff"></div>
+          <div class="swatch__name">--color-text</div>
+          <div class="swatch__value">#d8f3ff</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: rgba(8,12,20,0.92); border: 1px solid rgba(101,223,255,0.28)"></div>
+          <div class="swatch__name">--color-panel</div>
+          <div class="swatch__value">rgba(8,12,20,0.92)</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: #0d1725"></div>
+          <div class="swatch__name">--color-panel-strong</div>
+          <div class="swatch__value">#0d1725</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: #8fa8b5"></div>
+          <div class="swatch__name">--color-muted</div>
+          <div class="swatch__value">#8fa8b5</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: rgba(101,223,255,0.28)"></div>
+          <div class="swatch__name">--color-line</div>
+          <div class="swatch__value">rgba(101,223,255,0.28)</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: #29e3a9"></div>
+          <div class="swatch__name">--color-ok</div>
+          <div class="swatch__value">#29e3a9</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: #ff6b5e"></div>
+          <div class="swatch__name">--color-danger</div>
+          <div class="swatch__value">#ff6b5e</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: #48b8ff"></div>
+          <div class="swatch__name">--color-grid</div>
+          <div class="swatch__value">#48b8ff</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__block" style="background: #facc15"></div>
+          <div class="swatch__name">--color-focus</div>
+          <div class="swatch__value">#facc15</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HUD & Toolbar ────────────────────────────────────────── -->
+    <section>
+      <h2>HUD Toolbar</h2>
+      <div class="toolbar">
+        <button>↩</button>
+        <button>↪</button>
+        <button>⊞</button>
+        <button class="hud-button--danger">✕</button>
+      </div>
+      &nbsp;
+      <span class="brick-count">42 bricks</span>
+    </section>
+
+    <!-- ── Pickers ──────────────────────────────────────────────── -->
+    <section>
+      <h2>Part / Size Picker Chips</h2>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap">
+        <button class="picker-btn">2×2</button>
+        <button class="picker-btn picker-btn--selected">2×4</button>
+        <button class="picker-btn">1×8</button>
+        <button class="picker-btn">Plate</button>
+      </div>
+    </section>
+
+    <!-- ── Gallery ──────────────────────────────────────────────── -->
+    <section>
+      <h2>Gallery Panel</h2>
+      <div class="gallery-panel">
+        <div class="gallery-panel__header">
+          <span>Community Builds</span>
+          <span style="color: var(--color-muted); font-size: 12px">12 items</span>
+        </div>
+        <div class="gallery-item">
+          <div>
+            <div style="font-weight:700; font-size:0.95rem">Castle</div>
+            <div style="color: var(--color-muted); font-size: 0.8rem">by player1</div>
+          </div>
+          <button>Load</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Status ───────────────────────────────────────────────── -->
+    <section>
+      <h2>Status Colors</h2>
+      <span class="status status--ok">Stable</span>
+      &nbsp;
+      <span class="status status--danger">Collapsed</span>
+    </section>
+  </body>
+</html>
