@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>blocky — Light Style Guide</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3f6ff;
+        --panel: rgba(242, 248, 255, 0.94);
+        --panel-strong: #ffffff;
+        --text: #1f2940;
+        --muted: #6d768b;
+        --line: #d6deec;
+        --accent: #0f8a6c; /* placeable / valid ghost */
+        --danger: #c4281b; /* invalid ghost / collapse */
+        --grid: #009cd6; /* stud grid lines + selection accent */
+        --focus: #d8a200; /* keyboard focus ring */
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 32px;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+
+      h1,
+      h2,
+      p { margin: 0; }
+
+      h1 { font-size: 30px; }
+      h2 { font-size: 20px; }
+
+      .lede {
+        max-width: 760px;
+        margin-top: 10px;
+        color: var(--muted);
+      }
+
+      .section {
+        margin-top: 28px;
+        padding: 22px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .token {
+        padding: 14px;
+        background: var(--panel-strong);
+        border: 1px solid var(--line);
+      }
+
+      .swatch {
+        height: 42px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(31, 41, 64, 0.18);
+      }
+
+      code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        color: #244d69;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .caption {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* Ghost placement states — the core build mechanic (PRD §7.2) */
+      .ghost-strip {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .ghost {
+        min-height: 86px;
+        display: flex;
+        align-items: flex-end;
+        padding: 10px;
+        border: 2px solid var(--state);
+        background:
+          linear-gradient(var(--grid-soft) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-soft) 1px, transparent 1px),
+          color-mix(in srgb, var(--state) 16%, var(--panel-strong));
+        background-size: 16px 16px, 16px 16px, auto;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .ghost--ok { --state: var(--accent); --grid-soft: rgba(15, 138, 108, 0.32); }
+      .ghost--bad { --state: var(--danger); --grid-soft: rgba(196, 40, 27, 0.3); }
+
+      /* Stud-grid build surface (the baseplate) */
+      .surface {
+        min-height: 120px;
+        margin-top: 16px;
+        border: 1px solid rgba(0, 124, 176, 0.36);
+        background:
+          linear-gradient(rgba(0, 156, 214, 0.42) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 156, 214, 0.42) 1px, transparent 1px),
+          #e7eefb;
+        background-size: 16px 16px, 16px 16px, auto;
+      }
+
+      /* Brick color palette (~14 colors, PRD §4.3) */
+      .brick-strip {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .brick {
+        position: relative;
+        min-height: 56px;
+        border: 1px solid rgba(31, 41, 64, 0.2);
+        background: var(--fill);
+        display: flex;
+        align-items: flex-end;
+        padding: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--ink, #1f2940);
+      }
+
+      .brick::before { /* stud nub */
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 10px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.28);
+        box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.22);
+      }
+
+      /* Toolbar + HUD buttons (PRD §8) */
+      .toolbar {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-strong);
+        box-shadow: 0 10px 24px rgb(31 41 64 / 0.16);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        min-height: 38px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel-strong);
+        color: var(--text);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn--hover { background: color-mix(in srgb, var(--grid) 12%, var(--panel-strong)); border-color: var(--grid); }
+      .btn--focus { outline: 3px solid var(--focus); outline-offset: 2px; }
+      .btn--danger { border-color: var(--danger); color: var(--danger); }
+      .btn--disabled { opacity: 0.5; cursor: not-allowed; }
+
+      /* Brick count indicator (PRD §7.4) */
+      .brick-count {
+        display: inline-flex;
+        padding: 7px 11px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel-strong);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        box-shadow: 0 8px 20px rgb(31 41 64 / 0.14);
+      }
+
+      /* Part picker — grouped catalog (PRD §4.2) */
+      .group__label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        margin: 14px 0 6px;
+      }
+
+      .chip-row { display: flex; flex-wrap: wrap; gap: 5px; }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        padding: 5px 9px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--panel-strong);
+        color: var(--text);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .chip--selected { border-color: var(--grid); background: color-mix(in srgb, var(--grid) 16%, var(--panel-strong)); }
+
+      .chip__glyph {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        background: var(--grid);
+        opacity: 0.65;
+      }
+
+      /* Dialog (confirmations + shortcut sheet, PRD §7.2 / §8) */
+      .dialog {
+        max-width: 360px;
+        margin-top: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-strong);
+        color: var(--text);
+        box-shadow: 0 18px 44px rgb(31 41 64 / 0.22);
+        padding: 16px;
+      }
+
+      .dialog h3 { margin: 0 0 6px; font-size: 16px; }
+      .dialog p { margin: 0 0 12px; color: var(--muted); line-height: 1.45; }
+
+      .dialog__actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+      .shortcut { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 13px; }
+
+      kbd {
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--grid) 8%, var(--panel-strong));
+        color: var(--text);
+        padding: 2px 6px;
+        font: 12px "SFMono-Regular", Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>blocky — Light Style Guide</h1>
+      <p class="lede">
+        Light is the default theme for <em>blocky</em>, the browser brick-building sandbox. The HUD
+        is intentionally minimal so it stays out of the way of the 3D canvas — the stud grid and the
+        ghost-cursor states carry most of the feedback. Brick material colors are fixed swatches and
+        read identically in Light and Dark; only the chrome (panels, toolbar, grid lines) re-themes.
+      </p>
+
+      <section class="section">
+        <h2>HUD Tokens</h2>
+        <p class="lede">The base palette every HUD surface and 3D overlay color derives from.</p>
+        <div class="grid">
+          <div class="token"><div class="swatch" style="background:#f3f6ff"></div><code>--color-bg #f3f6ff</code></div>
+          <div class="token"><div class="swatch" style="background:#1f2940"></div><code>--color-text #1f2940</code></div>
+          <div class="token"><div class="swatch" style="background:rgba(242,248,255,0.94)"></div><code>--color-panel rgba(242,248,255,0.94)</code></div>
+          <div class="token"><div class="swatch" style="background:#6d768b"></div><code>--color-muted #6d768b</code></div>
+          <div class="token"><div class="swatch" style="background:#0f8a6c"></div><code>--color-ok #0f8a6c</code></div>
+          <div class="token"><div class="swatch" style="background:#c4281b"></div><code>--color-danger #c4281b</code></div>
+          <div class="token"><div class="swatch" style="background:#009cd6"></div><code>--color-grid #009cd6</code></div>
+          <div class="token"><div class="swatch" style="background:#d6deec"></div><code>--color-line #d6deec</code></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Ghost Placement States</h2>
+        <p class="lede">
+          A translucent cursor brick follows the pointer and snaps to the stud grid. Green = the
+          brick connects and will place; red = it would float or collide and is rejected. These map
+          to <code>--color-ok</code> and <code>--color-danger</code>.
+        </p>
+        <div class="ghost-strip">
+          <div class="ghost ghost--ok">Placeable — grounded / connects to a stud</div>
+          <div class="ghost ghost--bad">Invalid — would float or collide</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Stud-Grid Build Surface</h2>
+        <p class="lede">
+          The baseplate the structure rests on. Grid lines use <code>--color-grid</code> at low
+          alpha to suggest the stud pitch without competing with the bricks.
+        </p>
+        <div class="surface"></div>
+      </section>
+
+      <section class="section">
+        <h2>Brick Color Palette</h2>
+        <p class="lede">
+          The ~14 material colors (PRD §4.3). Every placed brick stores a color id; inventory is
+          unlimited. Color names are exposed in the picker (not color-only identification).
+        </p>
+        <div class="brick-strip">
+          <div class="brick" style="--fill:#c4281b;--ink:#fff">Red</div>
+          <div class="brick" style="--fill:#0d5ec4;--ink:#fff">Blue</div>
+          <div class="brick" style="--fill:#f5c518">Yellow</div>
+          <div class="brick" style="--fill:#237841;--ink:#fff">Green</div>
+          <div class="brick" style="--fill:#f4f4f4">White</div>
+          <div class="brick" style="--fill:#1b1b1b;--ink:#fff">Black</div>
+          <div class="brick" style="--fill:#a0a5a9">Light Gray</div>
+          <div class="brick" style="--fill:#6c6e68;--ink:#fff">Dark Gray</div>
+          <div class="brick" style="--fill:#694228;--ink:#fff">Brown</div>
+          <div class="brick" style="--fill:#fe8a18">Orange</div>
+          <div class="brick" style="--fill:#e4cd9e">Tan</div>
+          <div class="brick" style="--fill:#bbe90b">Lime</div>
+          <div class="brick" style="--fill:#1e90c4;--ink:#fff">Azure</div>
+          <div class="brick" style="--fill:#c8308a;--ink:#fff">Magenta</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Toolbar &amp; Buttons</h2>
+        <p class="lede">
+          The toolbar holds the edit controls: rotate, undo/redo, new, save/share, and reset view.
+          Buttons share one base; <code>--danger</code> marks destructive actions (clear / delete),
+          and the <code>--focus</code> ring keeps every action keyboard-reachable.
+        </p>
+        <div class="row">
+          <div class="toolbar">
+            <button class="btn">Rotate</button>
+            <button class="btn">Undo</button>
+            <button class="btn">Redo</button>
+            <button class="btn">Save</button>
+            <button class="btn">Reset</button>
+            <button class="btn btn--danger">Clear</button>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn">Default</button>
+          <button class="btn btn--hover">Hover</button>
+          <button class="btn btn--focus">Focus</button>
+          <button class="btn btn--disabled">Disabled</button>
+        </div>
+        <p class="caption">States, left to right: default, hover, keyboard-focus ring, disabled.</p>
+      </section>
+
+      <section class="section">
+        <h2>Brick Count Indicator</h2>
+        <p class="lede">A quiet, persistent readout of how many bricks are in the build (PRD §7.4).</p>
+        <div class="row"><span class="brick-count">1,248 bricks</span></div>
+      </section>
+
+      <section class="section">
+        <h2>Part Picker</h2>
+        <p class="lede">
+          The catalog (PRD §4.2), grouped by part type. Selecting a part loads it into the ghost
+          cursor. The selected chip uses <code>--color-grid</code> as its accent.
+        </p>
+
+        <div class="group__label">Bricks</div>
+        <div class="chip-row">
+          <button class="chip chip--selected"><span class="chip__glyph"></span>2×4</button>
+          <button class="chip"><span class="chip__glyph"></span>1×1</button>
+          <button class="chip"><span class="chip__glyph"></span>1×2</button>
+          <button class="chip"><span class="chip__glyph"></span>2×2</button>
+          <button class="chip"><span class="chip__glyph"></span>2×6</button>
+        </div>
+
+        <div class="group__label">Plates</div>
+        <div class="chip-row">
+          <button class="chip"><span class="chip__glyph"></span>1×2</button>
+          <button class="chip"><span class="chip__glyph"></span>2×4</button>
+          <button class="chip"><span class="chip__glyph"></span>2×6</button>
+        </div>
+
+        <div class="group__label">Tiles</div>
+        <div class="chip-row">
+          <button class="chip"><span class="chip__glyph"></span>1×2</button>
+          <button class="chip"><span class="chip__glyph"></span>2×2</button>
+          <button class="chip"><span class="chip__glyph"></span>2×4</button>
+        </div>
+
+        <div class="group__label">Slopes</div>
+        <div class="chip-row">
+          <button class="chip"><span class="chip__glyph"></span>2×1</button>
+          <button class="chip"><span class="chip__glyph"></span>Corner</button>
+          <button class="chip"><span class="chip__glyph"></span>Inverted</button>
+        </div>
+
+        <div class="group__label">Rounds &amp; Specials</div>
+        <div class="chip-row">
+          <button class="chip"><span class="chip__glyph"></span>1×1 Round</button>
+          <button class="chip"><span class="chip__glyph"></span>1×1 Cone</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Scene Pickers</h2>
+        <p class="lede">
+          Secondary selectors that change the scene rather than the build: baseplate size and
+          environment/lighting preset. They reuse the chip style with the same selected accent.
+        </p>
+        <div class="group__label">Baseplate Size</div>
+        <div class="chip-row">
+          <button class="chip chip--selected">32×32</button>
+          <button class="chip">48×48</button>
+          <button class="chip">64×64</button>
+        </div>
+        <div class="group__label">Environment Preset</div>
+        <div class="chip-row">
+          <button class="chip chip--selected">Studio</button>
+          <button class="chip">Sunset</button>
+          <button class="chip">Dawn</button>
+          <button class="chip">Night</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Dialogs</h2>
+        <p class="lede">
+          Modal sheets for confirmations (new / clear) and the keyboard-shortcut reference. Panels
+          use <code>--color-panel-strong</code>; <code>&lt;kbd&gt;</code> keys are tinted with the
+          grid accent.
+        </p>
+        <div class="row" style="align-items: flex-start">
+          <div class="dialog">
+            <h3>Clear the build?</h3>
+            <p>This removes every brick from the baseplate. You can undo it with Ctrl+Z.</p>
+            <div class="dialog__actions">
+              <button class="btn">Cancel</button>
+              <button class="btn btn--danger">Clear</button>
+            </div>
+          </div>
+          <div class="dialog">
+            <h3>Keyboard Shortcuts</h3>
+            <div class="shortcut"><span>Rotate cursor brick</span><kbd>R</kbd></div>
+            <div class="shortcut"><span>Undo</span><kbd>Ctrl+Z</kbd></div>
+            <div class="shortcut"><span>Redo</span><kbd>Ctrl+Y</kbd></div>
+            <div class="shortcut"><span>Place / delete</span><kbd>Click</kbd></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
