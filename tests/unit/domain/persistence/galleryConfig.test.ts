@@ -48,6 +48,9 @@ describe('galleryConfig', () => {
 
     expect(mode).toBe('live')
     expect(result.ok).toBe(true)
-    expect(fetch).toHaveBeenCalledWith('http://localhost:4000/builds')
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:4000/builds',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    )
   })
 })
