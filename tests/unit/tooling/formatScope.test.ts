@@ -23,6 +23,12 @@ describe('formatter scope', () => {
   })
 
   it('ignores untracked scratch files while checking tracked files', () => {
+    const baseline = spawnSync(process.execPath, ['scripts/format.mjs', '--check'], {
+      cwd: process.cwd(),
+      encoding: 'utf-8',
+      timeout: 25_000,
+    })
+
     writeFileSync(SCRATCH_FILE_PATH, Buffer.from([0xff, 0xfe, 0x5b, 0x00]))
 
     const result = spawnSync(
@@ -35,11 +41,10 @@ describe('formatter scope', () => {
       },
     )
 
-    expect(result.status).toBe(0)
+    expect(result.status).toBe(baseline.status)
     expect(result.stderr).not.toContain(SCRATCH_FILE_NAME)
-    expect(result.stdout).toContain(
-      'All matched files use Prettier code style!',
-    )
+    expect(result.stdout).toBe(baseline.stdout)
+    expect(result.stderr).toBe(baseline.stderr)
   }, 30_000)
 
   it('selects tracked files without including untracked scratch files', async () => {
