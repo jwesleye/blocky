@@ -174,11 +174,12 @@ function Baseplate({
 }
 
 function ThreeDevExpose() {
-  const { camera, gl } = useThree()
+  const { camera, gl, invalidate } = useThree()
 
   useEffect(() => {
     if (shouldExposeTestHooks) {
       window.__blockyCamera = camera as PerspectiveCamera
+      window.__blockyInvalidateScene = invalidate
       window.__blockyProjectToCanvas = (worldX, worldY, worldZ) => {
         const point = new Vector3(worldX, worldY, worldZ).project(
           camera as PerspectiveCamera,
@@ -193,10 +194,11 @@ function ThreeDevExpose() {
 
     return () => {
       if (shouldExposeTestHooks) {
+        delete window.__blockyInvalidateScene
         delete window.__blockyProjectToCanvas
       }
     }
-  }, [camera, gl])
+  }, [camera, gl, invalidate])
 
   return null
 }
