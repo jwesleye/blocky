@@ -22,4 +22,9 @@ if (shouldExposeTestHooks) {
   window.__blockyStore = useBuildStore
   window.__blockyCursorStore = useCursorStore
   window.__blockyCollapseDebug = collapseDebug
+
+  // Lazy-load the perf harness to keep the production bundle lean
+  import('./testing/collapsePerfHarness').then((harness) => {
+    window.__blockyCollapsePerf = harness
+  })
 }
