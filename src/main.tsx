@@ -29,4 +29,7 @@ if (shouldExposeTestHooks) {
   }).catch((err: unknown) => {
     window.__blockyCollapsePerfError = err instanceof Error ? err.message : String(err)
   })
+  import('./testing/renderPerfHarness').then((harness) => {
+    window.__blockyRenderPerf = harness
+  })
 }
