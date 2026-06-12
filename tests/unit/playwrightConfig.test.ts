@@ -79,6 +79,7 @@ describe('playwright.config.ts default matrix', () => {
     )
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_POSIX)).toBe(true)
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_WIN)).toBe(true)
+    expect(matchesTestIgnore(chromium?.testIgnore, WEBGL2_E2E)).toBe(false)
   })
 
   it('chromium project prefers the D3D11 ANGLE renderer for perf coverage', () => {
