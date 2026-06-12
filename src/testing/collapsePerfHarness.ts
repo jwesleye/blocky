@@ -6,6 +6,7 @@ import {
 import { createCollapseSceneBodies } from '../scene/collapseSceneBodies'
 import { useBuildStore } from '../state/store'
 import type { PlacedBrick, BrickBodySnapshot } from '../domain/model/types'
+import type { CollapseTransaction } from '../domain/physics/collapseSimulation'
 
 export interface MeasureCollapsePerfInput {
   brickData: PlacedBrick[]
@@ -55,7 +56,7 @@ export async function measureCollapsePerf({
   const frameTimes: number[] = []
   let computeMs = 0
   let collapsingCount = 0
-  let transaction: any = null
+  let transaction: CollapseTransaction | null = null
 
   await new Promise<void>((resolve) => {
     let last: number | null = null

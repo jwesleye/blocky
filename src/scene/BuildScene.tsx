@@ -253,6 +253,7 @@ export function BuildScene({
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
   const gestureStartRef = useRef<{ x: number; y: number } | null>(null)
   const draggedSincePointerDownRef = useRef(false)
+  const suppressNextPlaceRef = useRef(false)
 
   const stableOnCaptureFnReady = useCallback(
     (fn: CaptureScreenshot) => onCaptureFnReady?.(fn),
@@ -350,9 +351,12 @@ export function BuildScene({
   }
 
   const handlePlace = () => {
+    const shouldSuppressPlace = suppressNextPlaceRef.current
+    suppressNextPlaceRef.current = false
     const wasDragged = draggedSincePointerDownRef.current
     resetPlacementGesture()
 
+    if (shouldSuppressPlace) return
     if (wasDragged) return
     if (editingTool !== 'place') return
     if (!ghostGrid || !ghostValid) return
@@ -446,6 +450,9 @@ export function BuildScene({
         }}
         onInstancePointerDown={(brick, event) => {
           event.stopPropagation()
+          if (editingTool === 'place' && event.pointerType === 'touch') {
+            suppressNextPlaceRef.current = true
+          }
           if (brick.id) setHoveredBrickId(brick.id)
           const grid = brickPointerToGhostGrid(brick, event)
           if (grid) setGhostGrid(grid)
