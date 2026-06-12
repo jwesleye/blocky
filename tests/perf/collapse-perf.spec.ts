@@ -25,6 +25,18 @@ type FixtureBrick = {
   rot: 0 | 1 | 2 | 3
 }
 
+type BlockyWindow = Window & {
+  __blockyCollapsePerf?: {
+    measureCollapsePerf: (input: {
+      brickData: FixtureBrick[]
+      targetFrames: number
+    }) => Promise<
+      import('@/testing/collapsePerfHarness').MeasureCollapsePerfResult
+    >
+  }
+  __blockyCollapsePerfError?: string
+}
+
 /**
  * @perf Collapse smoothness — frame-stall budget
  *
@@ -42,7 +54,7 @@ type FixtureBrick = {
  * Budget thresholds are defined in ./budgets.ts.
  */
 test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
 
   // Stress fixture: two bricks form an unbalanced tower (narrow 1×1 base with a
   // wide 2x4 overhang) to exercise findShearRegion, computeSupportFootprint,
@@ -77,14 +89,15 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
     })
   }
 
-  await page.waitForFunction(
-    () =>
-      (
-        window as Window & {
-          __blockyCollapsePerf?: { measureCollapsePerf?: unknown }
-        }
-      ).__blockyCollapsePerf?.measureCollapsePerf !== undefined,
-  )
+  await page.waitForFunction(() => {
+    const w = window as BlockyWindow
+    if (w.__blockyCollapsePerfError) {
+      throw new Error(
+        `collapse perf harness failed to load: ${w.__blockyCollapsePerfError}`,
+      )
+    }
+    return w.__blockyCollapsePerf?.measureCollapsePerf !== undefined
+  })
 
   const result = (await page.evaluate(
     async ({
@@ -94,19 +107,12 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       brickData: FixtureBrick[]
       targetFrames: number
     }) => {
-      return (
-        window as Window & {
-          __blockyCollapsePerf: {
-            measureCollapsePerf: (input: {
-              brickData: typeof brickData
-              targetFrames: number
-            }) => unknown
-          }
-        }
-      ).__blockyCollapsePerf.measureCollapsePerf({
-        brickData,
-        targetFrames,
-      })
+      return (window as BlockyWindow).__blockyCollapsePerf!.measureCollapsePerf(
+        {
+          brickData,
+          targetFrames,
+        },
+      )
     },
     { brickData: bricks, targetFrames: MIN_SAMPLE_FRAMES },
   )) as import('@/testing/collapsePerfHarness').MeasureCollapsePerfResult

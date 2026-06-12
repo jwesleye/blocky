@@ -158,10 +158,13 @@ Default port: `4000` (override with `PORT` env var).
 
 ### Storage
 
-The backend persists published builds, tombstones, report records, and the
-build-id counter to a JSON file under `GALLERY_DATA_DIR`. By default that data
-directory is `backend/.gallery-data`, which keeps process restarts from losing
-gallery state during local development or single-instance deployments.
+The backend persists published builds, tombstones, and report records to a JSON
+file under `GALLERY_DATA_DIR`. By default that data directory is
+`backend/.gallery-data`, which keeps process restarts from losing gallery state
+during local development or single-instance deployments. Build ids are generated
+from cryptographically random entropy at publish time, not from a persisted
+sequential counter, so an `unlisted` build's id cannot be guessed or enumerated
+from a neighbouring id.
 
 For containerized or multi-host deployments, mount `GALLERY_DATA_DIR` to a
 durable volume. The storage format intentionally keeps the canonical

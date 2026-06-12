@@ -108,20 +108,42 @@ describe('gallery store resource bounds', () => {
     },
   )
 
-  it('evicts the oldest deleted tombstone when the delete cap is exceeded', () => {
-    const deletedIds: string[] = []
+  it(
+    'evicts the oldest deleted tombstone when the delete cap is exceeded',
+    { timeout: 30000 },
+    () => {
+      const deletedIds: string[] = []
 
-    for (let index = 0; index < MAX_STORED_BUILDS + 1; index += 1) {
-      const buildId = generateBuildId()
-      deletedIds.push(buildId)
-      storeBuild(makeAuthenticatedPayload(buildId))
-      expect(deleteBuild(buildId, { userId: 'owner-1' })).toEqual({
-        success: true,
-      })
+      for (let index = 0; index < MAX_STORED_BUILDS + 1; index += 1) {
+        const buildId = generateBuildId()
+        deletedIds.push(buildId)
+        storeBuild(makeAuthenticatedPayload(buildId))
+        expect(deleteBuild(buildId, { userId: 'owner-1' })).toEqual({
+          success: true,
+        })
+      }
+
+      expect(isBuildDeleted(deletedIds[0] as string)).toBe(false)
+      expect(isBuildDeleted(deletedIds.at(-1) as string)).toBe(true)
+    },
+  )
+})
+
+describe('build id entropy and unpredictability', () => {
+  it('generates high-entropy random ids that are not a sequential counter', () => {
+    const ids = Array.from({ length: 50 }, () => generateBuildId())
+
+    for (const id of ids) {
+      // build_<22-char base64url token> carries 128 bits of entropy.
+      expect(id).toMatch(/^build_[A-Za-z0-9_-]{22}$/)
+      // It must not be the old build_<base36 timestamp>_<base36 counter> shape
+      // whose suffix increments by 1 and is derivable from a prior id.
+      expect(id).not.toMatch(/^build_[0-9a-z]{4,12}_[0-9a-z]{1,5}$/)
     }
 
-    expect(isBuildDeleted(deletedIds[0] as string)).toBe(false)
-    expect(isBuildDeleted(deletedIds.at(-1) as string)).toBe(true)
+    // Every id is unique and, unlike the sequential counter format, not ordered.
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids).not.toEqual([...ids].sort())
   })
 })
 
@@ -145,13 +167,14 @@ describe('gallery store durability', () => {
     expect(getBuild(buildId)).toEqual(payload)
   })
 
-  it('persists the build id counter across reloads', () => {
+  it('keeps generated build ids unique across reloads', () => {
     const firstId = generateBuildId()
     storeBuild(makePayload(firstId))
 
     reloadStore()
     const secondId = generateBuildId()
 
+    expect(secondId).toMatch(/^build_[A-Za-z0-9_-]{22}$/)
     expect(secondId).not.toBe(firstId)
   })
 

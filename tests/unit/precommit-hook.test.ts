@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const ROOT = process.cwd()
 const HOOK_PATH = join(ROOT, '.husky/pre-commit')
+const PRE_PUSH_PATH = join(ROOT, '.husky/pre-push')
 const PACKAGE_PATH = join(ROOT, 'package.json')
 
 type PackageJson = {
@@ -25,6 +26,45 @@ describe('husky pre-commit hook (issue #293)', () => {
       const hook = readFileSync(HOOK_PATH, 'utf-8')
       expect(hook).toMatch(/lint-staged/)
       expect(hook).toMatch(/typecheck/)
+    })
+
+    it('has a failure message for lint-staged', () => {
+      const hook = readFileSync(HOOK_PATH, 'utf-8')
+      expect(
+        hook,
+        'pre-commit hook must print a clear error when lint-staged fails',
+      ).toMatch(
+        /lint-staged.*fail|fail.*lint-staged|pre-commit.*fail|lint.*fail/i,
+      )
+    })
+
+    it('has a failure message for typecheck', () => {
+      const hook = readFileSync(HOOK_PATH, 'utf-8')
+      expect(
+        hook,
+        'pre-commit hook must print a clear error when typecheck fails',
+      ).toMatch(/typecheck.*fail|fail.*typecheck|type.*check.*fail/i)
+    })
+  })
+
+  describe('.husky/pre-push (issue #469)', () => {
+    it('exists', () => {
+      expect(existsSync(PRE_PUSH_PATH), '.husky/pre-push not found').toBe(true)
+    })
+
+    it('runs npm run test', () => {
+      const hook = readFileSync(PRE_PUSH_PATH, 'utf-8')
+      expect(hook, 'pre-push hook must run npm run test').toMatch(
+        /npm run test/,
+      )
+    })
+
+    it('has a failure message for test failures', () => {
+      const hook = readFileSync(PRE_PUSH_PATH, 'utf-8')
+      expect(
+        hook,
+        'pre-push hook must print a clear error when tests fail',
+      ).toMatch(/test.*fail|fail.*test|pre-push.*fail/i)
     })
   })
 

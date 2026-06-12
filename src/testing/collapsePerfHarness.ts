@@ -1,8 +1,8 @@
 import { selectCollapsingBricks } from '../domain/physics/collapse'
-import type { CollapseTransaction } from '../domain/physics/collapseSimulation'
 import {
   createCollapseTransaction,
   advanceCollapseTransaction,
+  type CollapseTransaction,
 } from '../domain/physics/collapseSimulation'
 import { createCollapseSceneBodies } from '../scene/collapseSceneBodies'
 import { useBuildStore } from '../state/store'

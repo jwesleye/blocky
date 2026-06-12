@@ -35,11 +35,7 @@ const resetBuildStore = () => {
 
 describe('scene settings store', () => {
   it('defaults to the default scene preset', () => {
-    useSceneSettingsStore.setState({
-      selectedPresetId: DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
-    })
-
-    expect(useSceneSettingsStore.getState().selectedPresetId).toBe(
+    expect(useSceneSettingsStore.getInitialState().selectedPresetId).toBe(
       DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
     )
   })

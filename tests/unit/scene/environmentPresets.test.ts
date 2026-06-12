@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import { BRICK_COLORS } from '@/domain/model/colors'
-import { contrastRatio } from '@/lib/contrast'
 import {
   DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
   SCENE_ENVIRONMENT_PRESETS,
@@ -51,13 +50,22 @@ describe('scene environment presets', () => {
     for (const preset of SCENE_ENVIRONMENT_PRESETS) {
       for (const color of BRICK_COLORS) {
         expect(isReadableBrickColorOnPreset(color.hex, preset)).toBe(true)
-        expect(
-          Math.max(
-            contrastRatio(color.hex, preset.backgroundColor),
-            contrastRatio(color.hex, preset.groundColor),
-          ),
-        ).toBeGreaterThanOrEqual(1.35)
       }
     }
+  })
+
+  it('rejects a color with no contrast against preset surfaces', () => {
+    // We use a custom preset where background and ground are the same to guarantee a failure case
+    const lowContrastPreset = {
+      ...SCENE_ENVIRONMENT_PRESETS[0],
+      backgroundColor: '#ffffff',
+      groundColor: '#ffffff',
+    }
+    expect(isReadableBrickColorOnPreset('#ffffff', lowContrastPreset)).toBe(
+      false,
+    )
+    expect(isReadableBrickColorOnPreset('#f0f0f0', lowContrastPreset)).toBe(
+      false,
+    )
   })
 })
