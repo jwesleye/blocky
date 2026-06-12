@@ -16,7 +16,6 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
   >('idle')
   const [publishMessage, setPublishMessage] = useState('')
   const [shareUrl, setShareUrl] = useState('')
-  const [screenshotError, setScreenshotError] = useState<string | null>(null)
 
   const handleAddSample = () => {
     placeBrick({
@@ -47,19 +46,6 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
     setShareUrl(url)
     // Best-effort copy to clipboard; the link is also shown for manual copy.
     void navigator.clipboard?.writeText?.(url).catch(() => {})
-  }
-
-  const handleExportScreenshot = async () => {
-    if (!onExportScreenshot) return
-    setScreenshotError(null)
-    try {
-      await onExportScreenshot()
-    } catch (err) {
-      setScreenshotError(
-        'Screenshot failed: ' +
-          (err instanceof Error ? err.message : String(err)),
-      )
-    }
   }
 
   const handlePublish = async () => {
@@ -97,9 +83,6 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
         <button onClick={exportToJSON}>Export JSON</button>
         <button onClick={importFromJSON}>Import JSON</button>
         <button onClick={handleShare}>Share Link</button>
-        <button onClick={handleExportScreenshot} disabled={!onExportScreenshot}>
-          Export Screenshot
-        </button>
         <button
           onClick={handlePublish}
           disabled={publishStatus === 'publishing'}
