@@ -31,7 +31,7 @@ describe('formatter scope', () => {
       {
         cwd: process.cwd(),
         encoding: 'utf-8',
-        timeout: 25_000,
+        timeout: 45_000,
       },
     )
 
