@@ -32,7 +32,4 @@ if (shouldExposeTestHooks) {
   import('./testing/renderPerfHarness').then((harness) => {
     window.__blockyRenderPerf = harness
   })
-  import('./testing/renderPerfHarness').then((harness) => {
-    window.__blockyRenderPerf = harness
-  })
 }
