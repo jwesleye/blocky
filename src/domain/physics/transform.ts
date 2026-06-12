@@ -24,7 +24,8 @@ function withOffset(
   offsetZ: number,
 ): PlacedBrick {
   if (offsetX === 0 && offsetZ === 0) {
-    const { offset: _omit, ...rest } = brick
+    const rest = { ...brick }
+    delete rest.offset
     return rest
   }
   return {

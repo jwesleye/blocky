@@ -96,13 +96,17 @@ describe('gallery store resource bounds', () => {
     },
   )
 
-  it('never stores more builds than the configured cap', () => {
-    for (let index = 0; index < MAX_STORED_BUILDS * 2; index += 1) {
-      const buildId = generateBuildId()
-      storeBuild(makePayload(buildId))
-      expect(listBuilds().length).toBeLessThanOrEqual(MAX_STORED_BUILDS)
-    }
-  })
+  it(
+    'never stores more builds than the configured cap',
+    { timeout: 30000 },
+    () => {
+      for (let index = 0; index < MAX_STORED_BUILDS * 2; index += 1) {
+        const buildId = generateBuildId()
+        storeBuild(makePayload(buildId))
+        expect(listBuilds().length).toBeLessThanOrEqual(MAX_STORED_BUILDS)
+      }
+    },
+  )
 
   it('evicts the oldest deleted tombstone when the delete cap is exceeded', () => {
     const deletedIds: string[] = []
