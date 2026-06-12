@@ -7,8 +7,10 @@ declare global {
     __blockyCollapseDebug?: import('./scene/collapseDebug').CollapseDebug
     __blockyCollapsePerf?: typeof import('./testing/collapsePerfHarness')
     __blockyCollapsePerfError?: string
+    __blockyRenderPerf?: typeof import('./testing/renderPerfHarness')
     __blockyCamera?: import('three').PerspectiveCamera
     __blockyGhostGrid?: import('./domain/grid').GridCoord | null
+    __blockyInvalidateScene?: () => void
     __blockyProjectToCanvas?: (
       worldX: number,
       worldY: number,
