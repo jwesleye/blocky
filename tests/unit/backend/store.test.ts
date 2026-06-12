@@ -174,6 +174,7 @@ describe('gallery store durability', () => {
     reloadStore()
     const secondId = generateBuildId()
 
+    expect(secondId).toMatch(/^build_[A-Za-z0-9_-]{22}$/)
     expect(secondId).not.toBe(firstId)
   })
 

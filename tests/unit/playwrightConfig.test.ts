@@ -34,7 +34,7 @@ describe('playwright e2e defaults (issue #191)', () => {
     expect(playwrightConfig.use?.baseURL).toBe('http://localhost:4174')
     expect(playwrightConfig.webServer).toMatchObject({
       command:
-        'npm run build -- --mode e2e && npm run preview -- --host localhost --port 4174',
+        'npx vite build --mode e2e && npm run preview -- --host localhost --port 4174',
       url: 'http://localhost:4174',
       timeout: 120_000,
     })
@@ -46,9 +46,9 @@ describe('playwright e2e defaults (issue #191)', () => {
     })
   })
 
-  it('installs Playwright browsers before test:e2e runs', () => {
+  it('does not run playwright install before test:e2e (issue #479)', () => {
     const pkg = readPackageJson()
-    expect(pkg.scripts?.['pretest:e2e']).toBe('playwright install')
+    expect(pkg.scripts?.['pretest:e2e']).toBeUndefined()
     expect(pkg.scripts?.['test:e2e']).toBe('playwright test')
   })
 })
@@ -62,12 +62,34 @@ describe('playwright.config.ts default matrix', () => {
     expect(names).toContain('tablet')
   })
 
-  it('chromium project does not exclude load-perf.spec.ts', () => {
+  it('testMatch includes e2e and perf specs so render-perf stays in the default matrix', () => {
+    const testMatch = playwrightConfig.testMatch
+    expect(testMatch).toBeDefined()
+    const patterns = Array.isArray(testMatch) ? testMatch : [testMatch]
+    const strings = patterns.map((p) =>
+      p instanceof RegExp ? p.source : String(p),
+    )
+    expect(strings.some((s) => s.includes('e2e'))).toBe(true)
+    expect(strings.some((s) => s.includes('perf'))).toBe(true)
+  })
+
+  it('chromium project excludes load-perf.spec.ts from the default matrix', () => {
     const chromium = playwrightConfig.projects?.find(
       (p) => p.name === 'chromium',
     )
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_POSIX)).toBe(true)
     expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_WIN)).toBe(true)
+  })
+
+  it('chromium project prefers the D3D11 ANGLE renderer for perf coverage', () => {
+    const chromium = playwrightConfig.projects?.find(
+      (p) => p.name === 'chromium',
+    )
+    expect(chromium?.use).toMatchObject({
+      launchOptions: {
+        args: ['--use-angle=d3d11'],
+      },
+    })
   })
 
   describe('firefox, webkit, and tablet exclude the CDP-only load-perf spec', () => {
@@ -100,6 +122,20 @@ describe('playwright.config.ts default matrix', () => {
       })
     }
   })
+
+  describe('no project suppresses e2e specs', () => {
+    const allProjects = ['chromium', 'firefox', 'webkit', 'tablet'] as const
+
+    for (const projectName of allProjects) {
+      it(`${projectName}: testIgnore does not suppress E2E spec ${WEBGL2_E2E}`, () => {
+        const project = playwrightConfig.projects?.find(
+          (p) => p.name === projectName,
+        )
+        expect(project, `project "${projectName}" not found`).toBeDefined()
+        expect(matchesTestIgnore(project!.testIgnore, WEBGL2_E2E)).toBe(false)
+      })
+    }
+  })
 })
 
 describe('playwright.perf.config.ts fresh server (issue #303)', () => {
@@ -114,6 +150,14 @@ describe('playwright.perf.config.ts dedicated perf matrix', () => {
   it('has exactly one project: chromium', () => {
     expect(perfConfig.projects).toHaveLength(1)
     expect(perfConfig.projects![0].name).toBe('chromium')
+  })
+
+  it('uses the D3D11 ANGLE renderer for perf runs', () => {
+    expect(perfConfig.use).toMatchObject({
+      launchOptions: {
+        args: ['--use-angle=d3d11'],
+      },
+    })
   })
 
   it('testMatch targets load-perf.spec.ts', () => {
