@@ -2,10 +2,12 @@ import { defineConfig, devices } from '@playwright/test'
 
 // https://playwright.dev/docs/test-configuration
 
-// Matches load-perf.spec.ts on both POSIX and Windows path separators.
-// This spec uses CDP (newCDPSession) which is Chromium-only; excluding it from
-// Firefox/WebKit/tablet prevents deterministic non-product failures in those projects.
-const CDP_ONLY_SPECS = /[/\\]perf[/\\]load-perf\.spec\.ts$/
+// Match perf specs on both POSIX and Windows path separators.
+// The main cross-browser matrix should only run e2e coverage in non-Chromium
+// projects, while Chromium keeps the dev-server perf checks except load-perf,
+// which belongs exclusively to playwright.perf.config.ts.
+const PERF_SPECS = /[/\\]perf[/\\].*\.spec\.ts$/
+const LOAD_PERF_SPEC = /[/\\]perf[/\\]load-perf\.spec\.ts$/
 
 export default defineConfig({
   testDir: './tests',
@@ -20,21 +22,25 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: LOAD_PERF_SPEC,
+    },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testIgnore: CDP_ONLY_SPECS,
+      testIgnore: PERF_SPECS,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testIgnore: CDP_ONLY_SPECS,
+      testIgnore: PERF_SPECS,
     },
     {
       name: 'tablet',
       use: { ...devices['iPad (gen 7)'] },
-      testIgnore: CDP_ONLY_SPECS,
+      testIgnore: PERF_SPECS,
     },
   ],
   webServer: {
