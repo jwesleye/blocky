@@ -6,6 +6,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
+import { randomBytes } from 'node:crypto'
 import { dirname, join, resolve } from 'node:path'
 import type { SharedBuildPayload } from './validation.js'
 import type { ReportRecord, ReportRequest } from './moderation.js'
@@ -20,11 +21,8 @@ const builds = new Map<string, SharedBuildPayload>()
 const deleted = new Set<string>()
 const reports = new Map<string, ReportRecord[]>()
 
-let counter = 0
-
 interface PersistedStore {
   version: number
-  counter: number
   builds: SharedBuildPayload[]
   deleted: string[]
   reports: Record<string, ReportRecord[]>
@@ -40,7 +38,6 @@ function getStoreFilePath(): string {
 function snapshotStore(): PersistedStore {
   return {
     version: STORE_VERSION,
-    counter,
     builds: Array.from(builds.values()),
     deleted: Array.from(deleted),
     reports: Object.fromEntries(reports.entries()),
@@ -52,7 +49,6 @@ function hydrateStore(state: PersistedStore): void {
   deleted.clear()
   reports.clear()
 
-  counter = state.counter
   for (const payload of state.builds) {
     builds.set(payload.buildId, payload)
   }
@@ -68,7 +64,6 @@ function emptyStore(): void {
   builds.clear()
   deleted.clear()
   reports.clear()
-  counter = 0
 }
 
 function persistStore(): void {
@@ -99,9 +94,19 @@ export function reloadStore(): void {
   }
 }
 
+/**
+ * Generates an unguessable build id from 128 bits of cryptographic entropy.
+ *
+ * `unlisted` builds are hidden from listings but loadable by direct id, so the
+ * id is the only thing protecting them. A high-entropy random token (rather than
+ * a sequential counter) keeps neighbouring ids from being derived or enumerated.
+ */
 export function generateBuildId(): string {
-  counter += 1
-  return `build_${Date.now().toString(36)}_${counter.toString(36)}`
+  let candidate: string
+  do {
+    candidate = `build_${randomBytes(16).toString('base64url')}`
+  } while (builds.has(candidate) || deleted.has(candidate))
+  return candidate
 }
 
 export function storeBuild(payload: SharedBuildPayload): void {
