@@ -1,2 +1,2 @@
-npx lint-staged
-npm run typecheck
+npx lint-staged || { echo >&2 "pre-commit: lint-staged failed — commit aborted"; exit 1; }
+npm run typecheck || { echo >&2 "pre-commit: typecheck failed — commit aborted"; exit 1; }
