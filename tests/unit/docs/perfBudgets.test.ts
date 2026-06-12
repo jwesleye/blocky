@@ -38,7 +38,9 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
   describe('collapse smoothness budget (issue #52)', () => {
     it('records long-frame threshold', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(new RegExp(String(LONG_FRAME_THRESHOLD_MS) + '\\s*ms'))
+      expect(doc).toMatch(
+        new RegExp(String(LONG_FRAME_THRESHOLD_MS) + '\\s*ms'),
+      )
     })
 
     it('references collapse scenario brick count', () => {
@@ -64,7 +66,9 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
 
     it('still documents the gzip entry ceiling', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(new RegExp(String(BUNDLE_ENTRY_BUDGET_KIB) + '\\s*KiB'))
+      expect(doc).toMatch(
+        new RegExp(String(BUNDLE_ENTRY_BUDGET_KIB) + '\\s*KiB'),
+      )
     })
   })
 
