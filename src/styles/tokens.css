@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light;
+  --color-bg: #f3f6ff;
+  --color-text: #1f2940;
+  --color-panel: rgba(242, 248, 255, 0.94);
+  --color-panel-strong: #ffffff;
+  --color-muted: #6d768b;
+  --color-line: #d6deec;
+  --color-ok: #0f8a6c;
+  --color-danger: #c4281b;
+  --color-grid: #009cd6;
+  --color-focus: #d8a200;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #05070d;
+  --color-text: #d8f3ff;
+  --color-panel: rgba(8, 12, 20, 0.92);
+  --color-panel-strong: #0d1725;
+  --color-muted: #8fa8b5;
+  --color-line: rgba(101, 223, 255, 0.28);
+  --color-ok: #29e3a9;
+  --color-danger: #ff6b5e;
+  --color-grid: #48b8ff;
+  --color-focus: #facc15;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --color-bg: #05070d;
+    --color-text: #d8f3ff;
+    --color-panel: rgba(8, 12, 20, 0.92);
+    --color-panel-strong: #0d1725;
+    --color-muted: #8fa8b5;
+    --color-line: rgba(101, 223, 255, 0.28);
+    --color-ok: #29e3a9;
+    --color-danger: #ff6b5e;
+    --color-grid: #48b8ff;
+    --color-focus: #facc15;
+  }
+}

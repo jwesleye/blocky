@@ -157,8 +157,8 @@ export function App() {
         display: 'flex',
         height: '100vh',
         fontFamily: 'sans-serif',
-        background: '#1a1a1a',
-        color: '#e0e0e0',
+        background: 'var(--color-bg)',
+        color: 'var(--color-text)',
       }}
     >
       <aside
