@@ -122,7 +122,11 @@
 
       .toolbar button:hover,
       .hud-button:hover {
-        background: color-mix(in srgb, var(--color-grid) 15%, var(--color-panel-strong));
+        background: color-mix(
+          in srgb,
+          var(--color-grid) 15%,
+          var(--color-panel-strong)
+        );
         border-color: var(--color-grid);
       }
 
@@ -158,12 +162,20 @@
       }
 
       .picker-btn:hover {
-        background: color-mix(in srgb, var(--color-grid) 10%, var(--color-panel));
+        background: color-mix(
+          in srgb,
+          var(--color-grid) 10%,
+          var(--color-panel)
+        );
       }
 
       .picker-btn--selected {
         border-color: var(--color-grid);
-        background: color-mix(in srgb, var(--color-grid) 25%, var(--color-panel-strong));
+        background: color-mix(
+          in srgb,
+          var(--color-grid) 25%,
+          var(--color-panel-strong)
+        );
       }
 
       /* Gallery panel */
@@ -200,7 +212,11 @@
         padding: 0.4rem 0.7rem;
         border: 1px solid var(--color-grid);
         border-radius: 4px;
-        background: color-mix(in srgb, var(--color-grid) 25%, var(--color-panel-strong));
+        background: color-mix(
+          in srgb,
+          var(--color-grid) 25%,
+          var(--color-panel-strong)
+        );
         color: var(--color-text);
         cursor: pointer;
         font-size: 12px;
@@ -217,12 +233,20 @@
 
       .status--ok {
         color: var(--color-ok);
-        background: color-mix(in srgb, var(--color-ok) 12%, var(--color-panel-strong));
+        background: color-mix(
+          in srgb,
+          var(--color-ok) 12%,
+          var(--color-panel-strong)
+        );
       }
 
       .status--danger {
         color: var(--color-danger);
-        background: color-mix(in srgb, var(--color-danger) 12%, var(--color-panel-strong));
+        background: color-mix(
+          in srgb,
+          var(--color-danger) 12%,
+          var(--color-panel-strong)
+        );
       }
     </style>
   </head>
@@ -244,7 +268,10 @@
           <div class="swatch__value">#1f2940</div>
         </div>
         <div class="swatch">
-          <div class="swatch__block" style="background: rgba(242,248,255,0.94)"></div>
+          <div
+            class="swatch__block"
+            style="background: rgba(242, 248, 255, 0.94)"
+          ></div>
           <div class="swatch__name">--color-panel</div>
           <div class="swatch__value">rgba(242,248,255,0.94)</div>
         </div>
@@ -316,12 +343,16 @@
       <div class="gallery-panel">
         <div class="gallery-panel__header">
           <span>Community Builds</span>
-          <span style="color: var(--color-muted); font-size: 12px">12 items</span>
+          <span style="color: var(--color-muted); font-size: 12px"
+            >12 items</span
+          >
         </div>
         <div class="gallery-item">
           <div>
-            <div style="font-weight:700; font-size:0.95rem">Castle</div>
-            <div style="color: var(--color-muted); font-size: 0.8rem">by player1</div>
+            <div style="font-weight: 700; font-size: 0.95rem">Castle</div>
+            <div style="color: var(--color-muted); font-size: 0.8rem">
+              by player1
+            </div>
           </div>
           <button>Load</button>
         </div>

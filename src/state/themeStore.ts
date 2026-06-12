@@ -9,9 +9,11 @@ export function resolveTheme(
 ): ResolvedTheme {
   if (choice !== 'auto') return choice
   const query =
-    mql !== undefined ? mql : typeof window !== 'undefined' && window.matchMedia
-      ? window.matchMedia('(prefers-color-scheme: dark)')
-      : null
+    mql !== undefined
+      ? mql
+      : typeof window !== 'undefined' && window.matchMedia
+        ? window.matchMedia('(prefers-color-scheme: dark)')
+        : null
   return query?.matches ? 'dark' : 'light'
 }
 

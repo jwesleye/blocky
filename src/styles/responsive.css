@@ -63,7 +63,11 @@
 }
 
 .touch-toolbar__btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-grid) 15%, var(--color-panel-strong));
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 15%,
+    var(--color-panel-strong)
+  );
   border-color: var(--color-grid);
 }
 
@@ -78,5 +82,9 @@
 }
 
 .touch-toolbar__btn--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 15%, var(--color-panel-strong));
+  background: color-mix(
+    in srgb,
+    var(--color-danger) 15%,
+    var(--color-panel-strong)
+  );
 }

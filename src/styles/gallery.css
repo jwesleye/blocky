@@ -86,7 +86,11 @@
   padding: 0.4rem 0.7rem;
   border: 1px solid var(--color-grid);
   border-radius: 4px;
-  background: color-mix(in srgb, var(--color-grid) 25%, var(--color-panel-strong));
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 25%,
+    var(--color-panel-strong)
+  );
   color: var(--color-text);
   cursor: pointer;
 }
