@@ -6,9 +6,12 @@ import './styles/global.css'
 import { collapseDebug } from './scene/collapseDebug'
 import { useBuildStore } from '@/state/store'
 import { useCursorStore } from '@/state/cursor'
+import { initializeTheme } from '@/state/theme'
 
 const shouldExposeTestHooks =
   import.meta.env.DEV || import.meta.env.MODE === 'e2e'
+
+initializeTheme()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
