@@ -96,7 +96,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       brickData: FixtureBrick[]
       targetFrames: number
     }) => {
-      return (window as CollapseWindow).__blockyCollapsePerf.measureCollapsePerf({
+      return (window as CollapseWindow).__blockyCollapsePerf!.measureCollapsePerf({
         brickData,
         targetFrames,
       })
