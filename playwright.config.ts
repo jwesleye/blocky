@@ -3,11 +3,8 @@ import { defineConfig, devices } from '@playwright/test'
 // https://playwright.dev/docs/test-configuration
 
 // Match perf specs on both POSIX and Windows path separators.
-// The main cross-browser matrix should only run e2e coverage in non-Chromium
-// projects, while Chromium keeps the dev-server perf checks except load-perf,
-// which belongs exclusively to playwright.perf.config.ts.
+// Non-Chromium projects skip all perf specs; Chromium runs everything.
 const PERF_SPECS = /[/\\]perf[/\\].*\.spec\.ts$/
-const LOAD_PERF_SPEC = /[/\\]perf[/\\]load-perf\.spec\.ts$/
 
 export default defineConfig({
   testDir: './tests',
@@ -25,7 +22,6 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: LOAD_PERF_SPEC,
     },
     {
       name: 'firefox',
