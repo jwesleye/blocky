@@ -49,8 +49,11 @@ describe('galleryConfig', () => {
     expect(mode).toBe('live')
     expect(result.ok).toBe(true)
     expect(vi.mocked(fetch)).toHaveBeenCalledOnce()
-    expect(vi.mocked(fetch).mock.calls[0][0]).toBe(
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
       'http://localhost:4000/builds',
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      }),
     )
   })
 })
