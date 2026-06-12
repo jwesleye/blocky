@@ -2,6 +2,7 @@ import { selectCollapsingBricks } from '../domain/physics/collapse'
 import {
   createCollapseTransaction,
   advanceCollapseTransaction,
+  type CollapseTransaction,
 } from '../domain/physics/collapseSimulation'
 import { createCollapseSceneBodies } from '../scene/collapseSceneBodies'
 import { useBuildStore } from '../state/store'
@@ -55,7 +56,7 @@ export async function measureCollapsePerf({
   const frameTimes: number[] = []
   let computeMs = 0
   let collapsingCount = 0
-  let transaction: any = null
+  let transaction: CollapseTransaction | null = null
 
   await new Promise<void>((resolve) => {
     let last: number | null = null

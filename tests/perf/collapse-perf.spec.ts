@@ -25,6 +25,12 @@ type FixtureBrick = {
   rot: 0 | 1 | 2 | 3
 }
 
+type CollapseWindow = Window & {
+  __blockyCollapsePerf?: {
+    measureCollapsePerf: (input: unknown) => Promise<unknown>
+  }
+}
+
 /**
  * @perf Collapse smoothness — frame-stall budget
  *
@@ -79,7 +85,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
 
   await page.waitForFunction(
     () =>
-      (window as any).__blockyCollapsePerf?.measureCollapsePerf !== undefined,
+      (window as CollapseWindow).__blockyCollapsePerf?.measureCollapsePerf !== undefined,
   )
 
   const result = (await page.evaluate(
@@ -90,7 +96,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       brickData: FixtureBrick[]
       targetFrames: number
     }) => {
-      return (window as any).__blockyCollapsePerf.measureCollapsePerf({
+      return (window as CollapseWindow).__blockyCollapsePerf.measureCollapsePerf({
         brickData,
         targetFrames,
       })
