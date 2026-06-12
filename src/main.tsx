@@ -26,5 +26,7 @@ if (shouldExposeTestHooks) {
   // Lazy-load the perf harness to keep the production bundle lean
   import('./testing/collapsePerfHarness').then((harness) => {
     window.__blockyCollapsePerf = harness
+  }).catch((err: unknown) => {
+    window.__blockyCollapsePerfError = err instanceof Error ? err.message : String(err)
   })
 }
