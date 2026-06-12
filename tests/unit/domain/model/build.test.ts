@@ -766,7 +766,14 @@ describe('safeParseBuild', () => {
 })
 
 describe('build schema bounds', () => {
-  const validBrick = { partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 as const }
+  const validBrick = {
+    partId: 'brick-1x1',
+    color: 'red',
+    x: 0,
+    y: 0,
+    z: 0,
+    rot: 0 as const,
+  }
 
   it('rejects a bricks array that exceeds MAX_BRICKS_PER_BUILD', () => {
     const oversized = JSON.stringify({
@@ -782,7 +789,9 @@ describe('build schema bounds', () => {
     const oversized = JSON.stringify({
       version: 1,
       baseplate: { size: 32 },
-      bricks: [{ ...validBrick, partId: 'x'.repeat(MAX_BRICK_STRING_LENGTH + 1) }],
+      bricks: [
+        { ...validBrick, partId: 'x'.repeat(MAX_BRICK_STRING_LENGTH + 1) },
+      ],
     })
     expect(safeParseBuild(oversized)).toBeNull()
     expect(() => validateBuild(JSON.parse(oversized))).toThrow()
@@ -792,7 +801,9 @@ describe('build schema bounds', () => {
     const oversized = JSON.stringify({
       version: 1,
       baseplate: { size: 32 },
-      bricks: [{ ...validBrick, color: 'x'.repeat(MAX_BRICK_STRING_LENGTH + 1) }],
+      bricks: [
+        { ...validBrick, color: 'x'.repeat(MAX_BRICK_STRING_LENGTH + 1) },
+      ],
     })
     expect(safeParseBuild(oversized)).toBeNull()
     expect(() => validateBuild(JSON.parse(oversized))).toThrow()

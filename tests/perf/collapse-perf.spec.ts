@@ -78,10 +78,11 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   }
 
   await page.waitForFunction(
-    () => (window as any).__blockyCollapsePerf?.measureCollapsePerf !== undefined,
+    () =>
+      (window as any).__blockyCollapsePerf?.measureCollapsePerf !== undefined,
   )
 
-  const result = await page.evaluate(
+  const result = (await page.evaluate(
     async ({
       brickData,
       targetFrames,
@@ -95,7 +96,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       })
     },
     { brickData: bricks, targetFrames: MIN_SAMPLE_FRAMES },
-  ) as import('@/testing/collapsePerfHarness').MeasureCollapsePerfResult
+  )) as import('@/testing/collapsePerfHarness').MeasureCollapsePerfResult
 
   const setupSorted = [...result.setupFrameTimes].sort((a, b) => a - b)
   const baselineFrameMs = percentile(setupSorted, 50)
