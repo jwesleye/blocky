@@ -71,18 +71,18 @@ entry bundle gzip size must stay under **500 KiB** (the ceiling enforced by the 
 build gate).
 
 **Measurement method:** The Vite build step rejects the bundle if any entry chunk
-exceeds the 500 KiB gzip ceiling. A Playwright perf spec measuring
-time-to-first-interaction under simulated broadband throttling is planned for
-[#53](https://github.com/jwesleye/blocky/issues/53).
+exceeds the 500 KiB gzip ceiling. `tests/perf/load-perf.spec.ts` (see
+[#53](https://github.com/jwesleye/blocky/issues/53)) throttles network and CPU under
+simulated broadband to verify time-to-first-interaction against the shared budget.
 
-**Verification command (currently enforceable):**
+**Verification commands:**
 
 ```sh
 npm run build        # fails if entry bundle exceeds the 500 KiB gzip ceiling
+npm run test:perf    # Playwright throttled load spec (local validation)
 ```
 
-**Owning spec:** Vite bundle-size gate (enforced now); `tests/perf/load-perf.spec.ts`
-and the `test:perf` npm script land with [#53](https://github.com/jwesleye/blocky/issues/53).
+**Owning spec:** Vite bundle-size gate; `tests/perf/load-perf.spec.ts` (run via `npm run test:perf`).
 
 ### 3a. Async / runtime chunk warning threshold - documented exception
 
@@ -141,7 +141,7 @@ Quick reference:
 | Collapse p95        | <= 17 ms                         | `test:e2e -- collapse-perf.spec.ts` |
 | Bundle gzip         | <= 500 KiB (entry chunk)         | `npm run build`                     |
 | Chunk warning       | <= 3000 KiB uncompressed (async) | `npm run build` (no warn)           |
-| Load TTI            | couple of seconds (planned #53)  | test:perf script (lands with #53)   |
+| Load TTI            | couple of seconds                | `npm run test:perf`                 |
 | Browser matrix      | Chrome/Edge/Firefox/WebKit       | `npm run test:e2e`                  |
 | WebGL2              | supported in all browsers        | `test:e2e -- webgl2.spec.ts`        |
 
