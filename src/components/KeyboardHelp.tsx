@@ -13,6 +13,10 @@ const SHORTCUTS = [
   { action: 'Eyedropper', keys: ['I'] },
 ]
 
+const CONTROLS = [
+  { action: 'Theme', description: 'Auto / Light / Dark — toolbar toggle' },
+]
+
 export const KeyboardHelp = () => {
   const [open, setOpen] = useState(false)
 
@@ -44,6 +48,12 @@ export const KeyboardHelp = () => {
                   <kbd key={key}>{key}</kbd>
                 ))}
               </dd>
+            </div>
+          ))}
+          {CONTROLS.map((control) => (
+            <div className="shortcut-list__row" key={control.action}>
+              <dt>{control.action}</dt>
+              <dd>{control.description}</dd>
             </div>
           ))}
         </dl>

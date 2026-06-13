@@ -16,6 +16,7 @@ import {
   FlipHorizontal2,
 } from 'lucide-react'
 import { KeyboardHelp } from '@/components/KeyboardHelp'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 interface ToolbarProps {
   onNew?: () => void
@@ -106,6 +107,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       <button type="button" aria-label="Reset View" onClick={onResetView}>
         <Camera size={20} />
       </button>
+      <ThemeToggle />
       <KeyboardHelp />
     </div>
   )
