@@ -124,6 +124,59 @@
   margin-top: 1rem;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.theme-toggle__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  border: 1px solid var(--color-muted);
+  border-radius: 6px;
+  background: var(--color-panel-strong);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.theme-toggle__button:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 15%,
+    var(--color-panel-strong)
+  );
+  border-color: var(--color-grid);
+}
+
+.theme-toggle__button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.theme-toggle__button.active {
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 25%,
+    var(--color-panel-strong)
+  );
+  border-color: var(--color-grid);
+  color: var(--color-grid);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .theme-toggle__button {
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+}
+
 .shortcut-list {
   display: grid;
   gap: 0.65rem;

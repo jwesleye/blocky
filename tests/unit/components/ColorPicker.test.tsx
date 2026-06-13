@@ -22,12 +22,15 @@ describe('ColorPicker', () => {
     expect(screen.getByRole('radio', { name: 'Dark Gray' })).toBeInTheDocument()
   })
 
-  it('marks the selected color as checked', () => {
+  it('marks the selected color as checked with the palette color styling', () => {
     render(<ColorPicker selected="blue" onSelect={() => undefined} />)
-    expect(screen.getByRole('radio', { name: 'Blue' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    )
+    const blueSwatch = screen.getByRole('radio', { name: 'Blue' })
+
+    expect(blueSwatch).toHaveAttribute('aria-checked', 'true')
+    expect(blueSwatch).toHaveClass('color-swatch--selected')
+    expect(blueSwatch).toHaveStyle({
+      backgroundColor: COLOR_PALETTE.find((color) => color.id === 'blue')!.hex,
+    })
     expect(screen.getByRole('radio', { name: 'Red' })).toHaveAttribute(
       'aria-checked',
       'false',

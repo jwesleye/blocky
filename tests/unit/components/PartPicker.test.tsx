@@ -6,10 +6,10 @@ import { PartPicker } from '@/components/PartPicker'
 describe('PartPicker', () => {
   it('renders the default selected part as checked', () => {
     render(<PartPicker selected="brick-2x4" onSelect={() => undefined} />)
-    expect(screen.getByRole('radio', { name: 'Brick 2×4' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    )
+    const selectedPart = screen.getByRole('radio', { name: 'Brick 2×4' })
+
+    expect(selectedPart).toHaveAttribute('aria-checked', 'true')
+    expect(selectedPart).toHaveClass('part-btn--selected')
   })
 
   it('renders a decorative svg icon inside the Brick 2×4 radio button', () => {
@@ -44,10 +44,10 @@ describe('PartPicker', () => {
 
   it('marks non-selected parts as unchecked', () => {
     render(<PartPicker selected="brick-2x4" onSelect={() => undefined} />)
-    expect(screen.getByRole('radio', { name: 'Brick 1×1' })).toHaveAttribute(
-      'aria-checked',
-      'false',
-    )
+    const unselectedPart = screen.getByRole('radio', { name: 'Brick 1×1' })
+
+    expect(unselectedPart).toHaveAttribute('aria-checked', 'false')
+    expect(unselectedPart).not.toHaveClass('part-btn--selected')
   })
 
   it('groups parts by type with accessible radiogroup labels', () => {

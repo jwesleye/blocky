@@ -50,6 +50,7 @@ describe('theme store', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     document.documentElement.removeAttribute('data-theme')
+    localStorage.clear()
     installMatchMedia(false)
     useThemeStore.setState({
       theme: 'auto',
@@ -84,6 +85,66 @@ describe('theme store', () => {
     media.setMatches(false)
     media.setMatches(true)
 
+    expect(useThemeStore.getState().resolvedTheme).toBe('light')
+    expect(document.documentElement.dataset.theme).toBe('light')
+
+    cleanup()
+  })
+
+  // Persistence tests
+  it('restores auto preference from localStorage', () => {
+    localStorage.setItem('blocky:theme', 'auto')
+    const cleanup = initializeTheme()
+    expect(useThemeStore.getState().theme).toBe('auto')
+    cleanup()
+  })
+
+  it('restores light preference from localStorage', () => {
+    localStorage.setItem('blocky:theme', 'light')
+    const cleanup = initializeTheme()
+    expect(useThemeStore.getState().theme).toBe('light')
+    expect(document.documentElement.dataset.theme).toBe('light')
+    cleanup()
+  })
+
+  it('restores dark preference from localStorage', () => {
+    localStorage.setItem('blocky:theme', 'dark')
+    const cleanup = initializeTheme()
+    expect(useThemeStore.getState().theme).toBe('dark')
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    cleanup()
+  })
+
+  it('falls back to auto when stored value is invalid', () => {
+    localStorage.setItem('blocky:theme', 'invalid-value')
+    const cleanup = initializeTheme()
+    expect(useThemeStore.getState().theme).toBe('auto')
+    cleanup()
+  })
+
+  it('writes the chosen preference to localStorage when setTheme is called', () => {
+    useThemeStore.getState().setTheme('dark')
+    expect(localStorage.getItem('blocky:theme')).toBe('dark')
+  })
+
+  it('auto continues tracking OS changes live after restore', () => {
+    localStorage.setItem('blocky:theme', 'auto')
+    const media = installMatchMedia(false)
+    const cleanup = initializeTheme()
+
+    media.setMatches(true)
+    expect(useThemeStore.getState().resolvedTheme).toBe('dark')
+
+    cleanup()
+  })
+
+  it('explicit light preference ignores OS changes after restore', () => {
+    localStorage.setItem('blocky:theme', 'light')
+    const media = installMatchMedia(false)
+    const cleanup = initializeTheme()
+
+    expect(useThemeStore.getState().theme).toBe('light')
+    media.setMatches(true)
     expect(useThemeStore.getState().resolvedTheme).toBe('light')
     expect(document.documentElement.dataset.theme).toBe('light')
 

@@ -2,11 +2,16 @@
 
 ## Required validation
 
-Pull requests must keep the app within the documented load budget.
+The CI pipeline gates every pull request on:
 
-- Run `npm run build` on every PR. The Vite build now fails if any entry bundle exceeds the shared gzip ceiling in `tests/perf/budgets.ts`.
-- Run `npm run test:perf` on every PR. This Playwright check throttles network and CPU, then verifies first interaction stays within the shared budget in `tests/perf/budgets.ts`.
-- Run `npm run typecheck` before opening or updating a PR.
+- `npm run typecheck` — TypeScript must compile without errors.
+- `npm run lint` — ESLint must pass.
+- `npm run test` — All Vitest unit/integration tests must pass with coverage thresholds met.
+
+These additional checks are **local-only** validation for contributors working on affected areas:
+
+- `npm run build` — Vite fails if any entry bundle exceeds the 500 KiB gzip ceiling in `tests/perf/budgets.ts`. Run when changing bundle contents.
+- `npm run test:perf` — Playwright perf spec throttles network and CPU to verify first interaction stays within the shared budget. Run when changing rendering or load-path code.
 
 ## Running e2e tests
 

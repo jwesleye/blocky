@@ -11,22 +11,13 @@ type PackageJson = {
 }
 
 const PACKAGE_PATH = join(process.cwd(), 'package.json')
-const LOAD_PERF_POSIX = 'tests/perf/load-perf.spec.ts'
-const LOAD_PERF_WIN = 'tests\\perf\\load-perf.spec.ts'
+const LOAD_PERF = 'tests/perf/load-perf.spec.ts'
+const RENDER_PERF = 'tests/perf/render-perf.spec.ts'
+const COLLAPSE_PERF = 'tests/perf/collapse-perf.spec.ts'
 const WEBGL2_E2E = 'tests/e2e/webgl2.spec.ts'
 
 const readPackageJson = (): PackageJson =>
   JSON.parse(readFileSync(PACKAGE_PATH, 'utf-8')) as PackageJson
-
-function matchesTestIgnore(testIgnore: unknown, path: string): boolean {
-  if (testIgnore == null) return false
-  const patterns = Array.isArray(testIgnore) ? testIgnore : [testIgnore]
-  return patterns.some((p) => {
-    if (p instanceof RegExp) return p.test(path)
-    if (typeof p === 'string') return p === path
-    return false
-  })
-}
 
 describe('playwright e2e defaults (issue #191)', () => {
   it('uses the preview server instead of the Vite dev server', () => {
@@ -62,7 +53,7 @@ describe('playwright.config.ts default matrix', () => {
     expect(names).toContain('tablet')
   })
 
-  it('testMatch includes e2e and perf specs so render-perf stays in the default matrix', () => {
+  it('testMatch includes only e2e specs', () => {
     const testMatch = playwrightConfig.testMatch
     expect(testMatch).toBeDefined()
     const patterns = Array.isArray(testMatch) ? testMatch : [testMatch]
@@ -70,16 +61,13 @@ describe('playwright.config.ts default matrix', () => {
       p instanceof RegExp ? p.source : String(p),
     )
     expect(strings.some((s) => s.includes('e2e'))).toBe(true)
-    expect(strings.some((s) => s.includes('perf'))).toBe(true)
+    expect(strings.some((s) => s.includes('perf'))).toBe(false)
   })
 
-  it('chromium project excludes load-perf.spec.ts from the default matrix', () => {
-    const chromium = playwrightConfig.projects?.find(
-      (p) => p.name === 'chromium',
-    )
-    expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_POSIX)).toBe(true)
-    expect(matchesTestIgnore(chromium?.testIgnore, LOAD_PERF_WIN)).toBe(true)
-    expect(matchesTestIgnore(chromium?.testIgnore, WEBGL2_E2E)).toBe(false)
+  it('projects no longer need per-project testIgnore entries', () => {
+    for (const project of playwrightConfig.projects ?? []) {
+      expect(project.testIgnore).toBeUndefined()
+    }
   })
 
   it('chromium project prefers the D3D11 ANGLE renderer for perf coverage', () => {
@@ -93,48 +81,14 @@ describe('playwright.config.ts default matrix', () => {
     })
   })
 
-  describe('firefox, webkit, and tablet exclude the CDP-only load-perf spec', () => {
-    const nonChromiumProjects = ['firefox', 'webkit', 'tablet'] as const
-
-    for (const projectName of nonChromiumProjects) {
-      it(`${projectName}: testIgnore matches POSIX path ${LOAD_PERF_POSIX}`, () => {
-        const project = playwrightConfig.projects?.find(
-          (p) => p.name === projectName,
-        )
-        expect(project, `project "${projectName}" not found`).toBeDefined()
-        expect(matchesTestIgnore(project!.testIgnore, LOAD_PERF_POSIX)).toBe(
-          true,
-        )
-      })
-
-      it(`${projectName}: testIgnore matches Windows path ${LOAD_PERF_WIN}`, () => {
-        const project = playwrightConfig.projects?.find(
-          (p) => p.name === projectName,
-        )
-        expect(project, `project "${projectName}" not found`).toBeDefined()
-        expect(matchesTestIgnore(project!.testIgnore, LOAD_PERF_WIN)).toBe(true)
-      })
-
-      it(`${projectName}: testIgnore does not suppress E2E spec ${WEBGL2_E2E}`, () => {
-        const project = playwrightConfig.projects?.find(
-          (p) => p.name === projectName,
-        )
-        expect(matchesTestIgnore(project?.testIgnore, WEBGL2_E2E)).toBe(false)
-      })
-    }
-  })
-
-  describe('no project suppresses e2e specs', () => {
-    const allProjects = ['chromium', 'firefox', 'webkit', 'tablet'] as const
-
-    for (const projectName of allProjects) {
-      it(`${projectName}: testIgnore does not suppress E2E spec ${WEBGL2_E2E}`, () => {
-        const project = playwrightConfig.projects?.find(
-          (p) => p.name === projectName,
-        )
-        expect(project, `project "${projectName}" not found`).toBeDefined()
-        expect(matchesTestIgnore(project!.testIgnore, WEBGL2_E2E)).toBe(false)
-      })
+  it('no project suppresses e2e specs', () => {
+    for (const projectName of ['chromium', 'firefox', 'webkit', 'tablet']) {
+      const project = playwrightConfig.projects?.find(
+        (p) => p.name === projectName,
+      )
+      expect(project, `project "${projectName}" not found`).toBeDefined()
+      expect(project?.testIgnore).toBeUndefined()
+      expect(WEBGL2_E2E.startsWith('tests/e2e/')).toBe(true)
     }
   })
 })
@@ -161,14 +115,17 @@ describe('playwright.perf.config.ts dedicated perf matrix', () => {
     })
   })
 
-  it('testMatch targets load-perf.spec.ts', () => {
+  it('testMatch targets every *-perf spec', () => {
     const testMatch = perfConfig.testMatch
     expect(testMatch).toBeDefined()
     const pattern = Array.isArray(testMatch) ? testMatch[0] : testMatch
     if (pattern instanceof RegExp) {
-      expect(pattern.test('load-perf.spec.ts')).toBe(true)
+      expect(pattern.test(LOAD_PERF)).toBe(true)
+      expect(pattern.test(RENDER_PERF)).toBe(true)
+      expect(pattern.test(COLLAPSE_PERF)).toBe(true)
+      expect(pattern.test(WEBGL2_E2E)).toBe(false)
     } else {
-      expect(String(pattern)).toContain('load-perf')
+      expect(String(pattern)).toContain('-perf')
     }
   })
 })

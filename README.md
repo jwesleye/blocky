@@ -71,7 +71,7 @@ npx playwright install   # first-time browser download
 npm run test:e2e         # runs all three browser projects locally
 ```
 
-**CI scope:** The cross-browser matrix is currently local-only. No GitHub Actions workflow exists yet for this project, so the full browser matrix is validated by contributors before merging rather than in CI. A follow-up milestone will add a headless CI run (see issue #117); the WebGL2 test may require a software-rasteriser flag (`--use-gl=swiftshader`) or `xvfb` on Linux runners.
+**CI scope:** GitHub Actions runs on every pull request and push to `main`: `npm run typecheck`, `npm run lint`, and `npm run test` (Vitest unit/integration tests with coverage). The cross-browser Playwright matrix (`npm run test:e2e`) is currently local-only; contributors validate it before merging. A follow-up milestone will add a headless CI run (see issue #117); the WebGL2 test may require a software-rasteriser flag (`--use-gl=swiftshader`) or `xvfb` on Linux runners.
 
 ## Docker
 

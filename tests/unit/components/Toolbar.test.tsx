@@ -5,11 +5,28 @@ import {
   useBuildStore,
 } from '../../../src/state/store'
 import { BrickCount } from '../../../src/components/BrickCount'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Graph from 'graphology'
+
+function installMatchMedia(initialMatches: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      get matches() {
+        return initialMatches
+      },
+      media: '(prefers-color-scheme: dark)',
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
 
 describe('HUD Components', () => {
   beforeEach(() => {
+    installMatchMedia(false)
     const temporal = (
       useBuildStore as unknown as BuildStoreWithTemporal
     ).temporal.getState()
@@ -61,5 +78,12 @@ describe('HUD Components', () => {
     })
 
     expect(screen.getByText('Bricks in build: 1')).toBeInTheDocument()
+  })
+
+  it('includes the theme toggle with Auto, Light, and Dark buttons', () => {
+    render(<Toolbar />)
+    expect(screen.getByRole('button', { name: 'Auto' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Light' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Dark' })).toBeInTheDocument()
   })
 })
