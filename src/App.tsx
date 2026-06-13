@@ -157,15 +157,15 @@ export function App() {
         display: 'flex',
         height: '100vh',
         fontFamily: 'sans-serif',
-        background: '#1a1a1a',
-        color: '#e0e0e0',
+        background: 'var(--color-bg)',
+        color: 'var(--color-text)',
       }}
     >
       <aside
         className="app-sidebar"
         style={{
-          background: '#242424',
-          borderRight: '1px solid #333',
+          background: 'var(--color-panel-strong)',
+          borderRight: '1px solid var(--color-line)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -182,8 +182,19 @@ export function App() {
           blocky
         </div>
 
-        <div style={{ padding: '8px', borderBottom: '1px solid #333' }}>
-          <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>
+        <div
+          style={{
+            padding: '8px',
+            borderBottom: '1px solid var(--color-line)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              color: 'var(--color-muted)',
+              marginBottom: 4,
+            }}
+          >
             Active brick
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -192,8 +203,8 @@ export function App() {
                 width: 20,
                 height: 20,
                 borderRadius: 3,
-                background: currentColor?.hex ?? '#888',
-                border: '1px solid #444',
+                background: currentColor?.hex ?? 'var(--color-muted)',
+                border: '1px solid var(--color-line)',
                 flexShrink: 0,
               }}
               aria-hidden="true"
@@ -204,7 +215,7 @@ export function App() {
           </div>
         </div>
 
-        <div style={{ borderBottom: '1px solid #333' }}>
+        <div style={{ borderBottom: '1px solid var(--color-line)' }}>
           <div
             style={{
               padding: '8px 8px 0',
@@ -212,7 +223,7 @@ export function App() {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#888',
+              color: 'var(--color-muted)',
             }}
           >
             Color
@@ -220,7 +231,7 @@ export function App() {
           <ColorPicker selected={colorId} onSelect={setColor} />
         </div>
 
-        <div style={{ borderBottom: '1px solid #333' }}>
+        <div style={{ borderBottom: '1px solid var(--color-line)' }}>
           <div
             style={{
               padding: '8px 8px 0',
@@ -228,7 +239,7 @@ export function App() {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#888',
+              color: 'var(--color-muted)',
             }}
           >
             Baseplate
@@ -236,7 +247,7 @@ export function App() {
           <BaseplateSizePicker />
         </div>
 
-        <div style={{ borderBottom: '1px solid #333' }}>
+        <div style={{ borderBottom: '1px solid var(--color-line)' }}>
           <div
             style={{
               padding: '8px 8px 0',
@@ -244,7 +255,7 @@ export function App() {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#888',
+              color: 'var(--color-muted)',
             }}
           >
             Environment
@@ -267,7 +278,7 @@ export function App() {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#888',
+              color: 'var(--color-muted)',
             }}
           >
             Parts
@@ -275,7 +286,7 @@ export function App() {
           <PartPicker selected={partId} onSelect={setPart} />
         </div>
 
-        <div style={{ borderTop: '1px solid #333' }}>
+        <div style={{ borderTop: '1px solid var(--color-line)' }}>
           <div
             style={{
               padding: '8px 8px 0',
@@ -283,7 +294,7 @@ export function App() {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#888',
+              color: 'var(--color-muted)',
             }}
           >
             Mode
@@ -296,7 +307,7 @@ export function App() {
           </div>
         </div>
 
-        <div style={{ borderTop: '1px solid #333' }}>
+        <div style={{ borderTop: '1px solid var(--color-line)' }}>
           <div
             style={{
               padding: '8px 8px 0',
@@ -304,7 +315,7 @@ export function App() {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#888',
+              color: 'var(--color-muted)',
             }}
           >
             Transform
@@ -336,14 +347,20 @@ export function App() {
           {mirrorFeedback && (
             <div
               data-testid="mirror-feedback"
-              style={{ padding: '0 8px 6px', fontSize: 11, color: '#f77' }}
+              style={{
+                padding: '0 8px 6px',
+                fontSize: 11,
+                color: 'var(--color-danger)',
+              }}
             >
               {mirrorFeedback}
             </div>
           )}
         </div>
 
-        <div style={{ borderTop: '1px solid #333', padding: '8px' }}>
+        <div
+          style={{ borderTop: '1px solid var(--color-line)', padding: '8px' }}
+        >
           <div
             style={{
               padding: '0 0 6px',
@@ -351,7 +368,7 @@ export function App() {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#888',
+              color: 'var(--color-muted)',
             }}
           >
             Sound
