@@ -46,20 +46,20 @@ describe('validation-policy documentation drift guard', () => {
     })
   })
 
-  describe('docs/PERF_BUDGETS.md — load budget (issue #53)', () => {
+  describe('docs/perf-budgets.md — load budget (issue #53)', () => {
     it('does not describe test:perf or load-perf.spec.ts as future work landing with #53', () => {
-      const doc = read('docs/PERF_BUDGETS.md')
+      const doc = read('docs/perf-budgets.md')
       expect(doc).not.toMatch(/lands?\s+with\s+#53/i)
       expect(doc).not.toMatch(/planned\s+for\s+#53/i)
     })
 
     it('documents npm run test:perf as current local validation', () => {
-      const doc = read('docs/PERF_BUDGETS.md')
+      const doc = read('docs/perf-budgets.md')
       expect(doc).toMatch(/npm run test:perf/)
     })
 
     it('references load-perf.spec.ts as the owning spec', () => {
-      const doc = read('docs/PERF_BUDGETS.md')
+      const doc = read('docs/perf-budgets.md')
       expect(doc).toMatch(/load-perf\.spec\.ts/)
     })
   })

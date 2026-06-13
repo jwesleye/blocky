@@ -15,6 +15,10 @@ describe('Performance Budgets consistency', () => {
     ? fs.readFileSync(docPath, 'utf8')
     : ''
 
+  it('exports BUDGET_DOC_URL pointing at this canonical document', () => {
+    expect(budgets.BUDGET_DOC_URL).toBe('/docs/perf-budgets.md')
+  })
+
   it('matches render p95 budget', () => {
     expect(docContent).toContain(`${budgets.P95_FRAME_BUDGET_MS}ms`)
   })
@@ -44,5 +48,9 @@ describe('Performance Budgets consistency', () => {
 
   it('documents the uncompressed chunk warning threshold separately from the gzip entry ceiling', () => {
     expect(docContent).toContain(`${budgets.BUNDLE_CHUNK_WARNING_LIMIT_KIB}`)
+  })
+
+  it('does not contain stale planned-#53 language', () => {
+    expect(docContent).not.toMatch(/planned for|planned #53|lands with #53/i)
   })
 })
