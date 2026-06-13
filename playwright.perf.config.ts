@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   testDir: './tests/perf',
-  testMatch: /load-perf\.spec\.ts$/,
+  testMatch: /-perf\.spec\.ts$/,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
