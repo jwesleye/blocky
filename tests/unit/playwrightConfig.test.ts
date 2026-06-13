@@ -83,7 +83,9 @@ describe('playwright.config.ts default matrix', () => {
 
   it('no project suppresses e2e specs', () => {
     for (const projectName of ['chromium', 'firefox', 'webkit', 'tablet']) {
-      const project = playwrightConfig.projects?.find((p) => p.name === projectName)
+      const project = playwrightConfig.projects?.find(
+        (p) => p.name === projectName,
+      )
       expect(project, `project "${projectName}" not found`).toBeDefined()
       expect(project?.testIgnore).toBeUndefined()
       expect(WEBGL2_E2E.startsWith('tests/e2e/')).toBe(true)
