@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { execSync } from 'node:child_process'
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import {
@@ -9,11 +10,16 @@ import {
   P95_FRAME_BUDGET_MS,
 } from '../../perf/budgets'
 
-const DOC_PATH = join(process.cwd(), 'docs/PERF_BUDGETS.md')
+const DOC_PATH = join(process.cwd(), 'docs/perf-budgets.md')
 
-describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
+describe('docs/perf-budgets.md — perf-budget drift guard', () => {
   it('exists', () => {
-    expect(existsSync(DOC_PATH), 'docs/PERF_BUDGETS.md not found').toBe(true)
+    expect(existsSync(DOC_PATH), 'docs/perf-budgets.md not found').toBe(true)
+  })
+
+  it('docs/PERF_BUDGETS.md is not git-tracked', () => {
+    const tracked = execSync('git ls-files docs/PERF_BUDGETS.md').toString().trim()
+    expect(tracked, 'docs/PERF_BUDGETS.md must not be git-tracked').toBe('')
   })
 
   describe('render budget (issue #51)', () => {
@@ -73,16 +79,16 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
   })
 
   describe('load budget (issue #53)', () => {
-    it('notes that load-budget spec and test:perf script land with #53', () => {
+    it('does not contain stale planned-#53 language', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
-      expect(doc).toMatch(/#53/)
+      expect(doc).not.toMatch(/planned for|planned #53|lands with #53/i)
     })
 
     it('does not claim npm run test:perf without the script and spec both existing', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(
         doc,
-        'PERF_BUDGETS.md must reference the test:perf script',
+        'perf-budgets.md must reference the test:perf script',
       ).toMatch(/test:perf/)
       const pkg = JSON.parse(
         readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
