@@ -2,27 +2,30 @@ import { describe, expect, it } from 'vitest'
 
 import { COLOR_PALETTE, colorDefSchema } from '@/domain/parts/colors'
 
+const guidePalette = [
+  { id: 'red', label: 'Red', hex: '#c4281b' },
+  { id: 'blue', label: 'Blue', hex: '#0d5ec4' },
+  { id: 'yellow', label: 'Yellow', hex: '#f5c518' },
+  { id: 'green', label: 'Green', hex: '#237841' },
+  { id: 'white', label: 'White', hex: '#f4f4f4' },
+  { id: 'black', label: 'Black', hex: '#1b1b1b' },
+  { id: 'light-gray', label: 'Light Gray', hex: '#a0a5a9' },
+  { id: 'dark-gray', label: 'Dark Gray', hex: '#6c6e68' },
+  { id: 'brown', label: 'Brown', hex: '#694228' },
+  { id: 'orange', label: 'Orange', hex: '#fe8a18' },
+  { id: 'tan', label: 'Tan', hex: '#e4cd9e' },
+  { id: 'lime', label: 'Lime', hex: '#bbe90b' },
+  { id: 'azure', label: 'Azure', hex: '#1e90c4' },
+  { id: 'magenta', label: 'Magenta', hex: '#c8308a' },
+] as const
+
 describe('COLOR_PALETTE', () => {
   it('contains exactly 14 PRD §4.3 colors', () => {
     expect(COLOR_PALETTE).toHaveLength(14)
   })
 
-  it('contains all 14 expected color ids', () => {
-    const ids = COLOR_PALETTE.map((c) => c.id)
-    expect(ids).toContain('red')
-    expect(ids).toContain('blue')
-    expect(ids).toContain('yellow')
-    expect(ids).toContain('green')
-    expect(ids).toContain('white')
-    expect(ids).toContain('black')
-    expect(ids).toContain('light-gray')
-    expect(ids).toContain('dark-gray')
-    expect(ids).toContain('brown')
-    expect(ids).toContain('orange')
-    expect(ids).toContain('tan')
-    expect(ids).toContain('lime')
-    expect(ids).toContain('azure')
-    expect(ids).toContain('magenta')
+  it('matches the style guide brick palette exactly', () => {
+    expect(COLOR_PALETTE).toEqual(guidePalette)
   })
 
   it('every entry validates against colorDefSchema', () => {
@@ -58,13 +61,13 @@ describe('colorDefSchema', () => {
     const result = colorDefSchema.safeParse({
       id: 'red',
       label: 'Red',
-      hex: '#C4282B',
+      hex: '#c4281b',
     })
     expect(result.success).toBe(true)
   })
 
   it('rejects a missing id', () => {
-    const result = colorDefSchema.safeParse({ label: 'Red', hex: '#C4282B' })
+    const result = colorDefSchema.safeParse({ label: 'Red', hex: '#c4281b' })
     expect(result.success).toBe(false)
   })
 

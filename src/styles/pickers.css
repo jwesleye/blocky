@@ -18,8 +18,8 @@
 }
 
 .color-swatch--selected {
-  border-color: var(--color-panel-strong);
-  outline: 2px solid var(--color-text);
+  border-color: var(--color-grid);
+  outline: 2px solid var(--color-focus);
   outline-offset: 1px;
 }
 
