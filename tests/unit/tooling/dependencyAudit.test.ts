@@ -27,7 +27,11 @@ const readPackageLock = (): PackageLock =>
   ) as PackageLock
 
 function semverAtLeast(actual: string, minVersion: string): boolean {
-  const parse = (v: string) => v.replace(/^[^0-9]*/, '').split('.').map(Number)
+  const parse = (v: string) =>
+    v
+      .replace(/^[^0-9]*/, '')
+      .split('.')
+      .map(Number)
   const [aMaj, aMin, aPatch] = parse(actual)
   const [mMaj, mMin, mPatch] = parse(minVersion)
   if (aMaj !== mMaj) return aMaj > mMaj

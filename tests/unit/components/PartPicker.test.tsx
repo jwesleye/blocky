@@ -58,7 +58,9 @@ describe('PartPicker', () => {
     expect(
       screen.getByRole('radiogroup', { name: 'Plates' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('radiogroup', { name: 'Tiles' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('radiogroup', { name: 'Tiles' }),
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('radiogroup', { name: 'Slopes' }),
     ).toBeInTheDocument()
