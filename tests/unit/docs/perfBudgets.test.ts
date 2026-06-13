@@ -73,7 +73,7 @@ describe('docs/PERF_BUDGETS.md — perf-budget drift guard', () => {
   })
 
   describe('load budget (issue #53)', () => {
-    it('notes that load-budget spec and test:perf script land with #53', () => {
+    it('references issue #53 for load-budget context', () => {
       const doc = readFileSync(DOC_PATH, 'utf-8')
       expect(doc).toMatch(/#53/)
     })
