@@ -1,5 +1,7 @@
+/* Design tokens — light theme (default) */
 :root {
   color-scheme: light;
+
   --color-bg: #f3f6ff;
   --color-text: #1f2940;
   --color-panel: rgba(242, 248, 255, 0.94);
@@ -10,10 +12,13 @@
   --color-danger: #c4281b;
   --color-grid: #009cd6;
   --color-focus: #d8a200;
+  --color-overlay: rgb(31 41 64 / 0.66);
 }
 
+/* Dark theme — applied when data-theme="dark" */
 [data-theme='dark'] {
   color-scheme: dark;
+
   --color-bg: #05070d;
   --color-text: #d8f3ff;
   --color-panel: rgba(8, 12, 20, 0.92);
@@ -24,11 +29,14 @@
   --color-danger: #ff6b5e;
   --color-grid: #48b8ff;
   --color-focus: #facc15;
+  --color-overlay: rgb(0 0 0 / 0.8);
 }
 
+/* Pure-CSS fallback for auto theme when JS has not yet written data-theme */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
+
     --color-bg: #05070d;
     --color-text: #d8f3ff;
     --color-panel: rgba(8, 12, 20, 0.92);
@@ -39,5 +47,6 @@
     --color-danger: #ff6b5e;
     --color-grid: #48b8ff;
     --color-focus: #facc15;
+    --color-overlay: rgb(0 0 0 / 0.8);
   }
 }

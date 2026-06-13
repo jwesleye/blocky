@@ -54,17 +54,21 @@
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  border: 1px solid #64748b;
+  border: 1px solid var(--color-muted);
   border-radius: 8px;
-  background: #f8fafc;
-  color: #111827;
+  background: var(--color-panel-strong);
+  color: var(--color-text);
   cursor: pointer;
   touch-action: manipulation;
 }
 
 .touch-toolbar__btn:hover:not(:disabled) {
-  background: #e0f2fe;
-  border-color: #0369a1;
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 15%,
+    var(--color-panel-strong)
+  );
+  border-color: var(--color-grid);
 }
 
 .touch-toolbar__btn:disabled {
@@ -73,10 +77,14 @@
 }
 
 .touch-toolbar__btn--danger {
-  border-color: #991b1b;
-  color: #991b1b;
+  border-color: var(--color-danger);
+  color: var(--color-danger);
 }
 
 .touch-toolbar__btn--danger:hover:not(:disabled) {
-  background: #fee2e2;
+  background: color-mix(
+    in srgb,
+    var(--color-danger) 15%,
+    var(--color-panel-strong)
+  );
 }

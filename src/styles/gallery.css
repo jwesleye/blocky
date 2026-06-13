@@ -1,23 +1,23 @@
 .gallery-toggle {
   margin: 0 0 0.75rem;
   padding: 0.45rem 0.75rem;
-  border: 1px solid #555;
+  border: 1px solid var(--color-line);
   border-radius: 4px;
-  background: #2a2a2a;
-  color: #e0e0e0;
+  background: var(--color-panel);
+  color: var(--color-text);
   cursor: pointer;
 }
 
 .gallery-toggle:hover {
-  background: #363636;
+  background: color-mix(in srgb, var(--color-grid) 10%, var(--color-panel));
 }
 
 .gallery-panel {
   margin: 0 0 1rem;
-  border: 1px solid #3a3a3a;
+  border: 1px solid var(--color-line);
   border-radius: 6px;
-  background: #242424;
-  color: #e0e0e0;
+  background: var(--color-panel);
+  color: var(--color-text);
   overflow: hidden;
 }
 
@@ -27,7 +27,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--color-line);
 }
 
 .gallery-panel__header h3 {
@@ -38,7 +38,7 @@
 .gallery-panel__header span,
 .gallery-list__item p,
 .gallery-list__item span {
-  color: #aaa;
+  color: var(--color-muted);
   font-size: 0.8rem;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .gallery-panel__error {
-  color: #ff8a8a;
+  color: var(--color-danger);
 }
 
 .gallery-list {
@@ -67,9 +67,9 @@
   gap: 1rem;
   min-height: 76px;
   padding: 0.75rem;
-  border: 1px solid #3f3f3f;
+  border: 1px solid var(--color-line);
   border-radius: 6px;
-  background: #2b2b2b;
+  background: var(--color-panel-strong);
 }
 
 .gallery-list__item h4,
@@ -84,10 +84,14 @@
 .gallery-list__item button {
   flex: 0 0 auto;
   padding: 0.4rem 0.7rem;
-  border: 1px solid #5d86ba;
+  border: 1px solid var(--color-grid);
   border-radius: 4px;
-  background: #1d3b5e;
-  color: #fff;
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 25%,
+    var(--color-panel-strong)
+  );
+  color: var(--color-text);
   cursor: pointer;
 }
 

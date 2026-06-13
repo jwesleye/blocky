@@ -18,8 +18,8 @@
 }
 
 .color-swatch--selected {
-  border-color: #fff;
-  outline: 2px solid #333;
+  border-color: var(--color-panel-strong);
+  outline: 2px solid var(--color-text);
   outline-offset: 1px;
 }
 
@@ -49,7 +49,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #888;
+  color: var(--color-muted);
   margin: 0 0 6px;
 }
 
@@ -65,10 +65,10 @@
   gap: 4px;
   font-size: 12px;
   padding: 4px 8px;
-  border: 1px solid #555;
+  border: 1px solid var(--color-line);
   border-radius: 4px;
-  background: #2a2a2a;
-  color: #e0e0e0;
+  background: var(--color-panel);
+  color: var(--color-text);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -84,13 +84,17 @@
 }
 
 .part-btn:hover {
-  background: #3a3a3a;
+  background: color-mix(in srgb, var(--color-grid) 10%, var(--color-panel));
 }
 
 .part-btn--selected {
-  border-color: #4a9eff;
-  background: #1a3a5c;
-  color: #fff;
+  border-color: var(--color-grid);
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 25%,
+    var(--color-panel-strong)
+  );
+  color: var(--color-text);
 }
 
 /* Baseplate size picker */
@@ -107,10 +111,10 @@
   gap: 4px;
   font-size: 12px;
   padding: 4px 8px;
-  border: 1px solid #555;
+  border: 1px solid var(--color-line);
   border-radius: 4px;
-  background: #2a2a2a;
-  color: #e0e0e0;
+  background: var(--color-panel);
+  color: var(--color-text);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -126,13 +130,17 @@
 }
 
 .baseplate-size-btn:hover {
-  background: #3a3a3a;
+  background: color-mix(in srgb, var(--color-grid) 10%, var(--color-panel));
 }
 
 .baseplate-size-btn--selected {
-  border-color: #4a9eff;
-  background: #1a3a5c;
-  color: #fff;
+  border-color: var(--color-grid);
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 25%,
+    var(--color-panel-strong)
+  );
+  color: var(--color-text);
 }
 
 /* Environment preset picker */
@@ -147,20 +155,24 @@
   min-width: 0;
   font-size: 12px;
   padding: 5px 6px;
-  border: 1px solid #555;
+  border: 1px solid var(--color-line);
   border-radius: 4px;
-  background: #2a2a2a;
-  color: #e0e0e0;
+  background: var(--color-panel);
+  color: var(--color-text);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .environment-preset-btn:hover {
-  background: #3a3a3a;
+  background: color-mix(in srgb, var(--color-grid) 10%, var(--color-panel));
 }
 
 .environment-preset-btn--selected {
-  border-color: #4a9eff;
-  background: #1a3a5c;
-  color: #fff;
+  border-color: var(--color-grid);
+  background: color-mix(
+    in srgb,
+    var(--color-grid) 25%,
+    var(--color-panel-strong)
+  );
+  color: var(--color-text);
 }
