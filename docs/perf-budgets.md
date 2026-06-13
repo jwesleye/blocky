@@ -55,7 +55,7 @@ npm run test:e2e -- tests/perf/collapse-perf.spec.ts
 
 - **Budget:** 500 KiB gzip for the main entry chunk
 - **Rationale:** Keeping the initial JavaScript payload small is critical for fast Time-to-Interactive (TTI), especially on mobile devices or slower networks.
-- **Enforcement:** `tests/perf/load-perf.spec.ts` and the Vite `enforceBundleBudget` plugin.
+- **Enforcement:** Vite `enforceBundleBudget` plugin (runs during `npm run build`).
 
 ```sh
 npm run build        # fails if entry bundle exceeds the 500 KiB gzip ceiling
