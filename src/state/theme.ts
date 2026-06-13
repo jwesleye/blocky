@@ -11,6 +11,7 @@ export interface ThemeState {
 }
 
 const THEME_MEDIA_QUERY = '(prefers-color-scheme: dark)'
+const STORAGE_KEY = 'blocky:theme'
 
 function getSystemTheme(): ResolvedTheme {
   if (
@@ -33,10 +34,31 @@ function applyThemeAttribute(theme: ResolvedTheme) {
   document.documentElement.dataset.theme = theme
 }
 
+function readStoredTheme(): ThemePreference {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored === 'auto' || stored === 'light' || stored === 'dark') {
+      return stored
+    }
+  } catch {
+    // localStorage unavailable
+  }
+  return 'auto'
+}
+
+function writeStoredTheme(theme: ThemePreference) {
+  try {
+    localStorage.setItem(STORAGE_KEY, theme)
+  } catch {
+    // localStorage unavailable
+  }
+}
+
 export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: 'auto',
   resolvedTheme: resolveTheme('auto'),
   setTheme: (theme) => {
+    writeStoredTheme(theme)
     const resolvedTheme = resolveTheme(theme)
     applyThemeAttribute(resolvedTheme)
     set({ theme, resolvedTheme })
@@ -49,7 +71,12 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 }))
 
 export function initializeTheme() {
-  useThemeStore.getState().syncResolvedTheme()
+  const stored = readStoredTheme()
+  if (stored !== 'auto') {
+    useThemeStore.getState().setTheme(stored)
+  } else {
+    useThemeStore.getState().syncResolvedTheme()
+  }
 
   if (
     typeof window === 'undefined' ||

@@ -31,4 +31,13 @@ describe('KeyboardHelp', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+
+  it('includes a Theme entry documenting the toolbar selector', () => {
+    render(<KeyboardHelp />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keyboard shortcuts' }))
+
+    expect(screen.getByText('Theme')).toBeInTheDocument()
+    expect(screen.getByText(/Auto.*Light.*Dark|toolbar/i)).toBeInTheDocument()
+  })
 })
