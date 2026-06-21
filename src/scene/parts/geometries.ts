@@ -191,6 +191,8 @@ export function getPartGeometry(partId: string, dims: PartDims) {
     marker.rotateZ(Math.PI / 2)
     const merged = mergeGeometries([geometry, marker], false)
     if (merged) {
+      geometry.dispose()
+      marker.dispose()
       geometry = merged
     }
   } else if (dims.hinge === 'z') {
@@ -198,6 +200,8 @@ export function getPartGeometry(partId: string, dims: PartDims) {
     marker.rotateX(Math.PI / 2)
     const merged = mergeGeometries([geometry, marker], false)
     if (merged) {
+      geometry.dispose()
+      marker.dispose()
       geometry = merged
     }
   }
