@@ -1,9 +1,10 @@
-import { render, screen, act } from '@testing-library/react'
+import { fireEvent, render, screen, act } from '@testing-library/react'
 import { Toolbar } from '../../../src/components/Toolbar'
 import {
   type BuildStoreWithTemporal,
   useBuildStore,
 } from '../../../src/state/store'
+import { useCursorStore } from '../../../src/state/cursor'
 import { BrickCount } from '../../../src/components/BrickCount'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Graph from 'graphology'
@@ -41,6 +42,15 @@ describe('HUD Components', () => {
     })
     temporal.clear()
     temporal.resume()
+    useCursorStore.setState({
+      colorId: 'red',
+      partId: 'brick-2x4',
+      rot: 0,
+      offset: undefined,
+      mount: undefined,
+      hinge: undefined,
+      editingTool: 'place',
+    })
   })
 
   it('renders all toolbar buttons', () => {
@@ -85,5 +95,38 @@ describe('HUD Components', () => {
     expect(screen.getByRole('button', { name: 'Auto' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Light' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Dark' })).toBeInTheDocument()
+  })
+
+  it('toggles x-axis hinge cursor state and checks half-stud and SNOT controls still work', () => {
+    render(<Toolbar />)
+
+    const hingeBtn = screen.getByRole('button', { name: /Toggle X-Axis Hinge/i })
+    const offsetBtn = screen.getByRole('button', { name: /Toggle Half-Stud Offset/i })
+    const mountBtn = screen.getByRole('button', { name: /Cycle SNOT Mount/i })
+
+    expect(useCursorStore.getState().hinge).toBeUndefined()
+
+    // Click hinge
+    fireEvent.click(hingeBtn)
+    expect(useCursorStore.getState().hinge).toBe('x')
+
+    // Click half-stud offset
+    fireEvent.click(offsetBtn)
+    expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
+
+    // Click cycle mount
+    fireEvent.click(mountBtn)
+    expect(useCursorStore.getState().mount).toBe('px')
+
+    // All three are active
+    expect(useCursorStore.getState().hinge).toBe('x')
+    expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
+    expect(useCursorStore.getState().mount).toBe('px')
+
+    // Click hinge again to clear it
+    fireEvent.click(hingeBtn)
+    expect(useCursorStore.getState().hinge).toBeUndefined()
+    expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
+    expect(useCursorStore.getState().mount).toBe('px')
   })
 })

@@ -495,4 +495,69 @@ describe('BuildScene', () => {
 
     await renderer.unmount()
   })
+
+  it('renders a hinge-distinct ghost preview when cursor hinge is x', async () => {
+    useCursorStore.setState({ hinge: undefined })
+    const renderer1 = await ReactThreeTestRenderer.create(<BuildScene />)
+    const [baseplate1] = renderer1.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+    await renderer1.fireEvent(baseplate1, 'onPointerMove', {
+      point: { x: STUD, y: 0, z: STUD },
+      stopPropagation: () => {},
+    })
+    const [geomNode1] = renderer1.scene.findAll(
+      (node) => node.props.object !== undefined,
+    )
+    const geom1 = geomNode1?.props.object
+
+    useCursorStore.setState({ hinge: 'x' })
+    const renderer2 = await ReactThreeTestRenderer.create(<BuildScene />)
+    const [baseplate2] = renderer2.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+    await renderer2.fireEvent(baseplate2, 'onPointerMove', {
+      point: { x: STUD, y: 0, z: STUD },
+      stopPropagation: () => {},
+    })
+    const [geomNode2] = renderer2.scene.findAll(
+      (node) => node.props.object !== undefined,
+    )
+    const geom2 = geomNode2?.props.object
+
+    expect(geom1).toBeDefined()
+    expect(geom2).toBeDefined()
+    expect(geom1).not.toBe(geom2)
+
+    await renderer1.unmount()
+    await renderer2.unmount()
+  })
+
+  it('commits a hinge: "x" brick from the baseplate placement flow', async () => {
+    useCursorStore.setState({
+      hinge: 'x',
+    })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+      stopPropagation: () => {},
+    })
+
+    lastCanvasOnClick?.()
+
+    const bricks = Object.values(useBuildStore.getState().bricks)
+    expect(bricks).toHaveLength(1)
+    expect(bricks[0]?.hinge).toBe('x')
+
+    await renderer.unmount()
+  })
 })

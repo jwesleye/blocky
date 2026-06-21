@@ -22,7 +22,7 @@ const ROUND_PART_IDS = new Set(['round-brick-1x1', 'round-plate-1x1'])
 const geometryCache = new Map<string, BufferGeometry>()
 
 function cacheKey(partId: string, dims: PartDims) {
-  return `${partId}::${dims.w}::${dims.h}::${dims.d}`
+  return `${partId}::${dims.w}::${dims.h}::${dims.d}${dims.hinge ? `::hinge_${dims.hinge}` : ''}`
 }
 
 function createBoxGeometry(dims: PartDims) {
@@ -185,7 +185,23 @@ export function getPartGeometry(partId: string, dims: PartDims) {
     return cached
   }
 
-  const geometry = createGeometry(partId, dims)
+  let geometry = createGeometry(partId, dims)
+  if (dims.hinge === 'x') {
+    const marker = new CylinderGeometry(0.22, 0.22, dims.w + 0.25, 8)
+    marker.rotateZ(Math.PI / 2)
+    const merged = mergeGeometries([geometry, marker], false)
+    if (merged) {
+      geometry = merged
+    }
+  } else if (dims.hinge === 'z') {
+    const marker = new CylinderGeometry(0.22, 0.22, dims.d + 0.25, 8)
+    marker.rotateX(Math.PI / 2)
+    const merged = mergeGeometries([geometry, marker], false)
+    if (merged) {
+      geometry = merged
+    }
+  }
+
   geometry.computeVertexNormals()
   geometryCache.set(key, geometry)
   return geometry

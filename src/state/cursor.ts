@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 import { DEFAULT_COLOR_ID } from '@/domain/model/colors'
-import type { BrickMount, HalfStudOffset } from '@/domain/model/types'
+import type { BrickHinge, BrickMount, HalfStudOffset } from '@/domain/model/types'
 import { DEFAULT_PART_ID } from '@/domain/parts/catalog'
 
 export type EditingTool = 'place' | 'paint' | 'eyedropper'
@@ -20,6 +20,7 @@ interface CursorState {
   rot: 0 | 1 | 2 | 3
   offset?: HalfStudOffset
   mount?: BrickMount
+  hinge?: BrickHinge
   editingTool: EditingTool
   /** ID of the brick the pointer is currently hovering over, for touch delete. */
   hoveredBrickId: string | null
@@ -29,6 +30,7 @@ interface CursorState {
   rotateCursor: () => void
   toggleOffset: () => void
   cycleMount: () => void
+  toggleHingeX: () => void
   setEditingTool: (tool: EditingTool) => void
   setHoveredBrickId: (id: string | null) => void
   /** Copies a placed brick's partId and color into the cursor without mutating the build. */
@@ -41,6 +43,7 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
   rot: 0,
   offset: undefined,
   mount: undefined,
+  hinge: undefined,
   editingTool: 'place',
   hoveredBrickId: null,
   setColor: (id) => set({ colorId: id }),
@@ -64,6 +67,10 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
       const newMount = MOUNT_CYCLE[(idx + 1) % MOUNT_CYCLE.length]
       return { mount: newMount }
     }),
+  toggleHingeX: () =>
+    set((state) => ({
+      hinge: state.hinge === 'x' ? undefined : 'x',
+    })),
   setEditingTool: (tool) => set({ editingTool: tool }),
   setHoveredBrickId: (id) => set({ hoveredBrickId: id }),
   sampleBrick: (brick) =>
