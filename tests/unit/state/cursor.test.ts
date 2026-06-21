@@ -139,16 +139,38 @@ describe('useCursorStore', () => {
       expect(useCursorStore.getState().hinge).toBeUndefined()
     })
 
-    it('can toggle hinge between x and undefined, preserving offset and mount', () => {
-      useCursorStore.setState({ offset: { x: 1, z: 0 }, mount: 'px' })
-
-      useCursorStore.getState().toggleHingeX()
+    it('toggleHinge("x") sets hinge to x', () => {
+      useCursorStore.getState().toggleHinge('x')
       expect(useCursorStore.getState().hinge).toBe('x')
-      expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
-      expect(useCursorStore.getState().mount).toBe('px')
+    })
 
-      useCursorStore.getState().toggleHingeX()
+    it('toggleHinge("x") twice clears hinge back to undefined', () => {
+      useCursorStore.getState().toggleHinge('x')
+      useCursorStore.getState().toggleHinge('x')
       expect(useCursorStore.getState().hinge).toBeUndefined()
+    })
+
+    it('toggleHinge("z") sets hinge to z', () => {
+      useCursorStore.getState().toggleHinge('z')
+      expect(useCursorStore.getState().hinge).toBe('z')
+    })
+
+    it('toggleHinge("z") twice clears hinge back to undefined', () => {
+      useCursorStore.getState().toggleHinge('z')
+      useCursorStore.getState().toggleHinge('z')
+      expect(useCursorStore.getState().hinge).toBeUndefined()
+    })
+
+    it('toggleHinge("x") when hinge is z switches to x', () => {
+      useCursorStore.getState().toggleHinge('z')
+      useCursorStore.getState().toggleHinge('x')
+      expect(useCursorStore.getState().hinge).toBe('x')
+    })
+
+    it('toggleHinge preserves offset and mount', () => {
+      useCursorStore.setState({ offset: { x: 1, z: 0 }, mount: 'px' })
+      useCursorStore.getState().toggleHinge('x')
+      expect(useCursorStore.getState().hinge).toBe('x')
       expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
       expect(useCursorStore.getState().mount).toBe('px')
     })

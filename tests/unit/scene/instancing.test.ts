@@ -169,6 +169,39 @@ describe('groupBricksForInstancing', () => {
     expect(buckets[0]?.hinge).toBeUndefined()
     expect(buckets[1]?.hinge).toBe('x')
   })
+
+  it('groups rigid and hinge: "z" bricks of the same part/color into separate buckets', () => {
+    const bricks: RenderBrick[] = [
+      {
+        partId: 'brick-2x4',
+        partType: 'brick',
+        color: 'blue',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      },
+      {
+        partId: 'brick-2x4',
+        partType: 'brick',
+        color: 'blue',
+        x: 2,
+        y: 0,
+        z: 0,
+        rot: 0,
+        hinge: 'z',
+      },
+    ]
+
+    const buckets = groupBricksForInstancing(bricks, getDims)
+
+    expect(buckets.map((bucket) => bucket.key)).toEqual([
+      'brick::brick-2x4::blue',
+      'brick::brick-2x4::blue::hinge_z',
+    ])
+    expect(buckets[0]?.hinge).toBeUndefined()
+    expect(buckets[1]?.hinge).toBe('z')
+  })
 })
 
 describe('brickInstanceTransform', () => {

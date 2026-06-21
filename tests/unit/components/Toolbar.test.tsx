@@ -97,6 +97,30 @@ describe('HUD Components', () => {
     expect(screen.getByRole('button', { name: 'Dark' })).toBeInTheDocument()
   })
 
+  it('renders the z-axis hinge button', () => {
+    render(<Toolbar />)
+    expect(
+      screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('clicking Toggle Z-Axis Hinge sets cursor hinge to z', () => {
+    render(<Toolbar />)
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }))
+    })
+    expect(useCursorStore.getState().hinge).toBe('z')
+  })
+
+  it('clicking Toggle Z-Axis Hinge twice clears cursor hinge', () => {
+    render(<Toolbar />)
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }))
+      fireEvent.click(screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }))
+    })
+    expect(useCursorStore.getState().hinge).toBeUndefined()
+  })
+
   it('toggles x-axis hinge cursor state and checks half-stud and SNOT controls still work', () => {
     render(<Toolbar />)
 
