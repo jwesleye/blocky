@@ -18,7 +18,9 @@ describe('docs/perf-budgets.md — perf-budget drift guard', () => {
   })
 
   it('docs/PERF_BUDGETS.md is not git-tracked', () => {
-    const tracked = execSync('git ls-files docs/PERF_BUDGETS.md').toString().trim()
+    const tracked = execSync('git ls-files docs/PERF_BUDGETS.md')
+      .toString()
+      .trim()
     expect(tracked, 'docs/PERF_BUDGETS.md must not be git-tracked').toBe('')
   })
 

@@ -2,7 +2,11 @@ import { Monitor, Moon, Sun } from 'lucide-react'
 
 import { type ThemePreference, useThemeStore } from '@/state/theme'
 
-const OPTIONS: { value: ThemePreference; label: string; Icon: React.FC<{ size: number }> }[] = [
+const OPTIONS: {
+  value: ThemePreference
+  label: string
+  Icon: React.FC<{ size: number }>
+}[] = [
   { value: 'auto', label: 'Auto', Icon: Monitor },
   { value: 'light', label: 'Light', Icon: Sun },
   { value: 'dark', label: 'Dark', Icon: Moon },
