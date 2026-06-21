@@ -14,6 +14,7 @@ import {
   Undo2,
   ArrowRightToLine,
   FlipHorizontal2,
+  Axis3D,
 } from 'lucide-react'
 import { KeyboardHelp } from '@/components/KeyboardHelp'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -42,6 +43,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const isOffset = useCursorStore((state) => state.offset !== undefined)
   const cycleMount = useCursorStore((state) => state.cycleMount)
   const isMount = useCursorStore((state) => state.mount !== undefined)
+  const toggleHinge = useCursorStore((state) => state.toggleHinge)
+  const isHinge = useCursorStore((state) => state.hinge !== undefined)
   const [, setRefresh] = useState(0)
 
   useEffect(() => {
@@ -84,6 +87,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         className={isMount ? 'active' : ''}
       >
         <FlipHorizontal2 size={20} />
+      </button>
+      <button
+        type="button"
+        aria-label="Toggle X-Axis Hinge"
+        data-testid="toggle-hinge"
+        onClick={toggleHinge}
+        className={isHinge ? 'active' : ''}
+      >
+        <Axis3D size={20} />
       </button>
       <button
         type="button"

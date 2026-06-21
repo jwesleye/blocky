@@ -106,6 +106,87 @@ describe('groupBricksForInstancing', () => {
     ])
   })
 
+  it('keeps rigid and hinge:x bricks with the same part and color in separate buckets', () => {
+    const buckets = groupBricksForInstancing(
+      [
+        {
+          partId: 'brick-1x1',
+          partType: 'brick',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        {
+          partId: 'brick-1x1',
+          partType: 'brick',
+          color: 'red',
+          x: 2,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'x' as const,
+        },
+      ],
+      getDims,
+    )
+
+    expect(buckets).toHaveLength(2)
+    const rigidBucket = buckets.find((b) => !b.key.includes('hinge'))
+    const hingeBucket = buckets.find((b) => b.key.includes('hinge'))
+    expect(rigidBucket).toBeDefined()
+    expect(hingeBucket).toBeDefined()
+    expect(rigidBucket?.instances).toHaveLength(1)
+    expect(hingeBucket?.instances).toHaveLength(1)
+  })
+
+  it('rigid bucket key is unchanged by the addition of hinge bricks', () => {
+    const rigidOnly = groupBricksForInstancing(
+      [
+        {
+          partId: 'brick-1x1',
+          partType: 'brick',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+      ],
+      getDims,
+    )
+
+    const mixed = groupBricksForInstancing(
+      [
+        {
+          partId: 'brick-1x1',
+          partType: 'brick',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        {
+          partId: 'brick-1x1',
+          partType: 'brick',
+          color: 'red',
+          x: 2,
+          y: 0,
+          z: 0,
+          rot: 0,
+          hinge: 'x' as const,
+        },
+      ],
+      getDims,
+    )
+
+    const rigidKey = rigidOnly[0]?.key
+    const mixedRigidKey = mixed.find((b) => !b.key.includes('hinge'))?.key
+    expect(rigidKey).toBe(mixedRigidKey)
+  })
+
   it('keeps brick and plate instances in separate buckets even when ids and color match', () => {
     const buckets = groupBricksForInstancing(
       [

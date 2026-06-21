@@ -104,6 +104,7 @@ const resetCursorStore = () => {
     rot: 0,
     offset: undefined,
     mount: undefined,
+    hinge: undefined,
     editingTool: 'place',
   })
 }
@@ -492,6 +493,51 @@ describe('BuildScene', () => {
     })
 
     expect(useBuildStore.getState().bricks.brick1?.color).toBe('blue')
+
+    await renderer.unmount()
+  })
+
+  it('ghost brick with hinge:x receives hinge prop and is distinguishable', async () => {
+    useCursorStore.setState({ hinge: 'x' })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+      stopPropagation: () => {},
+    })
+
+    const ghosts = renderer.scene.findAll(
+      (node) => node.props.name === 'ghost-brick',
+    )
+    expect(ghosts).toHaveLength(1)
+
+    await renderer.unmount()
+  })
+
+  it('commits a hinge:x brick from the baseplate placement flow', async () => {
+    useCursorStore.setState({ hinge: 'x' })
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 2 * STUD, y: 0, z: 3 * STUD },
+      stopPropagation: () => {},
+    })
+
+    lastCanvasOnClick?.()
+
+    const bricks = Object.values(useBuildStore.getState().bricks)
+    expect(bricks).toHaveLength(1)
+    expect(bricks[0]?.hinge).toBe('x')
 
     await renderer.unmount()
   })

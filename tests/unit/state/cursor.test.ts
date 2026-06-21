@@ -10,6 +10,7 @@ const resetCursor = () => {
     rot: 0,
     offset: undefined,
     mount: undefined,
+    hinge: undefined,
     editingTool: 'place',
   })
 }
@@ -96,6 +97,32 @@ describe('useCursorStore', () => {
         const state = useCursorStore.getState()
         expect(state.mount).toBe(sequence[i + 1])
       }
+    })
+  })
+
+  describe('hinge', () => {
+    it('defaults to undefined (rigid)', () => {
+      expect(useCursorStore.getState().hinge).toBeUndefined()
+    })
+
+    it('toggleHinge sets hinge to x when currently undefined', () => {
+      useCursorStore.getState().toggleHinge()
+      expect(useCursorStore.getState().hinge).toBe('x')
+    })
+
+    it('toggleHinge clears hinge back to undefined when already x', () => {
+      useCursorStore.getState().toggleHinge()
+      useCursorStore.getState().toggleHinge()
+      expect(useCursorStore.getState().hinge).toBeUndefined()
+    })
+
+    it('toggleHinge does not change offset or mount', () => {
+      useCursorStore.getState().toggleOffset()
+      useCursorStore.getState().cycleMount()
+      const { offset, mount } = useCursorStore.getState()
+      useCursorStore.getState().toggleHinge()
+      expect(useCursorStore.getState().offset).toEqual(offset)
+      expect(useCursorStore.getState().mount).toBe(mount)
     })
   })
 

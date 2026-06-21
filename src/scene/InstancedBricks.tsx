@@ -30,6 +30,11 @@ export interface InstancedBricksProps {
   ) => void
 }
 
+function brickBucketKey(brick: RenderBrick): string {
+  const hingeSegment = brick.hinge ? `::hinge:${brick.hinge}` : ''
+  return `${brick.partType}::${brick.partId}::${brick.color}${hingeSegment}`
+}
+
 export function InstancedBricks({
   bricks,
   getDims,
@@ -44,7 +49,7 @@ export function InstancedBricks({
     const groupedSourceBricks = new Map<string, RenderBrick[]>()
 
     for (const brick of bricks) {
-      const key = `${brick.partType}::${brick.partId}::${brick.color}`
+      const key = brickBucketKey(brick)
       const bucketBricks = groupedSourceBricks.get(key) ?? []
       bucketBricks.push(brick)
       groupedSourceBricks.set(key, bucketBricks)
@@ -71,6 +76,7 @@ export function InstancedBricks({
               w: bucket.size[0] / STUD_SCENE_UNIT,
               h: bucket.size[1] / PLATE_SCENE_UNIT,
               d: bucket.size[2] / STUD_SCENE_UNIT,
+              hinge: bucket.hinge,
             })}
             attach="geometry"
           />
