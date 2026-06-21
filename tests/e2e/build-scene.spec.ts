@@ -279,6 +279,41 @@ test('R-rotate: pressing R increments cursor rotation mod 4', async ({
   expect(rot4).toBe(0)
 })
 
+test('z-axis hinge authoring: toolbar button sets hinge and placed brick carries hinge: "z"', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await waitForStores(page)
+
+  // Activate the z-axis hinge toolbar button
+  await page.click('[data-testid="toggle-hinge-z"]')
+  await expect(page.locator('[data-testid="toggle-hinge-z"]')).toHaveClass(
+    /active/,
+  )
+
+  // Hover the baseplate to trigger ghost snapping, then click to place
+  const pos = await projectToCanvas(page, 4, 0, 4)
+  await page.mouse.move(pos.x, pos.y)
+  await waitForGhostGrid(page)
+  await page.mouse.click(pos.x, pos.y)
+
+  await page.waitForFunction(
+    () =>
+      Object.keys(
+        (window as unknown as DevWindow).__blockyStore.getState().bricks,
+      ).length === 1,
+    undefined,
+    { timeout: 5000 },
+  )
+
+  const brick = await page.evaluate(() => {
+    const store = (window as unknown as DevWindow).__blockyStore
+    return Object.values(store.getState().bricks)[0] as unknown as Record<string, unknown>
+  })
+
+  expect(brick['hinge']).toBe('z')
+})
+
 test('right-click to delete: context-menu on a placed brick removes it from the store', async ({
   page,
 }) => {
