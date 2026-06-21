@@ -27,7 +27,7 @@ describe('playwright.perf.config.ts', () => {
     expect(path.resolve(webServer?.cwd ?? '')).toBe(path.resolve(repoRoot))
   })
 
-  it('builds before previewing so the perf gate cannot measure a stale bundle', async () => {
+  it('builds in e2e mode before previewing so perf hooks are exposed', async () => {
     vi.resetModules()
 
     const imported = await import('../../../playwright.perf.config')
@@ -36,7 +36,7 @@ describe('playwright.perf.config.ts', () => {
       : imported.default.webServer
 
     expect(webServer?.command).toBe(
-      'npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
+      'npx vite build --mode e2e && npm run preview -- --host 127.0.0.1 --port 4173',
     )
   })
 

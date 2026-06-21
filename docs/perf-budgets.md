@@ -17,12 +17,12 @@ Owning issues: [#51](https://github.com/jwesleye/blocky/issues/51) (render),
 
 - **Budget:** 17ms (about 60 fps)
 - **Rationale:** To maintain a smooth 60 frames per second (fps) experience, each frame must be rendered within 16.67ms. We target a p95 of 17ms to allow for minor jitter while ensuring the vast majority of frames are fluid.
-- **Measurement method:** `requestAnimationFrame` delta sampling. A loop of >= 60 consecutive rAF callbacks records the elapsed time between each pair of adjacent frames. The p95 of those deltas must stay at or below 17ms.
+- **Measurement method:** explicit redraw sampling against the R3F demand loop. The spec regenerates the 2,000-brick stress build in-process, warms a short settle window, then samples >= 60 invalidated redraws with `requestAnimationFrame`.
 - **Stress fixture:** 2,000 bricks placed layer-by-layer across a 32x32 stud grid, generated deterministically by the same algorithm as `scripts/gen-stress-build.ts` (canonical artifact: `fixtures/stress-build-2k.json`).
-- **Enforcement:** `tests/perf/render-perf.spec.ts`
+- **Enforcement:** Chromium-only via `tests/perf/render-perf.spec.ts` and `playwright.perf.config.ts`. The strict p95 budget is not enforced in headless Firefox/WebKit because their raw rAF cadence can exceed 17ms even without app work; those engines remain covered by the e2e smoke and WebGL2 matrix.
 
 ```sh
-npm run test:e2e -- tests/perf/render-perf.spec.ts
+npm run test:perf -- render-perf.spec.ts
 ```
 
 ---
@@ -108,7 +108,7 @@ Performance is measured using Playwright with CPU and Network throttling enabled
 
 | Budget              | Threshold                        | Verification                        |
 | ------------------- | -------------------------------- | ----------------------------------- |
-| Render p95          | <= 17 ms                         | `test:e2e -- render-perf.spec.ts`   |
+| Render p95          | <= 17 ms                         | `test:perf -- render-perf.spec.ts`  |
 | Collapse long-frame | < 50 ms                          | `test:e2e -- collapse-perf.spec.ts` |
 | Collapse p95        | <= 17 ms                         | `test:e2e -- collapse-perf.spec.ts` |
 | Bundle gzip         | <= 500 KiB (entry chunk)         | `npm run build`                     |
