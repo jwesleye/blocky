@@ -44,7 +44,9 @@ export function InstancedBricks({
     const groupedSourceBricks = new Map<string, RenderBrick[]>()
 
     for (const brick of bricks) {
-      const key = `${brick.partType}::${brick.partId}::${brick.color}`
+      const key = brick.hinge
+        ? `${brick.partType}::${brick.partId}::${brick.color}::hinge_${brick.hinge}`
+        : `${brick.partType}::${brick.partId}::${brick.color}`
       const bucketBricks = groupedSourceBricks.get(key) ?? []
       bucketBricks.push(brick)
       groupedSourceBricks.set(key, bucketBricks)
@@ -71,6 +73,7 @@ export function InstancedBricks({
               w: bucket.size[0] / STUD_SCENE_UNIT,
               h: bucket.size[1] / PLATE_SCENE_UNIT,
               d: bucket.size[2] / STUD_SCENE_UNIT,
+              hinge: bucket.hinge,
             })}
             attach="geometry"
           />

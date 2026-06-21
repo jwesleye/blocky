@@ -1,4 +1,4 @@
-import type { PlacedBrick } from '@/domain/model/types'
+import type { BrickHinge, PlacedBrick } from '@/domain/model/types'
 import type { PartType } from '@/domain/parts/catalog'
 import { mountRotation } from './mountRotation'
 
@@ -9,13 +9,14 @@ export interface PartDims {
   w: number
   d: number
   h: number
+  hinge?: BrickHinge
 }
 
 export type RenderBrick = Pick<
   PlacedBrick,
   'partId' | 'color' | 'x' | 'y' | 'z' | 'rot'
 > &
-  Partial<Pick<PlacedBrick, 'id' | 'mount'>> & {
+  Partial<Pick<PlacedBrick, 'id' | 'mount' | 'hinge'>> & {
     partType: PartType
   }
 
@@ -33,6 +34,7 @@ export interface InstanceBucket {
   color: string
   size: [number, number, number]
   instances: BrickInstance[]
+  hinge?: BrickHinge
 }
 
 export function brickInstanceTransform(
@@ -62,7 +64,9 @@ export function groupBricksForInstancing(
 
   for (const brick of bricks) {
     const dims = getDims(brick.partId)
-    const key = `${brick.partType}::${brick.partId}::${brick.color}`
+    const key = brick.hinge
+      ? `${brick.partType}::${brick.partId}::${brick.color}::hinge_${brick.hinge}`
+      : `${brick.partType}::${brick.partId}::${brick.color}`
     const bucket =
       buckets.get(key) ??
       (() => {
@@ -77,6 +81,7 @@ export function groupBricksForInstancing(
             dims.d * STUD_SCENE_UNIT,
           ],
           instances: [],
+          hinge: brick.hinge,
         }
         buckets.set(key, nextBucket)
         return nextBucket

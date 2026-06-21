@@ -15,6 +15,7 @@ import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
 import { resolveBrickColorHex } from '@/domain/model/colors'
 import type {
+  BrickHinge,
   BrickMount,
   HalfStudOffset,
   PlacedBrick,
@@ -90,6 +91,7 @@ function GhostBrickMesh({
   rot,
   offset,
   mount,
+  hinge,
 }: {
   grid: GridCoord
   valid: boolean
@@ -97,6 +99,7 @@ function GhostBrickMesh({
   rot: 0 | 1 | 2 | 3
   offset?: HalfStudOffset
   mount?: BrickMount
+  hinge?: BrickHinge
 }) {
   const part = PART_CATALOG[partId]
   if (!part) return null
@@ -123,6 +126,7 @@ function GhostBrickMesh({
           w: part.width,
           h: part.height,
           d: part.length,
+          hinge,
         })}
         attach="geometry"
       />
@@ -249,6 +253,7 @@ export function BuildScene({
   const rot = useCursorStore((state) => state.rot)
   const offset = useCursorStore((state) => state.offset)
   const mount = useCursorStore((state) => state.mount)
+  const hinge = useCursorStore((state) => state.hinge)
   const editingTool = useCursorStore((state) => state.editingTool)
   const sampleBrick = useCursorStore((state) => state.sampleBrick)
   const setHoveredBrickId = useCursorStore((state) => state.setHoveredBrickId)
@@ -303,6 +308,7 @@ export function BuildScene({
       rot,
       offset,
       mount,
+      hinge,
     }
     return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
   }, [
@@ -314,6 +320,7 @@ export function BuildScene({
     rot,
     offset,
     mount,
+    hinge,
   ])
 
   const resetPlacementGesture = () => {
@@ -371,6 +378,7 @@ export function BuildScene({
       rot,
       offset,
       mount,
+      hinge,
     })
   }
 
@@ -474,6 +482,7 @@ export function BuildScene({
           rot={rot}
           offset={offset}
           mount={mount}
+          hinge={hinge}
         />
       )}
       {activeCollapse && (
