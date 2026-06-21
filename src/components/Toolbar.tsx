@@ -15,6 +15,7 @@ import {
   ArrowRightToLine,
   FlipHorizontal2,
   Link2,
+  MoveVertical,
 } from 'lucide-react'
 import { KeyboardHelp } from '@/components/KeyboardHelp'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -43,8 +44,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const isOffset = useCursorStore((state) => state.offset !== undefined)
   const cycleMount = useCursorStore((state) => state.cycleMount)
   const isMount = useCursorStore((state) => state.mount !== undefined)
-  const toggleHingeX = useCursorStore((state) => state.toggleHingeX)
-  const isHingeX = useCursorStore((state) => state.hinge === 'x')
+  const toggleHinge = useCursorStore((state) => state.toggleHinge)
+  const hinge = useCursorStore((state) => state.hinge)
   const [, setRefresh] = useState(0)
 
   useEffect(() => {
@@ -92,10 +93,19 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         type="button"
         aria-label="Toggle X-Axis Hinge"
         data-testid="toggle-hinge-x"
-        onClick={toggleHingeX}
-        className={isHingeX ? 'active' : ''}
+        onClick={() => toggleHinge('x')}
+        className={hinge === 'x' ? 'active' : ''}
       >
         <Link2 size={20} />
+      </button>
+      <button
+        type="button"
+        aria-label="Toggle Z-Axis Hinge"
+        data-testid="toggle-hinge-z"
+        onClick={() => toggleHinge('z')}
+        className={hinge === 'z' ? 'active' : ''}
+      >
+        <MoveVertical size={20} />
       </button>
       <button
         type="button"

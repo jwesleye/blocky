@@ -30,7 +30,8 @@ interface CursorState {
   rotateCursor: () => void
   toggleOffset: () => void
   cycleMount: () => void
-  toggleHingeX: () => void
+  /** Toggles the given hinge axis on/off. Activating one axis clears the other. */
+  toggleHinge: (axis: BrickHinge) => void
   setEditingTool: (tool: EditingTool) => void
   setHoveredBrickId: (id: string | null) => void
   /** Copies a placed brick's partId and color into the cursor without mutating the build. */
@@ -67,10 +68,8 @@ export const useCursorStore = create<CursorState>()((set, get) => ({
       const newMount = MOUNT_CYCLE[(idx + 1) % MOUNT_CYCLE.length]
       return { mount: newMount }
     }),
-  toggleHingeX: () =>
-    set((state) => ({
-      hinge: state.hinge === 'x' ? undefined : 'x',
-    })),
+  toggleHinge: (axis) =>
+    set((state) => ({ hinge: state.hinge === axis ? undefined : axis })),
   setEditingTool: (tool) => set({ editingTool: tool }),
   setHoveredBrickId: (id) => set({ hoveredBrickId: id }),
   sampleBrick: (brick) =>

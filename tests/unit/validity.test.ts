@@ -234,4 +234,28 @@ describe('isValidPlacement', () => {
     })
     expect(isValidPlacement(ghost, [support1, support2])).toBe(true)
   })
+
+  describe('hinge placement', () => {
+    it('allows a z-axis hinge brick resting on the baseplate (y=0)', () => {
+      expect(isValidPlacement(brick({ hinge: 'z' }), [])).toBe(true)
+    })
+
+    it('allows an x-axis hinge brick resting on the baseplate (y=0)', () => {
+      expect(isValidPlacement(brick({ hinge: 'x' }), [])).toBe(true)
+    })
+
+    it('rejects a floating hinge brick (y>0, nothing below)', () => {
+      expect(isValidPlacement(brick({ y: 3, hinge: 'z' }), [])).toBe(false)
+    })
+
+    it('rejects a colliding hinge brick at the same grid position as an existing brick', () => {
+      const existing = brick({ id: 'existing' })
+      expect(isValidPlacement(brick({ hinge: 'x' }), [existing])).toBe(false)
+    })
+
+    it('allows stacking a hinge brick on top of a supporting brick', () => {
+      const support = brick({ id: 'support' })
+      expect(isValidPlacement(brick({ y: 3, hinge: 'z' }), [support])).toBe(true)
+    })
+  })
 })
