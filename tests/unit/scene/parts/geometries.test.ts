@@ -1,5 +1,5 @@
-import { BoxGeometry, type BufferGeometry } from 'three'
-import { describe, expect, it } from 'vitest'
+import { BoxGeometry, CylinderGeometry, type BufferGeometry } from 'three'
+import { describe, expect, it, vi } from 'vitest'
 
 import { PART_CATALOG } from '@/domain/parts/catalog'
 import { getPartGeometry } from '@/scene/parts/geometries'
@@ -199,6 +199,46 @@ describe('getPartGeometry', () => {
         ({ x, y }) => Math.abs(x - 1) < 1e-6 && Math.abs(y + 1.5) < 1e-6,
       ),
     ).toBe(false)
+  })
+})
+
+describe('hinge geometry disposal', () => {
+  it('disposes the hinge marker CylinderGeometry after hinge-x merge', () => {
+    const disposedCount = { value: 0 }
+    const origDispose = CylinderGeometry.prototype.dispose
+    const spy = vi
+      .spyOn(CylinderGeometry.prototype, 'dispose')
+      .mockImplementation(function (this: CylinderGeometry) {
+        disposedCount.value += 1
+        origDispose.call(this)
+      })
+
+    try {
+      // tile-2x4 base geometry is a BoxGeometry, so any CylinderGeometry
+      // disposal must come from the hinge marker alone.
+      getPartGeometry('tile-2x4', { w: 2, d: 4, h: 1, hinge: 'x' })
+      expect(disposedCount.value).toBe(1)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('disposes the hinge marker CylinderGeometry after hinge-z merge', () => {
+    const disposedCount = { value: 0 }
+    const origDispose = CylinderGeometry.prototype.dispose
+    const spy = vi
+      .spyOn(CylinderGeometry.prototype, 'dispose')
+      .mockImplementation(function (this: CylinderGeometry) {
+        disposedCount.value += 1
+        origDispose.call(this)
+      })
+
+    try {
+      getPartGeometry('tile-2x4', { w: 2, d: 4, h: 1, hinge: 'z' })
+      expect(disposedCount.value).toBe(1)
+    } finally {
+      spy.mockRestore()
+    }
   })
 })
 
