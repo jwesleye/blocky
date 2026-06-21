@@ -41,6 +41,13 @@ describe('docs/perf-budgets.md — perf-budget drift guard', () => {
         'tests/perf/render-perf.spec.ts not found — doc references it',
       ).toBe(true)
     })
+
+    it('documents Chromium-only strict p95 render enforcement', () => {
+      const doc = readFileSync(DOC_PATH, 'utf-8')
+      expect(doc).toMatch(/Chromium-only/i)
+      expect(doc).toMatch(/Firefox\/WebKit/i)
+      expect(doc).toMatch(/npm run test:perf -- render-perf\.spec\.ts/)
+    })
   })
 
   describe('collapse smoothness budget (issue #52)', () => {
