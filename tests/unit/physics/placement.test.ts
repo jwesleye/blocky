@@ -20,7 +20,7 @@ function fp(
   cells: { x: number; z: number }[],
   opts?: {
     hasTopStuds?: boolean
-    offset?: { x: number; z: number }
+    offset?: { x: 0 | 1; z: 0 | 1 }
     mount?: BrickMount
   },
 ): BrickFootprint {
@@ -157,24 +157,16 @@ describe('canPlaceBrick', () => {
   // Mock catalog
   const mockCatalog: PartCatalog = {
     'brick-1x1': {
-      id: 'brick-1x1',
-      title: 'Brick 1x1',
       width: 1,
       length: 1,
       height: 3,
       hasTopStuds: true,
-      geometryUrl: '',
-      coverImageUrl: '',
     },
     'tile-1x1': {
-      id: 'tile-1x1',
-      title: 'Tile 1x1',
       width: 1,
       length: 1,
       height: 1,
       hasTopStuds: false,
-      geometryUrl: '',
-      coverImageUrl: '',
     },
   }
 
