@@ -28,7 +28,7 @@ describe('ScreenshotCaptureBridge', () => {
       gl: mockGl,
       scene: mockScene,
       camera: mockCamera,
-    } as any)
+    } as unknown as ReturnType<typeof useThree>)
 
     const onReady = vi.fn()
     render(<ScreenshotCaptureBridge onReady={onReady} />)
@@ -42,7 +42,7 @@ describe('ScreenshotCaptureBridge', () => {
     const mockGl = {
       render: vi.fn(),
       domElement: {
-        toBlob: vi.fn((cb, _mimeType) => {
+        toBlob: vi.fn((cb) => {
           cb(mockBlob)
         }),
       },
@@ -54,7 +54,7 @@ describe('ScreenshotCaptureBridge', () => {
       gl: mockGl,
       scene: mockScene,
       camera: mockCamera,
-    } as any)
+    } as unknown as ReturnType<typeof useThree>)
 
     const onReady = vi.fn()
     render(<ScreenshotCaptureBridge onReady={onReady} />)
@@ -74,7 +74,7 @@ describe('ScreenshotCaptureBridge', () => {
     const mockGl = {
       render: vi.fn(),
       domElement: {
-        toBlob: vi.fn((cb, _mimeType) => {
+        toBlob: vi.fn((cb) => {
           cb(null)
         }),
       },
@@ -86,7 +86,7 @@ describe('ScreenshotCaptureBridge', () => {
       gl: mockGl,
       scene: mockScene,
       camera: mockCamera,
-    } as any)
+    } as unknown as ReturnType<typeof useThree>)
 
     const onReady = vi.fn()
     render(<ScreenshotCaptureBridge onReady={onReady} />)
@@ -101,7 +101,7 @@ describe('ScreenshotCaptureBridge', () => {
     const mockGl = {
       render: vi.fn(),
       domElement: {
-        toBlob: vi.fn((cb, _mimeType) => {
+        toBlob: vi.fn((cb) => {
           cb(mockBlob)
         }),
       },
@@ -113,7 +113,7 @@ describe('ScreenshotCaptureBridge', () => {
       gl: mockGl,
       scene: mockScene,
       camera: mockCamera,
-    } as any)
+    } as unknown as ReturnType<typeof useThree>)
 
     const onReady = vi.fn()
     render(<ScreenshotCaptureBridge onReady={onReady} />)
