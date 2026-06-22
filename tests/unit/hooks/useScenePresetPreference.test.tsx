@@ -17,7 +17,7 @@ describe('useScenePresetPreference', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useSceneSettingsStore.setState({
-      selectedPresetId: 'default', // Using a default value to avoid state pollution
+      selectedPresetId: 'studio', // Using a default value to avoid state pollution
     })
   })
 
