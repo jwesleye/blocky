@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { Grid3X3 } from 'lucide-react'
 import { SUPPORTED_BASEPLATE_SIZES } from '@/domain/grid'
 import { bricksOutsideBaseplate } from '@/domain/physics'
-import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID } from '@/domain/parts/catalog'
 import { useBuildStore } from '@/state/store'
 
 /**
@@ -24,7 +24,7 @@ export function BaseplateSizePicker() {
       const outside = bricksOutsideBaseplate(
         Object.values(bricks),
         nextSize,
-        PART_CATALOG,
+        CATALOG_BY_ID,
       )
       if (outside.length > 0) {
         const noun = outside.length === 1 ? 'brick' : 'bricks'
