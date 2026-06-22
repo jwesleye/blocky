@@ -138,7 +138,7 @@ describe('useGallery', () => {
             updatedAt: new Date().toISOString(),
           }
         }
-      } as any)
+      } as never)
 
       const { result } = renderHook(() => useGallery())
 
