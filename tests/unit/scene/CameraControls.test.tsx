@@ -5,7 +5,7 @@ import { CAMERA_DEFAULT_TARGET } from '@/scene/sceneConfig'
 import { TOUCH } from 'three'
 
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: (props: any) => <group data-testid="orbit-controls" {...props} />
+  OrbitControls: (props: Record<string, unknown>) => <group data-testid="orbit-controls" {...props} />
 }))
 
 describe('CameraControls', () => {
