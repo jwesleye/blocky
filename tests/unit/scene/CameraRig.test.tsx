@@ -29,7 +29,7 @@ describe('CameraRig', () => {
     vi.mocked(r3f.useThree).mockReturnValue({
       camera: mockCamera,
       controls: mockControls,
-    } as any)
+    } as unknown as r3f.RootState)
 
     render(<CameraRig />)
 
@@ -50,7 +50,7 @@ describe('CameraRig', () => {
     vi.mocked(r3f.useThree).mockReturnValue({
       camera: mockCamera,
       controls: null,
-    } as any)
+    } as unknown as r3f.RootState)
 
     render(<CameraRig />)
 
