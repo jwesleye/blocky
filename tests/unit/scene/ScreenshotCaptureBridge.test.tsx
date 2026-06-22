@@ -42,7 +42,7 @@ describe('ScreenshotCaptureBridge', () => {
     const mockGl = {
       render: vi.fn(),
       domElement: {
-        toBlob: vi.fn((cb, mimeType) => {
+        toBlob: vi.fn((cb, _mimeType) => {
           cb(mockBlob)
         }),
       },
@@ -74,7 +74,7 @@ describe('ScreenshotCaptureBridge', () => {
     const mockGl = {
       render: vi.fn(),
       domElement: {
-        toBlob: vi.fn((cb, mimeType) => {
+        toBlob: vi.fn((cb, _mimeType) => {
           cb(null)
         }),
       },
@@ -101,7 +101,7 @@ describe('ScreenshotCaptureBridge', () => {
     const mockGl = {
       render: vi.fn(),
       domElement: {
-        toBlob: vi.fn((cb, mimeType) => {
+        toBlob: vi.fn((cb, _mimeType) => {
           cb(mockBlob)
         }),
       },
