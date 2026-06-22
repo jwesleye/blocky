@@ -124,7 +124,7 @@ export function findCollisions(
   catalog: PartCatalog,
 ): Set<string> {
   const collisions = new Set<string>()
-  const occupancy = new Map<string, string>() // key -> brickId
+  const occupancy = new Map<number, string>() // key -> brickId
 
   for (const brick of bricks) {
     const def = catalog[brick.partId]
@@ -137,7 +137,7 @@ export function findCollisions(
       for (let hx = xHalfMin; hx <= xHalfMax; hx++) {
         for (let hz = zHalfMin; hz <= zHalfMax; hz++) {
           for (let py = yMin; py <= yMax; py++) {
-            const key = `${hx}|${hz}|${py}`
+            const key = (hx + 32768) * 4294967296 + (hz + 32768) * 65536 + (py + 32768)
             const existingId = occupancy.get(key)
             if (existingId && existingId !== brick.id) {
               collisions.add(existingId)
@@ -153,7 +153,7 @@ export function findCollisions(
       for (const cell of cells) {
         // A brick occupies cells from y to y + height - 1
         for (let dy = 0; dy < def.height; dy++) {
-          const key = `${cell.x}|${cell.z}|${brick.y + dy}`
+          const key = (cell.x + 32768) * 4294967296 + (cell.z + 32768) * 65536 + (brick.y + dy + 32768)
           const existingId = occupancy.get(key)
           if (existingId && existingId !== brick.id) {
             collisions.add(existingId)
