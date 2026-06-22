@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 // We must mock `@react-three/drei`'s Instances and Instance components
 // to avoid deep nested errors inside r3f testing without a real DOM/canvas.
 vi.mock('@react-three/drei', () => ({
-  Instances: (props: any) => <group data-testid="Instances" limit={props.limit} {...props} />,
-  Instance: (props: any) => <group data-testid="Instance" {...props} />
+  Instances: (props: { limit?: number; [key: string]: unknown }) => <group data-testid="Instances" limit={props.limit} {...props} />,
+  Instance: (props: { [key: string]: unknown }) => <group data-testid="Instance" {...props} />
 }))
 
 import { InstancedBricks } from '@/scene/InstancedBricks'
@@ -133,8 +133,8 @@ describe('InstancedBricks', () => {
 
     const instancesGroups = renderer.scene.findAll((node) => node.props['data-testid'] === 'Instances')
     // Get the instance corresponding to sampleBricks[0] (which is brick-1, 2x4, red)
-    let instance: any
-    let expectedBrick: any
+    let instance: ReturnType<typeof renderer.scene.find> | undefined
+    let expectedBrick: RenderBrick | undefined
 
     for (const group of instancesGroups) {
       if (group.props.limit === 2) {
@@ -145,12 +145,12 @@ describe('InstancedBricks', () => {
     }
 
     // Simulate events
-    const mockEvent = {} as any
+    const mockEvent = {} as unknown
 
-    instance.props.onClick(mockEvent)
-    instance.props.onPointerMove(mockEvent)
-    instance.props.onPointerDown(mockEvent)
-    instance.props.onContextMenu(mockEvent)
+    instance!.props.onClick(mockEvent)
+    instance!.props.onPointerMove(mockEvent)
+    instance!.props.onPointerDown(mockEvent)
+    instance!.props.onContextMenu(mockEvent)
 
     // The handler should receive the correct original RenderBrick object
     expect(onInstanceClick).toHaveBeenCalledWith(expectedBrick, mockEvent)
