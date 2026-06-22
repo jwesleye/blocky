@@ -10,7 +10,6 @@ vi.mock('@react-three/drei', () => ({
 
 import { InstancedBricks } from '@/scene/InstancedBricks'
 import type { RenderBrick } from '@/scene/instancing'
-import { PLATE_SCENE_UNIT, STUD_SCENE_UNIT } from '@/scene/instancing'
 
 // Mock the parts geometry to avoid WebGL context issues and simplify test output
 vi.mock('@/scene/parts/geometries', () => ({
