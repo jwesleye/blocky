@@ -107,7 +107,9 @@ describe('HUD Components', () => {
   it('clicking Toggle Z-Axis Hinge sets cursor hinge to z', () => {
     render(<Toolbar />)
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }))
+      fireEvent.click(
+        screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }),
+      )
     })
     expect(useCursorStore.getState().hinge).toBe('z')
   })
@@ -115,8 +117,12 @@ describe('HUD Components', () => {
   it('clicking Toggle Z-Axis Hinge twice clears cursor hinge', () => {
     render(<Toolbar />)
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }))
-      fireEvent.click(screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }))
+      fireEvent.click(
+        screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }),
+      )
+      fireEvent.click(
+        screen.getByRole('button', { name: /Toggle Z-Axis Hinge/i }),
+      )
     })
     expect(useCursorStore.getState().hinge).toBeUndefined()
   })
@@ -124,8 +130,12 @@ describe('HUD Components', () => {
   it('toggles x-axis hinge cursor state and checks half-stud and SNOT controls still work', () => {
     render(<Toolbar />)
 
-    const hingeBtn = screen.getByRole('button', { name: /Toggle X-Axis Hinge/i })
-    const offsetBtn = screen.getByRole('button', { name: /Toggle Half-Stud Offset/i })
+    const hingeBtn = screen.getByRole('button', {
+      name: /Toggle X-Axis Hinge/i,
+    })
+    const offsetBtn = screen.getByRole('button', {
+      name: /Toggle Half-Stud Offset/i,
+    })
     const mountBtn = screen.getByRole('button', { name: /Cycle SNOT Mount/i })
 
     expect(useCursorStore.getState().hinge).toBeUndefined()
