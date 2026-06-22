@@ -1,12 +1,13 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import ReactThreeTestRenderer from '@react-three/test-renderer'
+import type { ReactNode } from 'react'
 
 // Mock rapier physics to return pure react elements instead of complicated Context providers which may not render easily
 vi.mock('@react-three/rapier', () => {
   return {
-    Physics: ({ children }: any) => <group name="physics">{children}</group>,
-    RigidBody: (props: any) => <group name="rigid-body" {...props}>{props.children}</group>,
-    CuboidCollider: (props: any) => <group name="collider" {...props} />
+    Physics: ({ children }: { children: ReactNode }) => <group name="physics">{children}</group>,
+    RigidBody: (props: { children?: ReactNode } & Record<string, unknown>) => <group name="rigid-body" {...props}>{props.children}</group>,
+    CuboidCollider: (props: Record<string, unknown>) => <group name="collider" {...props} />
   }
 })
 
@@ -112,7 +113,7 @@ describe('CollapseSimulation', () => {
     expect(dynamicBody).toBeDefined()
 
     await ReactThreeTestRenderer.act(async () => {
-      dynamicBody?.props.onSleep?.()
+      ;(dynamicBody?.props.onSleep as () => void)?.()
     })
 
     // settle delay + fade out
@@ -126,15 +127,15 @@ describe('CollapseSimulation', () => {
   })
 
   it('updates the simulation if transaction prop changes', async () => {
-    let renderer: any
+    let renderer: ReturnType<typeof ReactThreeTestRenderer.create> extends Promise<infer T> ? T : never
     await ReactThreeTestRenderer.act(async () => {
       renderer = await ReactThreeTestRenderer.create(
         <CollapseSimulation transaction={mockTransaction} />
       )
     })
 
-    const [dynamicBody1] = renderer.scene.findAll(
-      (node: any) => node.props.type === 'dynamic'
+    const [dynamicBody1] = renderer!.scene.findAll(
+      (node) => node.props.type === 'dynamic'
     )
     expect(dynamicBody1?.props.position).toEqual([0, 5, 0])
 
@@ -152,16 +153,16 @@ describe('CollapseSimulation', () => {
     })
 
     await ReactThreeTestRenderer.act(async () => {
-      renderer.update(
+      renderer!.update(
         <CollapseSimulation transaction={updatedTransaction} />
       )
     })
 
-    const [dynamicBody2] = renderer.scene.findAll(
-      (node: any) => node.props.type === 'dynamic'
+    const [dynamicBody2] = renderer!.scene.findAll(
+      (node) => node.props.type === 'dynamic'
     )
     expect(dynamicBody2?.props.position).toEqual([10, 10, 10])
 
-    await renderer.unmount()
+    await renderer!.unmount()
   })
 })
