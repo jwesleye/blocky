@@ -1,5 +1,5 @@
 import type { PlacedBrick } from '../model/types'
-import { CATALOG_BY_ID as PART_CATALOG } from '../parts/catalog'
+import { CATALOG_BY_ID } from '../parts/catalog'
 import { toBrickFootprint } from '../parts/footprint'
 import { buildConnectionGraph } from './graph'
 import { floatingIds } from './placement'
@@ -21,12 +21,12 @@ export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
   // Use the shared footprint-based grounding helper so tile coupling (hasTopStuds)
   // is evaluated by the same rule as the placement path.
   const floating = floatingIds(
-    bricks.map((b) => toBrickFootprint(b, PART_CATALOG)),
+    bricks.map((b) => toBrickFootprint(b, CATALOG_BY_ID)),
   )
 
   // Brick-only graph (no BASEPLATE node) for shear connected-component analysis
   // so physically disconnected grounded components are evaluated independently.
-  const graph = buildConnectionGraph(bricks, PART_CATALOG)
+  const graph = buildConnectionGraph(bricks, CATALOG_BY_ID)
   const brickById = new Map(bricks.map((brick) => [brick.id, brick]))
   const sheared = new Set<string>()
 
@@ -37,7 +37,7 @@ export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
 
     if (component.length === 0 || component.every((brick) => brick.y !== 0))
       continue
-    if (isBalanced(component, PART_CATALOG)) continue
+    if (isBalanced(component, CATALOG_BY_ID)) continue
 
     const { shear } = findShearRegion(component)
     for (const brick of shear) {
