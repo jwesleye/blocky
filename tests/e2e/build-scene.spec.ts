@@ -308,7 +308,10 @@ test('z-axis hinge authoring: toolbar button sets hinge and placed brick carries
 
   const brick = await page.evaluate(() => {
     const store = (window as unknown as DevWindow).__blockyStore
-    return Object.values(store.getState().bricks)[0] as unknown as Record<string, unknown>
+    return Object.values(store.getState().bricks)[0] as unknown as Record<
+      string,
+      unknown
+    >
   })
 
   expect(brick['hinge']).toBe('z')

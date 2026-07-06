@@ -1,7 +1,11 @@
 import { create } from 'zustand'
 
 import { DEFAULT_COLOR_ID } from '@/domain/model/colors'
-import type { BrickHinge, BrickMount, HalfStudOffset } from '@/domain/model/types'
+import type {
+  BrickHinge,
+  BrickMount,
+  HalfStudOffset,
+} from '@/domain/model/types'
 import { DEFAULT_PART_ID } from '@/domain/parts/catalog'
 
 export type EditingTool = 'place' | 'paint' | 'eyedropper'
