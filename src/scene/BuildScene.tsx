@@ -25,6 +25,8 @@ import {
   getPart,
   type PartType,
 } from '@/domain/parts/catalog'
+import { useShallow } from 'zustand/react/shallow'
+
 import { isValidPlacement } from '@/domain/physics/validity'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
@@ -241,22 +243,49 @@ export function BuildScene({
   presetId = DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
   onCaptureFnReady,
 }: BuildSceneProps = {}) {
-  const bricks = useBuildStore((state) => state.bricks)
-  const baseplateSize = useBuildStore((state) => state.baseplateSize)
-  const activeCollapse = useBuildStore((state) => state.activeCollapse)
-  const completeCollapse = useBuildStore((state) => state.completeCollapse)
-  const placeBrick = useBuildStore((state) => state.placeBrick)
-  const deleteBrick = useBuildStore((state) => state.deleteBrick)
-  const recolorBrick = useBuildStore((state) => state.recolorBrick)
-  const partId = useCursorStore((state) => state.partId)
-  const colorId = useCursorStore((state) => state.colorId)
-  const rot = useCursorStore((state) => state.rot)
-  const offset = useCursorStore((state) => state.offset)
-  const mount = useCursorStore((state) => state.mount)
-  const hinge = useCursorStore((state) => state.hinge)
-  const editingTool = useCursorStore((state) => state.editingTool)
-  const sampleBrick = useCursorStore((state) => state.sampleBrick)
-  const setHoveredBrickId = useCursorStore((state) => state.setHoveredBrickId)
+  const {
+    bricks,
+    baseplateSize,
+    activeCollapse,
+    completeCollapse,
+    placeBrick,
+    deleteBrick,
+    recolorBrick,
+  } = useBuildStore(
+    useShallow((state) => ({
+      bricks: state.bricks,
+      baseplateSize: state.baseplateSize,
+      activeCollapse: state.activeCollapse,
+      completeCollapse: state.completeCollapse,
+      placeBrick: state.placeBrick,
+      deleteBrick: state.deleteBrick,
+      recolorBrick: state.recolorBrick,
+    })),
+  )
+
+  const {
+    partId,
+    colorId,
+    rot,
+    offset,
+    mount,
+    hinge,
+    editingTool,
+    sampleBrick,
+    setHoveredBrickId,
+  } = useCursorStore(
+    useShallow((state) => ({
+      partId: state.partId,
+      colorId: state.colorId,
+      rot: state.rot,
+      offset: state.offset,
+      mount: state.mount,
+      hinge: state.hinge,
+      editingTool: state.editingTool,
+      sampleBrick: state.sampleBrick,
+      setHoveredBrickId: state.setHoveredBrickId,
+    })),
+  )
   const [ghostGrid, setGhostGrid] = useState<GridCoord | null>(null)
   const gestureStartRef = useRef<{ x: number; y: number } | null>(null)
   const draggedSincePointerDownRef = useRef(false)
