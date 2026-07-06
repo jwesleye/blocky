@@ -358,12 +358,16 @@ export const CATALOG_BY_ID: PartCatalog = Object.fromEntries(
 
 export const DEFAULT_PART_ID = 'brick-2x4'
 
+const PART_DEF_BY_ID = new Map<string, PartDef>(
+  PART_CATALOG.map((p) => [p.id, p]),
+)
+
 export function getPart(id: string): PartDef | undefined {
-  return PART_CATALOG.find((p) => p.id === id)
+  return PART_DEF_BY_ID.get(id)
 }
 
 export function isValidPartId(id: string): boolean {
-  return PART_CATALOG.some((p) => p.id === id)
+  return PART_DEF_BY_ID.has(id)
 }
 
 export function getPartsByCategory(category: PartCategory): readonly PartDef[] {
