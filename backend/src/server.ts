@@ -118,7 +118,10 @@ export async function handler(
     if (!parsed.success) {
       sendJSON(res, 422, {
         error: 'Invalid publish request',
-        details: parsed.error.issues,
+        details: parsed.error.issues.map((issue) => ({
+          path: issue.path,
+          message: issue.message,
+        })),
       })
       return
     }
@@ -213,7 +216,10 @@ export async function handler(
     if (!parsed.success) {
       sendJSON(res, 422, {
         error: 'Invalid report request',
-        details: parsed.error.issues,
+        details: parsed.error.issues.map((issue) => ({
+          path: issue.path,
+          message: issue.message,
+        })),
       })
       return
     }
