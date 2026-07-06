@@ -50,6 +50,12 @@ type WindowWithWebkitAudioContext = Window &
     webkitAudioContext?: typeof AudioContext
   }
 
+function hasWebkitAudioContext(
+  win: typeof window,
+): win is WindowWithWebkitAudioContext {
+  return 'webkitAudioContext' in win
+}
+
 export type SoundEffectsController = {
   isEnabled(): boolean
   setEnabled(enabled: boolean): void
@@ -93,7 +99,7 @@ function getBrowserAudioContext(): AudioContextLike | null {
 
   const AudioContextCtor =
     window.AudioContext ??
-    (window as WindowWithWebkitAudioContext).webkitAudioContext
+    (hasWebkitAudioContext(window) ? window.webkitAudioContext : undefined)
   if (!AudioContextCtor) return null
 
   try {
