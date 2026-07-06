@@ -1,22 +1,17 @@
 import { useState } from 'react'
 import { useBuildPersistence } from '@/hooks/useBuildPersistence'
 import { useBuildStore } from '@/state/store'
+import type {
+  GalleryPublishRequest,
+  GalleryPublishResult,
+} from '@/domain/persistence/galleryClient'
 
 interface Props {
   onExportScreenshot?: (() => Promise<void>) | null
 }
 
-export function PersistenceControls({ onExportScreenshot }: Props = {}) {
-  const { exportToJSON, importFromJSON, createShareLink, publishToGallery } =
-    useBuildPersistence()
+function useSampleBrick() {
   const placeBrick = useBuildStore((state) => state.placeBrick)
-  const [screenshotError, setScreenshotError] = useState<string | null>(null)
-  const [publishStatus, setPublishStatus] = useState<
-    'idle' | 'publishing' | 'success' | 'error'
-  >('idle')
-  const [publishMessage, setPublishMessage] = useState('')
-  const [shareUrl, setShareUrl] = useState('')
-
   const handleAddSample = () => {
     placeBrick({
       partId: 'brick-2x4',
@@ -27,6 +22,13 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
       rot: 0,
     })
   }
+  return handleAddSample
+}
+
+function useScreenshotExport(
+  onExportScreenshot?: (() => Promise<void>) | null,
+) {
+  const [screenshotError, setScreenshotError] = useState<string | null>(null)
 
   const handleExportScreenshot = async () => {
     if (!onExportScreenshot) return
@@ -41,12 +43,34 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
     }
   }
 
+  return { screenshotError, handleExportScreenshot }
+}
+
+function useShare(createShareLink: () => string) {
+  const [shareUrl, setShareUrl] = useState('')
+
   const handleShare = () => {
     const url = createShareLink()
     setShareUrl(url)
     // Best-effort copy to clipboard; the link is also shown for manual copy.
     void navigator.clipboard?.writeText?.(url).catch(() => {})
   }
+
+  return { shareUrl, handleShare }
+}
+
+function usePublish(
+  publishToGallery: (
+    meta: Pick<
+      GalleryPublishRequest['gallery'],
+      'title' | 'description' | 'visibility' | 'author'
+    >,
+  ) => Promise<GalleryPublishResult>,
+) {
+  const [publishStatus, setPublishStatus] = useState<
+    'idle' | 'publishing' | 'success' | 'error'
+  >('idle')
+  const [publishMessage, setPublishMessage] = useState('')
 
   const handlePublish = async () => {
     const title = window.prompt('Gallery title for this build:')
@@ -66,9 +90,23 @@ export function PersistenceControls({ onExportScreenshot }: Props = {}) {
       setPublishMessage(`Published! ID: ${result.payload.buildId}`)
     } else {
       setPublishStatus('error')
-      setPublishMessage(result.message)
+      setPublishMessage(result.message ?? 'Unknown error')
     }
   }
+
+  return { publishStatus, publishMessage, handlePublish }
+}
+
+export function PersistenceControls({ onExportScreenshot }: Props = {}) {
+  const { exportToJSON, importFromJSON, createShareLink, publishToGallery } =
+    useBuildPersistence()
+
+  const handleAddSample = useSampleBrick()
+  const { screenshotError, handleExportScreenshot } =
+    useScreenshotExport(onExportScreenshot)
+  const { shareUrl, handleShare } = useShare(createShareLink)
+  const { publishStatus, publishMessage, handlePublish } =
+    usePublish(publishToGallery)
 
   return (
     <div
