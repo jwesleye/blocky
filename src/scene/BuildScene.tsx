@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
-import { Vector3, type PerspectiveCamera } from 'three'
+import { PerspectiveCamera, Vector3 } from 'three'
 
 import type { GridCoord } from '@/domain/grid'
 import { STUD, rotatedDimensions } from '@/domain/grid'
@@ -181,13 +181,11 @@ function ThreeDevExpose() {
   const { camera, gl, invalidate } = useThree()
 
   useEffect(() => {
-    if (shouldExposeTestHooks) {
-      window.__blockyCamera = camera as PerspectiveCamera
+    if (shouldExposeTestHooks && camera instanceof PerspectiveCamera) {
+      window.__blockyCamera = camera
       window.__blockyInvalidateScene = invalidate
       window.__blockyProjectToCanvas = (worldX, worldY, worldZ) => {
-        const point = new Vector3(worldX, worldY, worldZ).project(
-          camera as PerspectiveCamera,
-        )
+        const point = new Vector3(worldX, worldY, worldZ).project(camera)
         const rect = gl.domElement.getBoundingClientRect()
         return {
           x: rect.left + ((point.x + 1) / 2) * rect.width,
