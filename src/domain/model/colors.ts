@@ -13,8 +13,10 @@ export function getBrickColor(id: string): ColorDef | undefined {
   return COLOR_PALETTE.find((c) => c.id === id)
 }
 
+const VALID_COLOR_IDS = new Set(COLOR_PALETTE.map((c) => c.id))
+
 export function isValidColorId(id: string): boolean {
-  return COLOR_PALETTE.some((c) => c.id === id)
+  return VALID_COLOR_IDS.has(id)
 }
 
 export function resolveBrickColorHex(id: string): string {
