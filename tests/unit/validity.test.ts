@@ -255,7 +255,9 @@ describe('isValidPlacement', () => {
 
     it('allows stacking a hinge brick on top of a supporting brick', () => {
       const support = brick({ id: 'support' })
-      expect(isValidPlacement(brick({ y: 3, hinge: 'z' }), [support])).toBe(true)
+      expect(isValidPlacement(brick({ y: 3, hinge: 'z' }), [support])).toBe(
+        true,
+      )
     })
   })
 })

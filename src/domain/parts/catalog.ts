@@ -362,8 +362,10 @@ export function getPart(id: string): PartDef | undefined {
   return PART_CATALOG.find((p) => p.id === id)
 }
 
+const VALID_PART_IDS = new Set(PART_CATALOG.map((p) => p.id))
+
 export function isValidPartId(id: string): boolean {
-  return PART_CATALOG.some((p) => p.id === id)
+  return VALID_PART_IDS.has(id)
 }
 
 export function getPartsByCategory(category: PartCategory): readonly PartDef[] {
