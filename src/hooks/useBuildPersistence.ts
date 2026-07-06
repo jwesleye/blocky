@@ -66,7 +66,13 @@ export function useBuildPersistence() {
 
     return new Promise<void>((resolve) => {
       input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0]
+        const target = e.target
+        if (!(target instanceof HTMLInputElement)) {
+          resolve()
+          return
+        }
+
+        const file = target.files?.[0]
         if (!file) {
           resolve()
           return

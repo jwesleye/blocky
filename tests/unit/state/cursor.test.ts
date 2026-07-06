@@ -15,7 +15,6 @@ const resetCursor = () => {
   })
 }
 
-
 describe('useCursorStore', () => {
   beforeEach(resetCursor)
 
