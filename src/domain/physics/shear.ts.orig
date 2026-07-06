@@ -122,24 +122,23 @@ export function findShearRegion(
   const shearIds = new Set<string>()
   const graph = buildConnectionGraph(component, PART_CATALOG)
 
-  const remainderIds = new Set(component.map((c) => c.id))
-
   for (const brick of candidates) {
     shearIds.add(brick.id)
-    remainderIds.delete(brick.id)
 
-    if (remainderIds.size === 0) continue
+    const remainder = component.filter(
+      (candidate) => !shearIds.has(candidate.id),
+    )
+    const remainderIds = new Set(remainder.map((candidate) => candidate.id))
+    if (remainder.length === 0) continue
     if (!isConnectedRemainder(graph, remainderIds)) continue
 
     // In minimal mode, any valid shear that leaves the remainder connected is enough.
     if (options.minimal) {
       return {
         shear: candidates.filter((candidate) => shearIds.has(candidate.id)),
-        remainder: component.filter((c) => remainderIds.has(c.id)),
+        remainder,
       }
     }
-
-    const remainder = component.filter((c) => remainderIds.has(c.id))
 
     // Otherwise, expand until the remainder is also balanced.
     if (!isBalanced(remainder, PART_CATALOG)) continue
