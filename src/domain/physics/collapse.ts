@@ -27,13 +27,22 @@ export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
   // Brick-only graph (no BASEPLATE node) for shear connected-component analysis
   // so physically disconnected grounded components are evaluated independently.
   const graph = buildConnectionGraph(bricks, PART_CATALOG)
-  const brickById = new Map(bricks.map((brick) => [brick.id, brick]))
+
+  const brickById = new Map<string, PlacedBrick>()
+  for (let i = 0; i < bricks.length; i++) {
+    brickById.set(bricks[i].id, bricks[i])
+  }
+
   const sheared = new Set<string>()
 
   for (const componentIds of connectedComponents(graph)) {
-    const component = componentIds
-      .map((id) => brickById.get(id))
-      .filter((brick): brick is PlacedBrick => Boolean(brick))
+    const component: PlacedBrick[] = []
+    for (let i = 0; i < componentIds.length; i++) {
+      const brick = brickById.get(componentIds[i])
+      if (brick !== undefined) {
+        component.push(brick)
+      }
+    }
 
     if (component.length === 0 || component.every((brick) => brick.y !== 0))
       continue
