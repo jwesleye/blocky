@@ -63,6 +63,7 @@ describe('rectsOverlap', () => {
   it('detects intersecting rects', () => {
     const r2: FootprintRect = { xLo: 1, xHi: 3, zLo: 1, zHi: 5 }
     expect(rectsOverlap(r1, r2)).toBe(true)
+    expect(rectsOverlap(r2, r1)).toBe(true)
   })
 
   it('returns false for disjoint rects', () => {
@@ -82,6 +83,13 @@ describe('rectsOverlap', () => {
 
   it('returns true for identically positioned rects', () => {
     expect(rectsOverlap(r1, r1)).toBe(true)
+  })
+
+  it('returns true when one rectangle is fully inside another', () => {
+    const outer: FootprintRect = { xLo: 0, xHi: 10, zLo: 0, zHi: 10 }
+    const inner: FootprintRect = { xLo: 2, xHi: 8, zLo: 2, zHi: 8 }
+    expect(rectsOverlap(outer, inner)).toBe(true)
+    expect(rectsOverlap(inner, outer)).toBe(true)
   })
 })
 

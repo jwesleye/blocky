@@ -33,20 +33,46 @@ function isBodyTooLargeError(error: unknown): error is BodyTooLargeError {
   return error instanceof BodyTooLargeError
 }
 
-function sendJSON(res: ServerResponse, status: number, body: unknown): void {
+function getAllowedOrigin(req: IncomingMessage): string | undefined {
+  const requestOrigin = req.headers.origin
+  if (!requestOrigin) return undefined
+
+  const allowedOriginsEnv = process.env['ALLOWED_ORIGINS']
+  if (!allowedOriginsEnv) return undefined
+
+  const allowedOrigins = allowedOriginsEnv.split(',').map((o) => o.trim())
+  if (allowedOrigins.includes(requestOrigin)) {
+    return requestOrigin
+  }
+  return undefined
+}
+
+function sendJSON(
+  req: IncomingMessage,
+  res: ServerResponse,
+  status: number,
+  body: unknown,
+): void {
   const payload = JSON.stringify(body)
-  res.writeHead(status, {
+  const origin = getAllowedOrigin(req)
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  })
+  }
+
+  if (origin) {
+    headers['Access-Control-Allow-Origin'] = origin
+    headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
+    headers['Vary'] = 'Origin'
+  }
+
+  res.writeHead(status, headers)
   res.end(payload)
 }
 
 function sendBodyTooLarge(req: IncomingMessage, res: ServerResponse): void {
   res.once('finish', () => req.destroy())
-  sendJSON(res, 413, { error: 'Request body too large' })
+  sendJSON(req, res, 413, { error: 'Request body too large' })
 }
 
 async function readBody(req: IncomingMessage): Promise<string> {
@@ -82,11 +108,17 @@ export async function handler(
   res: ServerResponse,
 ): Promise<void> {
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-    })
+    const origin = getAllowedOrigin(req)
+    const headers: Record<string, string> = {}
+
+    if (origin) {
+      headers['Access-Control-Allow-Origin'] = origin
+      headers['Access-Control-Allow-Headers'] = 'Content-Type'
+      headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
+      headers['Vary'] = 'Origin'
+    }
+
+    res.writeHead(204, headers)
     res.end()
     return
   }
@@ -102,7 +134,7 @@ export async function handler(
         sendBodyTooLarge(req, res)
         return
       }
-      sendJSON(res, 400, { error: 'Failed to read request body' })
+      sendJSON(req, res, 400, { error: 'Failed to read request body' })
       return
     }
 
@@ -110,13 +142,13 @@ export async function handler(
     try {
       data = JSON.parse(raw)
     } catch {
-      sendJSON(res, 400, { error: 'Invalid JSON' })
+      sendJSON(req, res, 400, { error: 'Invalid JSON' })
       return
     }
 
     const parsed = PublishRequestSchema.safeParse(data)
     if (!parsed.success) {
-      sendJSON(res, 422, {
+      sendJSON(req, res, 422, {
         error: 'Invalid publish request',
         details: parsed.error.issues,
       })
@@ -137,7 +169,7 @@ export async function handler(
     }
 
     storeBuild(payload)
-    sendJSON(res, 201, payload)
+    sendJSON(req, res, 201, payload)
     return
   }
 
@@ -146,15 +178,15 @@ export async function handler(
   if (req.method === 'GET' && buildIdMatch) {
     const buildId = decodeURIComponent(buildIdMatch[1] ?? '')
     if (isBuildDeleted(buildId)) {
-      sendJSON(res, 410, { error: 'Build has been deleted' })
+      sendJSON(req, res, 410, { error: 'Build has been deleted' })
       return
     }
     const payload = getBuild(buildId)
     if (!payload) {
-      sendJSON(res, 404, { error: 'Build not found' })
+      sendJSON(req, res, 404, { error: 'Build not found' })
       return
     }
-    sendJSON(res, 200, payload)
+    sendJSON(req, res, 200, payload)
     return
   }
 
@@ -163,15 +195,15 @@ export async function handler(
     const result = deleteBuild(buildId)
     if (!result.success) {
       if (result.reason === 'not-found') {
-        sendJSON(res, 404, { error: 'Build not found' })
+        sendJSON(req, res, 404, { error: 'Build not found' })
       } else {
-        sendJSON(res, 403, {
+        sendJSON(req, res, 403, {
           error: 'Deletion requires an authenticated principal',
         })
       }
       return
     }
-    sendJSON(res, 200, { deleted: true })
+    sendJSON(req, res, 200, { deleted: true })
     return
   }
 
@@ -180,12 +212,12 @@ export async function handler(
     const buildId = decodeURIComponent(reportsMatch[1] ?? '')
 
     if (isBuildDeleted(buildId)) {
-      sendJSON(res, 404, { error: 'Build not found' })
+      sendJSON(req, res, 404, { error: 'Build not found' })
       return
     }
     const payload = getBuild(buildId)
     if (!payload) {
-      sendJSON(res, 404, { error: 'Build not found' })
+      sendJSON(req, res, 404, { error: 'Build not found' })
       return
     }
 
@@ -197,7 +229,7 @@ export async function handler(
         sendBodyTooLarge(req, res)
         return
       }
-      sendJSON(res, 400, { error: 'Failed to read request body' })
+      sendJSON(req, res, 400, { error: 'Failed to read request body' })
       return
     }
 
@@ -205,13 +237,13 @@ export async function handler(
     try {
       data = JSON.parse(raw)
     } catch {
-      sendJSON(res, 400, { error: 'Invalid JSON' })
+      sendJSON(req, res, 400, { error: 'Invalid JSON' })
       return
     }
 
     const parsed = ReportRequestSchema.safeParse(data)
     if (!parsed.success) {
-      sendJSON(res, 422, {
+      sendJSON(req, res, 422, {
         error: 'Invalid report request',
         details: parsed.error.issues,
       })
@@ -222,20 +254,20 @@ export async function handler(
     addReport(buildId, parsed.data)
     const payloadAfter = JSON.stringify(getBuild(buildId))
     if (payloadBefore !== payloadAfter) {
-      sendJSON(res, 500, { error: 'Internal error: payload mutated' })
+      sendJSON(req, res, 500, { error: 'Internal error: payload mutated' })
       return
     }
 
-    sendJSON(res, 201, { reported: true })
+    sendJSON(req, res, 201, { reported: true })
     return
   }
 
   if (req.method === 'GET' && url === '/builds') {
-    sendJSON(res, 200, { builds: listDiscoverableBuilds() })
+    sendJSON(req, res, 200, { builds: listDiscoverableBuilds() })
     return
   }
 
-  sendJSON(res, 404, { error: 'Not found' })
+  sendJSON(req, res, 404, { error: 'Not found' })
 }
 
 const server = createServer(handler)

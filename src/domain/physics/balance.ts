@@ -76,7 +76,7 @@ export function computeSupportFootprint(
     ]
   }
 
-  return hull as Polygon2D
+  return hull
 }
 
 /**

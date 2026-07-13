@@ -224,9 +224,11 @@ export const useBuildStore = create<BuildStore>()(
           const state = get()
           if (state.selection.size === 0) return false
 
-          const selectedBricks = Array.from(state.selection)
-            .map((id) => state.bricks[id])
-            .filter((brick): brick is PlacedBrick => !!brick)
+          const selectedBricks: PlacedBrick[] = []
+          for (const id of state.selection) {
+            const brick = state.bricks[id]
+            if (brick) selectedBricks.push(brick)
+          }
 
           const otherBricks = Object.values(state.bricks).filter(
             (brick) => !state.selection.has(brick.id),
@@ -260,9 +262,11 @@ export const useBuildStore = create<BuildStore>()(
           const state = get()
           if (state.selection.size === 0) return false
 
-          const selectedBricks = Array.from(state.selection)
-            .map((id) => state.bricks[id])
-            .filter((brick): brick is PlacedBrick => !!brick)
+          const selectedBricks: PlacedBrick[] = []
+          for (const id of state.selection) {
+            const brick = state.bricks[id]
+            if (brick) selectedBricks.push(brick)
+          }
 
           const clones = selectedBricks.map((brick) => {
             const id = createBrickId()
@@ -300,9 +304,11 @@ export const useBuildStore = create<BuildStore>()(
         previewMoveSelection: (delta) => {
           const state = get()
           if (state.selection.size === 0) return false
-          const selectedBricks = Array.from(state.selection)
-            .map((id) => state.bricks[id])
-            .filter((brick): brick is PlacedBrick => !!brick)
+          const selectedBricks: PlacedBrick[] = []
+          for (const id of state.selection) {
+            const brick = state.bricks[id]
+            if (brick) selectedBricks.push(brick)
+          }
           const otherBricks = Object.values(state.bricks).filter(
             (brick) => !state.selection.has(brick.id),
           )
@@ -320,9 +326,11 @@ export const useBuildStore = create<BuildStore>()(
         previewDuplicateSelection: (delta) => {
           const state = get()
           if (state.selection.size === 0) return false
-          const selectedBricks = Array.from(state.selection)
-            .map((id) => state.bricks[id])
-            .filter((brick): brick is PlacedBrick => !!brick)
+          const selectedBricks: PlacedBrick[] = []
+          for (const id of state.selection) {
+            const brick = state.bricks[id]
+            if (brick) selectedBricks.push(brick)
+          }
           const clones = selectedBricks.map((brick, index) =>
             translateBrick({ ...brick, id: `preview-${index}` }, delta),
           )
@@ -339,9 +347,11 @@ export const useBuildStore = create<BuildStore>()(
           const state = get()
           if (state.selection.size === 0) return false
 
-          const selectedBricks = Array.from(state.selection)
-            .map((id) => state.bricks[id])
-            .filter((b): b is PlacedBrick => !!b)
+          const selectedBricks: PlacedBrick[] = []
+          for (const id of state.selection) {
+            const brick = state.bricks[id]
+            if (brick) selectedBricks.push(brick)
+          }
 
           const otherBricks = Object.values(state.bricks).filter(
             (b) => !state.selection.has(b.id),
@@ -372,9 +382,11 @@ export const useBuildStore = create<BuildStore>()(
         previewMirrorSelection: (axis) => {
           const state = get()
           if (state.selection.size === 0) return false
-          const selectedBricks = Array.from(state.selection)
-            .map((id) => state.bricks[id])
-            .filter((b): b is PlacedBrick => !!b)
+          const selectedBricks: PlacedBrick[] = []
+          for (const id of state.selection) {
+            const brick = state.bricks[id]
+            if (brick) selectedBricks.push(brick)
+          }
           const otherBricks = Object.values(state.bricks).filter(
             (b) => !state.selection.has(b.id),
           )

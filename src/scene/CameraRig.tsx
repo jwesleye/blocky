@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { useCameraStore } from '@/state/cameraStore'
 import { CAMERA_DEFAULT_POSITION, CAMERA_DEFAULT_TARGET } from './sceneConfig'
 
@@ -15,10 +16,9 @@ export const CameraRig = () => {
     camera.position.set(...CAMERA_DEFAULT_POSITION)
 
     if (controls) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(controls as any).target.set(...CAMERA_DEFAULT_TARGET)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(controls as any).update()
+      const orbitControls = controls as unknown as OrbitControlsImpl
+      orbitControls.target.set(...CAMERA_DEFAULT_TARGET)
+      orbitControls.update()
     }
 
     // Explicitly update camera projection matrix just in case FOV was changed elsewhere,

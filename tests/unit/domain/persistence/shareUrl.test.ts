@@ -1,5 +1,19 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { compressToEncodedURIComponent } from 'lz-string'
+
+vi.mock('lz-string', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('lz-string')>()
+  return {
+    ...actual,
+    decompressFromEncodedURIComponent: (token: string) => {
+      if (token === 'throw-me') throw new Error('mock error')
+      return actual.decompressFromEncodedURIComponent(token)
+    },
+    compressToEncodedURIComponent: (input: string) => {
+      return actual.compressToEncodedURIComponent(input)
+    },
+  }
+})
 
 import {
   SHARE_URL_PARAM,
@@ -59,6 +73,10 @@ describe('encodeBuildToShareToken / decodeShareToken', () => {
       JSON.stringify({ version: 1, bricks: 'nope' }),
     )
     expect(decodeShareToken(token)).toBeNull()
+  })
+
+  it('returns null when decompression throws an error', () => {
+    expect(decodeShareToken('throw-me')).toBeNull()
   })
 })
 

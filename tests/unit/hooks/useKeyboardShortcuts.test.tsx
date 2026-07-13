@@ -15,6 +15,7 @@ const Host = ({
     <div>
       <input aria-label="Name" />
       <textarea aria-label="Notes" />
+      <div contentEditable aria-label="Editor" />
     </div>
   )
 }
@@ -49,13 +50,22 @@ describe('useKeyboardShortcuts', () => {
       rotate: vi.fn(),
     }
 
-    const { getByRole, rerender } = render(<Host handlers={handlers} />)
+    const { getByLabelText, getByRole, rerender } = render(<Host handlers={handlers} />)
 
     fireEvent.keyDown(getByRole('textbox', { name: 'Name' }), {
       key: 'z',
       ctrlKey: true,
     })
     fireEvent.keyDown(getByRole('textbox', { name: 'Notes' }), { key: 'r' })
+
+    const editorEl = getByLabelText('Editor');
+    // JSDOM doesn't fully support isContentEditable, so we have to mock it for the test
+    Object.defineProperty(editorEl, 'isContentEditable', { value: true, configurable: true });
+
+    fireEvent.keyDown(editorEl, {
+      key: 'z',
+      ctrlKey: true,
+    })
 
     expect(handlers.undo).not.toHaveBeenCalled()
     expect(handlers.rotate).not.toHaveBeenCalled()
@@ -77,10 +87,28 @@ describe('useKeyboardShortcuts', () => {
     fireEvent.keyDown(window, { key: 'p' })
     fireEvent.keyDown(window, { key: 'b' })
     fireEvent.keyDown(window, { key: 'i' })
+    fireEvent.keyDown(window, { key: 'x' })
 
     expect(handlers.setPlaceTool).toHaveBeenCalledTimes(1)
     expect(handlers.setPaintTool).toHaveBeenCalledTimes(1)
     expect(handlers.setEyedropperTool).toHaveBeenCalledTimes(1)
+    // No other handlers exist to test 'x' against here directly, but the main file should branch false gracefully
+  })
+
+  it('unmapped keys are ignored', () => {
+    const handlers = {
+      undo: vi.fn(),
+      rotate: vi.fn(),
+      setPlaceTool: vi.fn(),
+    }
+
+    render(<Host handlers={handlers} />)
+
+    fireEvent.keyDown(window, { key: 'x' })
+
+    expect(handlers.undo).not.toHaveBeenCalled()
+    expect(handlers.rotate).not.toHaveBeenCalled()
+    expect(handlers.setPlaceTool).not.toHaveBeenCalled()
   })
 
   it('p/b/i are ignored when the event target is an editable element', () => {
