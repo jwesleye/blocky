@@ -1,9 +1,6 @@
 import { resolveBrickColorHex } from '../model/colors'
 import type { BrickBodySnapshot, PlacedBrick } from '../model/types'
-import {
-  CATALOG_BY_ID as PART_CATALOG,
-  type PartCatalog,
-} from '../parts/catalog'
+import { CATALOG_BY_ID, type PartCatalog } from '../parts/catalog'
 
 /**
  * Converts a placed brick into a {@link BrickBodySnapshot} positioned at the
@@ -15,7 +12,7 @@ import {
  */
 export function brickToBodySnapshot(
   brick: PlacedBrick,
-  catalog: PartCatalog = PART_CATALOG,
+  catalog: PartCatalog = CATALOG_BY_ID,
 ): BrickBodySnapshot {
   const def = catalog[brick.partId]
   if (!def) {
@@ -46,7 +43,7 @@ export function brickToBodySnapshot(
 /** Batch form of {@link brickToBodySnapshot}, preserving input order. */
 export function bricksToBodySnapshots(
   bricks: readonly PlacedBrick[],
-  catalog: PartCatalog = PART_CATALOG,
+  catalog: PartCatalog = CATALOG_BY_ID,
 ): BrickBodySnapshot[] {
   return bricks.map((brick) => brickToBodySnapshot(brick, catalog))
 }

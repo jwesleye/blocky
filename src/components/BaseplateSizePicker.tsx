@@ -4,6 +4,46 @@ import { SUPPORTED_BASEPLATE_SIZES } from '@/domain/grid'
 import { bricksOutsideBaseplate } from '@/domain/physics'
 import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
 import { useBuildStore } from '@/state/store'
+import type { PlacedBrick } from '@/domain/model/types'
+
+function confirmShrink(
+  nextSize: number,
+  bricks: Record<string, PlacedBrick>,
+): boolean {
+  const outside = bricksOutsideBaseplate(
+    Object.values(bricks),
+    nextSize,
+    PART_CATALOG,
+  )
+  if (outside.length > 0) {
+    const noun = outside.length === 1 ? 'brick' : 'bricks'
+    return window.confirm(
+      `Shrinking to ${nextSize} × ${nextSize} leaves ${outside.length} ${noun} outside the smaller baseplate. Continue?`,
+    )
+  }
+  return true
+}
+
+function getNextIndex(
+  key: string,
+  currentIndex: number,
+  count: number,
+): number | null {
+  switch (key) {
+    case 'ArrowDown':
+    case 'ArrowRight':
+      return (currentIndex + 1) % count
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      return (currentIndex - 1 + count) % count
+    case 'Home':
+      return 0
+    case 'End':
+      return count - 1
+    default:
+      return null
+  }
+}
 
 /**
  * Sidebar control for choosing the active baseplate side length. Growing or
@@ -21,18 +61,7 @@ export function BaseplateSizePicker() {
     if (nextSize === baseplateSize) return false
 
     if (nextSize < baseplateSize) {
-      const outside = bricksOutsideBaseplate(
-        Object.values(bricks),
-        nextSize,
-        PART_CATALOG,
-      )
-      if (outside.length > 0) {
-        const noun = outside.length === 1 ? 'brick' : 'bricks'
-        const ok = window.confirm(
-          `Shrinking to ${nextSize} × ${nextSize} leaves ${outside.length} ${noun} outside the smaller baseplate. Continue?`,
-        )
-        if (!ok) return false
-      }
+      if (!confirmShrink(nextSize, bricks)) return false
     }
 
     setBaseplateSize(nextSize)
@@ -42,35 +71,16 @@ export function BaseplateSizePicker() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const count = SUPPORTED_BASEPLATE_SIZES.length
     const idx = SUPPORTED_BASEPLATE_SIZES.findIndex((s) => s === baseplateSize)
-    let nextIdx = idx
 
-    switch (e.key) {
-      case 'ArrowDown':
-      case 'ArrowRight':
-        e.preventDefault()
-        nextIdx = (idx + 1) % count
-        break
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        e.preventDefault()
-        nextIdx = (idx - 1 + count) % count
-        break
-      case 'Home':
-        e.preventDefault()
-        nextIdx = 0
-        break
-      case 'End':
-        e.preventDefault()
-        nextIdx = count - 1
-        break
-      default:
-        return
-    }
+    const nextIdx = getNextIndex(e.key, idx, count)
 
-    if (nextIdx !== idx) {
-      const accepted = handleSelect(SUPPORTED_BASEPLATE_SIZES[nextIdx])
-      if (accepted) {
-        btnRefs.current[nextIdx]?.focus()
+    if (nextIdx !== null) {
+      e.preventDefault()
+      if (nextIdx !== idx) {
+        const accepted = handleSelect(SUPPORTED_BASEPLATE_SIZES[nextIdx])
+        if (accepted) {
+          btnRefs.current[nextIdx]?.focus()
+        }
       }
     }
   }

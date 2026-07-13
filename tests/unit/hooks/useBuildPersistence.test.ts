@@ -43,15 +43,51 @@ function makeMockInput() {
 
   const originalCreateElement = document.createElement.bind(document)
   vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
-    if (tagName === 'input') return input as unknown as HTMLInputElement
+    if (tagName === 'input') {
+      const realInput = originalCreateElement(tagName) as HTMLInputElement
+      return new Proxy(realInput, {
+        get(target, prop) {
+          if (prop === 'click') return input.click
+          if (prop === 'onchange') return input.onchange
+          return target[prop as keyof HTMLInputElement]
+        },
+        set(target, prop, value) {
+          if (prop === 'onchange') {
+            input.onchange = value
+            return true
+          }
+          if (prop === 'type' || prop === 'accept') {
+            target[prop as 'type' | 'accept'] = value
+            return true
+          }
+          return Reflect.set(target, prop, value)
+        },
+      })
+    }
     return originalCreateElement(tagName)
   })
 
   async function triggerChange(fileText: string) {
+    const mockTarget = originalCreateElement('input')
+    mockTarget.type = 'file'
+
+    // Some versions of jsdom don't let you directly define `files` on the
+    // element itself because it's a getter on the prototype. We can define
+    // it on the object directly if we use `value` and it's configurable.
+    // However, an even simpler way is to just pass a mock event object.
+
+    const mockEvent = {
+      target: {
+        ...mockTarget,
+        files: [{ text: async () => fileText }],
+      },
+    }
+
+    // We need target to pass instanceof HTMLInputElement
+    Object.setPrototypeOf(mockEvent.target, HTMLInputElement.prototype)
+
     await act(async () => {
-      await handleChange?.({
-        target: { files: [{ text: async () => fileText }] },
-      })
+      await handleChange?.(mockEvent as unknown as { target: { files: FakeFile[] } })
     })
   }
 

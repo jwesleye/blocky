@@ -1,5 +1,5 @@
 import type { PlacedBrick } from '../model/types'
-import { CATALOG_BY_ID as PART_CATALOG } from '../parts/catalog'
+import { CATALOG_BY_ID } from '../parts/catalog'
 import { forEachOccupiedCell } from '../parts/footprint'
 import { computeCoM, computeSupportFootprint, isBalanced } from './balance'
 import { buildConnectionGraph } from './graph'
@@ -15,10 +15,10 @@ interface Direction2D {
 }
 
 function getOverhangDirection(component: PlacedBrick[]): Direction2D {
-  const footprint = computeSupportFootprint(component, PART_CATALOG)
+  const footprint = computeSupportFootprint(component, CATALOG_BY_ID)
   if (footprint.length === 0) return { x: 0, z: 0 }
 
-  const com = computeCoM(component, PART_CATALOG)
+  const com = computeCoM(component, CATALOG_BY_ID)
   const xs = footprint.map(([x]) => x)
   const zs = footprint.map(([, z]) => z)
   const minX = Math.min(...xs)
@@ -44,7 +44,7 @@ function getOutermostProjection(
   brick: PlacedBrick,
   direction: Direction2D,
 ): number {
-  const def = PART_CATALOG[brick.partId]
+  const def = CATALOG_BY_ID[brick.partId]
   if (!def) return Number.NEGATIVE_INFINITY
 
   const ox = 0.5 * (brick.offset?.x ?? 0)
@@ -114,13 +114,13 @@ export function findShearRegion(
   component: PlacedBrick[],
   options: { minimal?: boolean } = {},
 ): ShearRegion {
-  if (component.length === 0 || isBalanced(component, PART_CATALOG)) {
+  if (component.length === 0 || isBalanced(component, CATALOG_BY_ID)) {
     return { shear: [], remainder: [...component] }
   }
 
   const candidates = sortByShearPriority(component)
   const shearIds = new Set<string>()
-  const graph = buildConnectionGraph(component, PART_CATALOG)
+  const graph = buildConnectionGraph(component, CATALOG_BY_ID)
 
   for (const brick of candidates) {
     shearIds.add(brick.id)
@@ -141,7 +141,7 @@ export function findShearRegion(
     }
 
     // Otherwise, expand until the remainder is also balanced.
-    if (!isBalanced(remainder, PART_CATALOG)) continue
+    if (!isBalanced(remainder, CATALOG_BY_ID)) continue
 
     return {
       shear: candidates.filter((candidate) => shearIds.has(candidate.id)),
