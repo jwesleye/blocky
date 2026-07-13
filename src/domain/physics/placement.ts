@@ -223,10 +223,50 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   const mountedBricks = all.filter((b) => b.mount !== undefined)
   if (mountedBricks.length > 0) {
     const standardBricks = all.filter((b) => b.mount === undefined)
-    for (const m of mountedBricks) {
-      for (const s of standardBricks) {
-        if (hasLateralContact(m, s)) {
-          graph.mergeEdge(m.id, s.id)
+
+    // Create an array mapping from each mounted brick to its exact Y-bounds.
+    // The bounds logic is identical to `hasLateralContact`.
+    const mountedBounds = mountedBricks.map((m) => {
+      const mr = bfpToRect(m)
+      const H = m.height
+      const W = mr.xHi - mr.xLo
+      const L = mr.zHi - mr.zLo
+      const mountedYHalfWidth =
+        m.mount === 'pz' || m.mount === 'nz' ? L / 2 : W / 2
+      const mountedYCenter = m.bottomY + H / 2
+      return {
+        m,
+        yLo: mountedYCenter - mountedYHalfWidth,
+        yHi: mountedYCenter + mountedYHalfWidth,
+      }
+    })
+
+    // Group standard bricks by bottomY for spatial indexing
+    // Use an array indexed by integer `bottomY` if possible, otherwise Map.
+    // `byBottomY` from earlier already maps standard bricks (because mounted were skipped there),
+    // but the `byBottomY` there has all bricks.
+    const stdByBottomY = new Map<number, BrickFootprint[]>()
+    for (const s of standardBricks) {
+      const bucket = stdByBottomY.get(s.bottomY)
+      if (bucket) bucket.push(s)
+      else stdByBottomY.set(s.bottomY, [s])
+    }
+    const stdLevels = Array.from(stdByBottomY.keys()).sort((a, b) => a - b)
+
+    for (const { m, yLo, yHi } of mountedBounds) {
+      // standard.bottomY + standard.height > yLo  =>  standard.bottomY > yLo - height
+      // To ensure overlap, we need to iterate standard levels that could possibly overlap.
+      // std.bottomY < yHi (exclusive)
+      for (const levelY of stdLevels) {
+        if (levelY >= yHi) break // standard brick is completely above mounted brick
+
+        const candidates = stdByBottomY.get(levelY)!
+        for (const s of candidates) {
+          if (levelY + s.height <= yLo) continue // standard brick is completely below
+
+          if (hasLateralContact(m, s)) {
+            graph.mergeEdge(m.id, s.id)
+          }
         }
       }
     }

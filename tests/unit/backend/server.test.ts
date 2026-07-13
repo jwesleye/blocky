@@ -119,6 +119,62 @@ afterEach(() => {
   delete process.env['GALLERY_DATA_DIR']
 })
 
+describe('CORS', () => {
+  const originalEnv = process.env['ALLOWED_ORIGINS']
+
+  beforeEach(() => {
+    process.env['ALLOWED_ORIGINS'] = 'https://allowed.example.com, https://another.example.com'
+  })
+
+  afterEach(() => {
+    if (originalEnv === undefined) {
+      delete process.env['ALLOWED_ORIGINS']
+    } else {
+      process.env['ALLOWED_ORIGINS'] = originalEnv
+    }
+  })
+
+  it('sets Access-Control-Allow-Origin for allowed origins on OPTIONS', async () => {
+    const res = await req('/builds', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://allowed.example.com' },
+    })
+    expect(res.status).toBe(204)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://allowed.example.com')
+    expect(res.headers.get('Vary')).toBe('Origin')
+    expect(res.headers.get('Access-Control-Allow-Methods')).toBe('GET, POST, DELETE, OPTIONS')
+  })
+
+  it('omits Access-Control-Allow-Origin for unallowed origins on OPTIONS', async () => {
+    const res = await req('/builds', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://hacker.example.com' },
+    })
+    expect(res.status).toBe(204)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
+  })
+
+  it('sets Access-Control-Allow-Origin for allowed origins on GET', async () => {
+    const res = await req('/builds', {
+      method: 'GET',
+      headers: { Origin: 'https://another.example.com' },
+    })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://another.example.com')
+    expect(res.headers.get('Vary')).toBe('Origin')
+  })
+
+  it('omits Access-Control-Allow-Origin when ALLOWED_ORIGINS is not set', async () => {
+    delete process.env['ALLOWED_ORIGINS']
+    const res = await req('/builds', {
+      method: 'GET',
+      headers: { Origin: 'https://allowed.example.com' },
+    })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
+  })
+})
+
 describe('POST /builds — publish', () => {
   it('returns 201 with the stored payload on valid request', async () => {
     const requestBody = JSON.stringify({

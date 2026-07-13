@@ -8,7 +8,7 @@ import {
 import { createBrickId } from '@/domain/model/ids'
 import type { BuildState, PlacedBrick } from '@/domain/model/types'
 import { buildConnectionGraph } from '@/domain/physics/graph'
-import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
+import { CATALOG_BY_ID } from '@/domain/parts/catalog'
 
 /**
  * Build JSON schema and (de)serialization helpers.
@@ -46,7 +46,7 @@ export function deserialize(json: string): BuildState {
   return {
     bricks,
     selection: new Set<string>(),
-    connectionGraph: buildConnectionGraph(Object.values(bricks), PART_CATALOG),
+    connectionGraph: buildConnectionGraph(Object.values(bricks), CATALOG_BY_ID),
     lastCollapse: null,
     baseplateSize: parsed.baseplate.size,
   }
