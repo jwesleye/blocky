@@ -33,8 +33,24 @@ describe('BrickCount', () => {
   it('updates brick count when bricks are added', () => {
     useBuildStore.setState({
       bricks: {
-        'brick-1': { id: 'brick-1', partId: 'brick-2x4', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
-        'brick-2': { id: 'brick-2', partId: 'brick-2x2', color: 'blue', x: 2, y: 0, z: 0, rot: 0 },
+        'brick-1': {
+          id: 'brick-1',
+          partId: 'brick-2x4',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        'brick-2': {
+          id: 'brick-2',
+          partId: 'brick-2x2',
+          color: 'blue',
+          x: 2,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
       },
     })
 

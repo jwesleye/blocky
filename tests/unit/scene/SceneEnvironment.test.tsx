@@ -7,7 +7,7 @@ import { SHADOW_BIAS } from '@/scene/sceneConfig'
 describe('SceneEnvironment', () => {
   it('renders the correct number of lights', async () => {
     const renderer = await ReactThreeTestRenderer.create(
-      <SceneEnvironment presetId="studio" />
+      <SceneEnvironment presetId="studio" />,
     )
 
     const root = renderer.scene
@@ -28,7 +28,7 @@ describe('SceneEnvironment', () => {
     const preset = getSceneEnvironmentPreset('studio')
 
     const renderer = await ReactThreeTestRenderer.create(
-      <SceneEnvironment presetId="studio" />
+      <SceneEnvironment presetId="studio" />,
     )
 
     const root = renderer.scene
@@ -59,7 +59,7 @@ describe('SceneEnvironment', () => {
 
     const renderer = await ReactThreeTestRenderer.create(
       // @ts-expect-error testing invalid input
-      <SceneEnvironment presetId="unknown-preset" />
+      <SceneEnvironment presetId="unknown-preset" />,
     )
 
     const root = renderer.scene
@@ -72,7 +72,7 @@ describe('SceneEnvironment', () => {
 
   it('configures shadows on the key light', async () => {
     const renderer = await ReactThreeTestRenderer.create(
-      <SceneEnvironment presetId="studio" />
+      <SceneEnvironment presetId="studio" />,
     )
 
     const root = renderer.scene

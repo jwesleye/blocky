@@ -54,8 +54,8 @@ describe('state/schema', () => {
             y: 0,
             z: 0,
             rot: 0,
-          }
-        ]
+          },
+        ],
       })
     })
 
@@ -85,8 +85,8 @@ describe('state/schema', () => {
             y: 0,
             z: 0,
             rot: 0,
-          }
-        ]
+          },
+        ],
       })
 
       const state = deserialize(jsonStr)

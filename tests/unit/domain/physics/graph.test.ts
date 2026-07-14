@@ -55,7 +55,10 @@ describe('buildConnectionGraph', () => {
       rot: 0,
     }
 
-    const graph = buildConnectionGraph([bottomBrick, unknownBrick], PART_CATALOG)
+    const graph = buildConnectionGraph(
+      [bottomBrick, unknownBrick],
+      PART_CATALOG,
+    )
     // Both nodes should be present, but without any edges between them
     expect(graph.order).toBe(2)
     expect(graph.hasNode('bottom')).toBe(true)

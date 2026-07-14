@@ -5,9 +5,17 @@ import type { ReactNode } from 'react'
 // Mock rapier physics to return pure react elements instead of complicated Context providers which may not render easily
 vi.mock('@react-three/rapier', () => {
   return {
-    Physics: ({ children }: { children: ReactNode }) => <group name="physics">{children}</group>,
-    RigidBody: (props: { children?: ReactNode } & Record<string, unknown>) => <group name="rigid-body" {...props}>{props.children}</group>,
-    CuboidCollider: (props: Record<string, unknown>) => <group name="collider" {...props} />
+    Physics: ({ children }: { children: ReactNode }) => (
+      <group name="physics">{children}</group>
+    ),
+    RigidBody: (props: { children?: ReactNode } & Record<string, unknown>) => (
+      <group name="rigid-body" {...props}>
+        {props.children}
+      </group>
+    ),
+    CuboidCollider: (props: Record<string, unknown>) => (
+      <group name="collider" {...props} />
+    ),
   }
 })
 
@@ -38,7 +46,7 @@ describe('CollapseSimulation', () => {
 
   it('renders fixed ground by default', async () => {
     const renderer = await ReactThreeTestRenderer.create(
-      <CollapseSimulation transaction={mockTransaction} />
+      <CollapseSimulation transaction={mockTransaction} />,
     )
 
     const ground = renderer.scene.findAll((node) => node.props.type === 'fixed')
@@ -50,7 +58,7 @@ describe('CollapseSimulation', () => {
 
   it('omits ground when ground={false}', async () => {
     const renderer = await ReactThreeTestRenderer.create(
-      <CollapseSimulation transaction={mockTransaction} ground={false} />
+      <CollapseSimulation transaction={mockTransaction} ground={false} />,
     )
 
     const ground = renderer.scene.findAll((node) => node.props.type === 'fixed')
@@ -61,11 +69,11 @@ describe('CollapseSimulation', () => {
 
   it('renders dynamic bodies for collapsing items', async () => {
     const renderer = await ReactThreeTestRenderer.create(
-      <CollapseSimulation transaction={mockTransaction} />
+      <CollapseSimulation transaction={mockTransaction} />,
     )
 
     const dynamicBodies = renderer.scene.findAll(
-      (node) => node.props.type === 'dynamic'
+      (node) => node.props.type === 'dynamic',
     )
     expect(dynamicBodies.length).toBe(1)
     expect(dynamicBodies[0]?.props.position).toEqual([0, 5, 0])
@@ -80,7 +88,7 @@ describe('CollapseSimulation', () => {
         transaction={mockTransaction}
         onComplete={onComplete}
         tickMs={50}
-      />
+      />,
     )
 
     // Not settled yet
@@ -103,11 +111,11 @@ describe('CollapseSimulation', () => {
         transaction={mockTransaction}
         onComplete={onComplete}
         tickMs={50}
-      />
+      />,
     )
 
     const [dynamicBody] = renderer.scene.findAll(
-      (node) => node.props.type === 'dynamic'
+      (node) => node.props.type === 'dynamic',
     )
 
     expect(dynamicBody).toBeDefined()
@@ -127,15 +135,19 @@ describe('CollapseSimulation', () => {
   })
 
   it('updates the simulation if transaction prop changes', async () => {
-    let renderer: ReturnType<typeof ReactThreeTestRenderer.create> extends Promise<infer T> ? T : never
+    let renderer: ReturnType<
+      typeof ReactThreeTestRenderer.create
+    > extends Promise<infer T>
+      ? T
+      : never
     await ReactThreeTestRenderer.act(async () => {
       renderer = await ReactThreeTestRenderer.create(
-        <CollapseSimulation transaction={mockTransaction} />
+        <CollapseSimulation transaction={mockTransaction} />,
       )
     })
 
     const [dynamicBody1] = renderer!.scene.findAll(
-      (node) => node.props.type === 'dynamic'
+      (node) => node.props.type === 'dynamic',
     )
     expect(dynamicBody1?.props.position).toEqual([0, 5, 0])
 
@@ -153,13 +165,11 @@ describe('CollapseSimulation', () => {
     })
 
     await ReactThreeTestRenderer.act(async () => {
-      renderer!.update(
-        <CollapseSimulation transaction={updatedTransaction} />
-      )
+      renderer!.update(<CollapseSimulation transaction={updatedTransaction} />)
     })
 
     const [dynamicBody2] = renderer!.scene.findAll(
-      (node) => node.props.type === 'dynamic'
+      (node) => node.props.type === 'dynamic',
     )
     expect(dynamicBody2?.props.position).toEqual([10, 10, 10])
 

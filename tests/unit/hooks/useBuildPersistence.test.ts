@@ -87,7 +87,9 @@ function makeMockInput() {
     Object.setPrototypeOf(mockEvent.target, HTMLInputElement.prototype)
 
     await act(async () => {
-      await handleChange?.(mockEvent as unknown as { target: { files: FakeFile[] } })
+      await handleChange?.(
+        mockEvent as unknown as { target: { files: FakeFile[] } },
+      )
     })
   }
 

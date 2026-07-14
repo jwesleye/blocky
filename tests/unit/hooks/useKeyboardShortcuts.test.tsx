@@ -50,7 +50,9 @@ describe('useKeyboardShortcuts', () => {
       rotate: vi.fn(),
     }
 
-    const { getByLabelText, getByRole, rerender } = render(<Host handlers={handlers} />)
+    const { getByLabelText, getByRole, rerender } = render(
+      <Host handlers={handlers} />,
+    )
 
     fireEvent.keyDown(getByRole('textbox', { name: 'Name' }), {
       key: 'z',
@@ -58,9 +60,12 @@ describe('useKeyboardShortcuts', () => {
     })
     fireEvent.keyDown(getByRole('textbox', { name: 'Notes' }), { key: 'r' })
 
-    const editorEl = getByLabelText('Editor');
+    const editorEl = getByLabelText('Editor')
     // JSDOM doesn't fully support isContentEditable, so we have to mock it for the test
-    Object.defineProperty(editorEl, 'isContentEditable', { value: true, configurable: true });
+    Object.defineProperty(editorEl, 'isContentEditable', {
+      value: true,
+      configurable: true,
+    })
 
     fireEvent.keyDown(editorEl, {
       key: 'z',

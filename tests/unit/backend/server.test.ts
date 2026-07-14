@@ -123,7 +123,8 @@ describe('CORS', () => {
   const originalEnv = process.env['ALLOWED_ORIGINS']
 
   beforeEach(() => {
-    process.env['ALLOWED_ORIGINS'] = 'https://allowed.example.com, https://another.example.com'
+    process.env['ALLOWED_ORIGINS'] =
+      'https://allowed.example.com, https://another.example.com'
   })
 
   afterEach(() => {
@@ -140,9 +141,13 @@ describe('CORS', () => {
       headers: { Origin: 'https://allowed.example.com' },
     })
     expect(res.status).toBe(204)
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://allowed.example.com')
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(
+      'https://allowed.example.com',
+    )
     expect(res.headers.get('Vary')).toBe('Origin')
-    expect(res.headers.get('Access-Control-Allow-Methods')).toBe('GET, POST, DELETE, OPTIONS')
+    expect(res.headers.get('Access-Control-Allow-Methods')).toBe(
+      'GET, POST, DELETE, OPTIONS',
+    )
   })
 
   it('omits Access-Control-Allow-Origin for unallowed origins on OPTIONS', async () => {
@@ -160,7 +165,9 @@ describe('CORS', () => {
       headers: { Origin: 'https://another.example.com' },
     })
     expect(res.status).toBe(200)
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://another.example.com')
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(
+      'https://another.example.com',
+    )
     expect(res.headers.get('Vary')).toBe('Origin')
   })
 

@@ -234,9 +234,7 @@ export function Sidebar() {
         )}
       </div>
 
-      <div
-        style={{ borderTop: '1px solid var(--color-line)', padding: '8px' }}
-      >
+      <div style={{ borderTop: '1px solid var(--color-line)', padding: '8px' }}>
         <div
           style={{
             padding: '0 0 6px',

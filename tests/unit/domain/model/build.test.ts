@@ -491,7 +491,6 @@ describe('version/feature envelope compatibility', () => {
   })
 })
 
-
 describe('buildToBricks (uses shared createBrickId)', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
