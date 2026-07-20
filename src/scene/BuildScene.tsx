@@ -189,9 +189,7 @@ function ThreeDevExpose() {
       }
       window.__blockyInvalidateScene = invalidate
       window.__blockyProjectToCanvas = (worldX, worldY, worldZ) => {
-        const point = new Vector3(worldX, worldY, worldZ).project(
-          camera,
-        )
+        const point = new Vector3(worldX, worldY, worldZ).project(camera)
         const rect = gl.domElement.getBoundingClientRect()
         return {
           x: rect.left + ((point.x + 1) / 2) * rect.width,

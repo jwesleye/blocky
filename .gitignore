@@ -108,3 +108,6 @@ agentshore.yaml
 timelapse-runs/
 closed_issue_refs.txt
 open_bead_refs.txt
+
+# Beads / Dolt files (added by bd init)
+.beads/proxieddb/

@@ -5,7 +5,9 @@ import { CAMERA_DEFAULT_TARGET } from '@/scene/sceneConfig'
 import { TOUCH } from 'three'
 
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: (props: Record<string, unknown>) => <group data-testid="orbit-controls" {...props} />
+  OrbitControls: (props: Record<string, unknown>) => (
+    <group data-testid="orbit-controls" {...props} />
+  ),
 }))
 
 describe('CameraControls', () => {
@@ -18,6 +20,9 @@ describe('CameraControls', () => {
     expect(controls.props.enablePan).toBe(true)
     expect(controls.props.enableZoom).toBe(true)
     expect(controls.props.target).toBe(CAMERA_DEFAULT_TARGET)
-    expect(controls.props.touches).toEqual({ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN })
+    expect(controls.props.touches).toEqual({
+      ONE: TOUCH.ROTATE,
+      TWO: TOUCH.DOLLY_PAN,
+    })
   })
 })

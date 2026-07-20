@@ -136,8 +136,8 @@ describe('useGallery', () => {
             author: { identityMode: 'anonymous' },
             publishedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-          }
-        }
+          },
+        },
       } as never)
 
       const { result } = renderHook(() => useGallery())

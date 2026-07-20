@@ -3,7 +3,10 @@ import { render, act } from '@testing-library/react'
 import { CameraRig } from '@/scene/CameraRig'
 import { useCameraStore } from '@/state/cameraStore'
 import * as r3f from '@react-three/fiber'
-import { CAMERA_DEFAULT_POSITION, CAMERA_DEFAULT_TARGET } from '@/scene/sceneConfig'
+import {
+  CAMERA_DEFAULT_POSITION,
+  CAMERA_DEFAULT_TARGET,
+} from '@/scene/sceneConfig'
 
 vi.mock('@react-three/fiber', () => ({
   useThree: vi.fn(),
@@ -33,8 +36,12 @@ describe('CameraRig', () => {
 
     render(<CameraRig />)
 
-    expect(mockCamera.position.set).toHaveBeenCalledWith(...CAMERA_DEFAULT_POSITION)
-    expect(mockControls.target.set).toHaveBeenCalledWith(...CAMERA_DEFAULT_TARGET)
+    expect(mockCamera.position.set).toHaveBeenCalledWith(
+      ...CAMERA_DEFAULT_POSITION,
+    )
+    expect(mockControls.target.set).toHaveBeenCalledWith(
+      ...CAMERA_DEFAULT_TARGET,
+    )
     expect(mockControls.update).toHaveBeenCalled()
     expect(mockCamera.lookAt).toHaveBeenCalledWith(...CAMERA_DEFAULT_TARGET)
     expect(mockCamera.updateProjectionMatrix).toHaveBeenCalled()
@@ -62,7 +69,9 @@ describe('CameraRig', () => {
       useCameraStore.setState({ resetNonce: 1 })
     })
 
-    expect(mockCamera.position.set).toHaveBeenCalledWith(...CAMERA_DEFAULT_POSITION)
+    expect(mockCamera.position.set).toHaveBeenCalledWith(
+      ...CAMERA_DEFAULT_POSITION,
+    )
     expect(mockCamera.lookAt).toHaveBeenCalledWith(...CAMERA_DEFAULT_TARGET)
     expect(mockCamera.updateProjectionMatrix).toHaveBeenCalled()
   })

@@ -76,17 +76,12 @@ describe('buildConnectionGraph', () => {
   it('connects a mounted brick via lateral contact to a standard brick', () => {
     // Standard 2x2 brick at (0,0,0) -> cells (0,0),(1,0),(0,1),(1,1), bottomY=0, height=3
     // Rect: x: [0, 2], z: [0, 2]
-    const std = fp(
-      'std',
-      0,
-      3,
-      [
-        { x: 0, z: 0 },
-        { x: 1, z: 0 },
-        { x: 0, z: 1 },
-        { x: 1, z: 1 },
-      ],
-    )
+    const std = fp('std', 0, 3, [
+      { x: 0, z: 0 },
+      { x: 1, z: 0 },
+      { x: 0, z: 1 },
+      { x: 1, z: 1 },
+    ])
 
     // Mounted brick 'px' at (2,0,0) -> cells (2,0), bottomY=0, height=1
     // anti-stud face will be at X = 2.5 - 0.5 = 2.0 (matches std xHi = 2.0)
@@ -170,7 +165,13 @@ describe('canPlaceBrick', () => {
     },
   }
 
-  function brick(id: string, partId: string, x: number, y: number, z: number): PlacedBrick {
+  function brick(
+    id: string,
+    partId: string,
+    x: number,
+    y: number,
+    z: number,
+  ): PlacedBrick {
     return { id, partId, color: 'red', x, y, z, rot: 0 }
   }
 
