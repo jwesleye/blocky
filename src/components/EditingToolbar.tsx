@@ -7,6 +7,7 @@ interface EditingToolbarProps {
 
 const TOOLS: { id: EditingTool; label: string }[] = [
   { id: 'place', label: 'Place' },
+  { id: 'select', label: 'Select' },
   { id: 'paint', label: 'Paint' },
   { id: 'eyedropper', label: 'Eyedropper' },
 ]

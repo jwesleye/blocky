@@ -394,6 +394,92 @@ describe('BuildScene', () => {
     await renderer.unmount()
   })
 
+  it('selects a brick and toggles it from the selection with shift-click', async () => {
+    const id = useBuildStore.getState().placeBrick({
+      partId: DEFAULT_PART_ID,
+      color: DEFAULT_COLOR_ID,
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+    expect(id).not.toBeNull()
+    useCursorStore.getState().setEditingTool('select')
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+    const brick = lastInstancedBricksProps?.bricks[0]
+    expect(brick?.id).toBe(id)
+
+    await ReactThreeTestRenderer.act(async () => {
+      lastInstancedBricksProps?.onInstanceClick?.(brick!, {
+        shiftKey: false,
+        stopPropagation: () => {},
+      } as never)
+    })
+    expect(useBuildStore.getState().selection).toEqual(new Set([id]))
+    expect(
+      renderer.scene.findAll((node) => node.props.name === 'selection-outline'),
+    ).toHaveLength(1)
+
+    await ReactThreeTestRenderer.act(async () => {
+      lastInstancedBricksProps?.onInstanceClick?.(brick!, {
+        shiftKey: true,
+        stopPropagation: () => {},
+      } as never)
+    })
+    expect(useBuildStore.getState().selection).toEqual(new Set())
+
+    await renderer.unmount()
+  })
+
+  it('box-selects bricks whose anchors fall within a baseplate drag region', async () => {
+    const first = useBuildStore.getState().placeBrick({
+      partId: DEFAULT_PART_ID,
+      color: DEFAULT_COLOR_ID,
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+    const second = useBuildStore.getState().placeBrick({
+      partId: DEFAULT_PART_ID,
+      color: DEFAULT_COLOR_ID,
+      x: 4,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+    const outside = useBuildStore.getState().placeBrick({
+      partId: DEFAULT_PART_ID,
+      color: DEFAULT_COLOR_ID,
+      x: 8,
+      y: 0,
+      z: 0,
+      rot: 0,
+    })
+    expect([first, second, outside]).not.toContain(null)
+    useCursorStore.getState().setEditingTool('select')
+
+    const renderer = await ReactThreeTestRenderer.create(<BuildScene />)
+    const [baseplate] = renderer.scene.findAll(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+
+    await renderer.fireEvent(baseplate, 'onPointerDown', {
+      point: { x: 0, y: 0, z: 0 },
+      stopPropagation: () => {},
+    })
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 5 * STUD, y: 0, z: 0 },
+      stopPropagation: () => {},
+    })
+
+    expect(useBuildStore.getState().selection).toEqual(new Set([first, second]))
+
+    await renderer.unmount()
+  })
+
   it('renders the ghost red for an unsupported elevated mounted placement', async () => {
     useBuildStore.setState({
       bricks: {

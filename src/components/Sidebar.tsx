@@ -234,6 +234,21 @@ export function Sidebar() {
         )}
       </div>
 
+      <div
+        aria-live="polite"
+        data-testid="selection-count"
+        style={{
+          borderTop: '1px solid var(--color-line)',
+          padding: '8px',
+          fontSize: 12,
+          color: 'var(--color-muted)',
+        }}
+      >
+        {selectionSize === 1
+          ? '1 brick selected'
+          : `${selectionSize} bricks selected`}
+      </div>
+
       <div style={{ borderTop: '1px solid var(--color-line)', padding: '8px' }}>
         <div
           style={{

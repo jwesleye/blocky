@@ -12,7 +12,7 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { Vector3, PerspectiveCamera } from 'three'
 
 import type { GridCoord } from '@/domain/grid'
-import { STUD, rotatedDimensions } from '@/domain/grid'
+import { PLATE, STUD, rotatedDimensions } from '@/domain/grid'
 import { resolveBrickColorHex } from '@/domain/model/colors'
 import type {
   BrickHinge,
@@ -147,22 +147,30 @@ function Baseplate({
   color,
   onPointerPos,
   onPointerEnterEmpty,
+  onGridPointerDown,
+  onGridPointerMove,
+  onGridPointerUp,
 }: {
   size: number
   color: string
   onPointerPos: (pos: GridCoord) => void
   onPointerEnterEmpty: () => void
+  onGridPointerDown: (pos: GridCoord) => void
+  onGridPointerMove: (pos: GridCoord) => void
+  onGridPointerUp: () => void
 }) {
   const sceneSize = size * STUD
+
+  const gridFromEvent = (event: ThreeEvent<PointerEvent>): GridCoord => ({
+    x: Math.round(event.point.x / STUD),
+    y: 0,
+    z: Math.round(event.point.z / STUD),
+  })
 
   const updateGhost = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation()
     onPointerEnterEmpty()
-    onPointerPos({
-      x: Math.round(event.point.x / STUD),
-      y: 0,
-      z: Math.round(event.point.z / STUD),
-    })
+    onPointerPos(gridFromEvent(event))
   }
 
   return (
@@ -170,13 +178,47 @@ function Baseplate({
       position={[sceneSize / 2, 0, sceneSize / 2]}
       rotation={[-Math.PI / 2, 0, 0]}
       receiveShadow
-      onPointerMove={updateGhost}
-      onPointerDown={updateGhost}
+      onPointerMove={(event) => {
+        updateGhost(event)
+        onGridPointerMove(gridFromEvent(event))
+      }}
+      onPointerDown={(event) => {
+        updateGhost(event)
+        onGridPointerDown(gridFromEvent(event))
+      }}
+      onPointerUp={onGridPointerUp}
     >
       <planeGeometry args={[sceneSize, sceneSize]} />
       <meshStandardMaterial color={color} />
     </mesh>
   )
+}
+
+function SelectionOutlines({ bricks }: { bricks: readonly PlacedBrick[] }) {
+  return bricks.flatMap((brick) => {
+    const part = PART_CATALOG[brick.partId]
+    if (!part) return []
+
+    const [width, depth] = rotatedDimensions(part, brick.rot)
+    const [rx, , rz] = mountRotation(brick.mount)
+    return (
+      <mesh
+        key={brick.id}
+        name="selection-outline"
+        position={[
+          brick.x + width / 2 + (brick.offset?.x ?? 0) * 0.5,
+          brick.y + part.height / 2,
+          brick.z + depth / 2 + (brick.offset?.z ?? 0) * 0.5,
+        ]}
+        rotation={[rx, brick.rot * (Math.PI / 2), rz]}
+        scale={[1.03, 1.03, 1.03]}
+        raycast={() => null}
+      >
+        <boxGeometry args={[width * STUD, part.height * PLATE, depth * STUD]} />
+        <meshBasicMaterial color="#f7c948" wireframe />
+      </mesh>
+    )
+  })
 }
 
 function ThreeDevExpose() {
@@ -252,6 +294,9 @@ export function BuildScene({
     placeBrick,
     deleteBrick,
     recolorBrick,
+    selectBrick,
+    selectBricks,
+    selection,
   } = useBuildStore(
     useShallow((state) => ({
       bricks: state.bricks,
@@ -261,6 +306,9 @@ export function BuildScene({
       placeBrick: state.placeBrick,
       deleteBrick: state.deleteBrick,
       recolorBrick: state.recolorBrick,
+      selectBrick: state.selectBrick,
+      selectBricks: state.selectBricks,
+      selection: state.selection,
     })),
   )
 
@@ -291,6 +339,7 @@ export function BuildScene({
   const gestureStartRef = useRef<{ x: number; y: number } | null>(null)
   const draggedSincePointerDownRef = useRef(false)
   const suppressNextPlaceRef = useRef(false)
+  const boxSelectStartRef = useRef<GridCoord | null>(null)
 
   const stableOnCaptureFnReady = useCallback(
     (fn: CaptureScreenshot) => onCaptureFnReady?.(fn),
@@ -316,6 +365,10 @@ export function BuildScene({
   }, [ghostGrid])
 
   const placedBricks = useMemo(() => Object.values(bricks), [bricks])
+  const selectedBricks = useMemo(
+    () => placedBricks.filter((brick) => selection.has(brick.id)),
+    [placedBricks, selection],
+  )
   const preset = getSceneEnvironmentPreset(presetId)
   const renderBricks = useMemo(
     () =>
@@ -412,7 +465,12 @@ export function BuildScene({
     })
   }
 
-  const handleBrickClick = (brickId: string) => {
+  const handleBrickClick = (brickId: string, additive = false) => {
+    if (editingTool === 'select') {
+      selectBrick(brickId, additive)
+      return
+    }
+
     if (editingTool === 'place') return
 
     if (editingTool === 'paint') {
@@ -424,6 +482,26 @@ export function BuildScene({
       const brick = bricks[brickId]
       if (brick) sampleBrick(brick)
     }
+  }
+
+  const updateBoxSelection = (end: GridCoord) => {
+    const start = boxSelectStartRef.current
+    if (!start) return
+    const minX = Math.min(start.x, end.x)
+    const maxX = Math.max(start.x, end.x)
+    const minZ = Math.min(start.z, end.z)
+    const maxZ = Math.max(start.z, end.z)
+    selectBricks(
+      placedBricks
+        .filter(
+          (brick) =>
+            brick.x >= minX &&
+            brick.x <= maxX &&
+            brick.z >= minZ &&
+            brick.z <= maxZ,
+        )
+        .map((brick) => brick.id),
+    )
   }
 
   return (
@@ -460,6 +538,15 @@ export function BuildScene({
         color={preset.groundColor}
         onPointerPos={setGhostGrid}
         onPointerEnterEmpty={() => setHoveredBrickId(null)}
+        onGridPointerDown={(grid) => {
+          if (editingTool === 'select') boxSelectStartRef.current = grid
+        }}
+        onGridPointerMove={(grid) => {
+          if (editingTool === 'select') updateBoxSelection(grid)
+        }}
+        onGridPointerUp={() => {
+          boxSelectStartRef.current = null
+        }}
       />
       <InstancedBricks
         bricks={renderBricks}
@@ -479,7 +566,7 @@ export function BuildScene({
         onInstanceClick={(brick, event) => {
           event.stopPropagation()
           if (brick.id) {
-            handleBrickClick(brick.id)
+            handleBrickClick(brick.id, event.shiftKey)
           }
         }}
         onInstancePointerMove={(brick, event) => {
@@ -504,6 +591,7 @@ export function BuildScene({
           }
         }}
       />
+      <SelectionOutlines bricks={selectedBricks} />
       {ghostGrid && (
         <GhostBrickMesh
           grid={ghostGrid}

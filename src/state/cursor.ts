@@ -8,7 +8,7 @@ import type {
 } from '@/domain/model/types'
 import { DEFAULT_PART_ID } from '@/domain/parts/catalog'
 
-export type EditingTool = 'place' | 'paint' | 'eyedropper'
+export type EditingTool = 'place' | 'select' | 'paint' | 'eyedropper'
 
 const MOUNT_CYCLE: (BrickMount | undefined)[] = [
   undefined,

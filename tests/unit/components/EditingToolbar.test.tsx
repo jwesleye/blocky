@@ -4,9 +4,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { EditingToolbar } from '@/components/EditingToolbar'
 
 describe('EditingToolbar', () => {
-  it('renders Place, Paint, and Eyedropper buttons', () => {
+  it('renders Place, Select, Paint, and Eyedropper buttons', () => {
     render(<EditingToolbar activeTool="place" onToolChange={() => undefined} />)
     expect(screen.getByTestId('tool-place')).toBeInTheDocument()
+    expect(screen.getByTestId('tool-select')).toBeInTheDocument()
     expect(screen.getByTestId('tool-paint')).toBeInTheDocument()
     expect(screen.getByTestId('tool-eyedropper')).toBeInTheDocument()
   })
