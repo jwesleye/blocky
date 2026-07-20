@@ -415,7 +415,9 @@ export const useBuildStore = create<BuildStore>()(
 
         selectBricks: (ids) =>
           set((state) => ({
-            selection: new Set([...ids].filter((id) => id in state.bricks)),
+            selection: new Set<string>(
+              [...ids].filter((id) => id in state.bricks),
+            ),
             lastCollapse: null,
           })),
 
