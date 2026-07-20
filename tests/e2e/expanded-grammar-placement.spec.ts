@@ -10,6 +10,7 @@ interface PlacedBrick {
   rot: number
   offset?: { x: number; z: number }
   mount?: 'px' | 'nx' | 'pz' | 'nz'
+  hinge?: 'x' | 'z'
 }
 
 interface DevStore {
@@ -156,6 +157,43 @@ test('places an offset brick and rejects overlapping offset placements', async (
   })
 
   // It should be rejected (count remains 1)
+  count = await getBrickCount(page)
+  expect(count).toBe(1)
+})
+
+test('places a baseplate-supported z-axis hinge brick and rejects a floating hinge placement', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+
+  // Place a valid z-axis hinge brick resting on the baseplate.
+  await placeBrick(page, {
+    partId: 'brick-1x1',
+    color: 'blue',
+    x: 8,
+    y: 0,
+    z: 8,
+    rot: 0,
+    hinge: 'z',
+  })
+
+  let count = await getBrickCount(page)
+  expect(count).toBe(1)
+
+  await expect(page.locator('canvas')).toBeVisible()
+
+  // Floating hinge brick (y>0, nothing below) is rejected.
+  await placeBrick(page, {
+    partId: 'brick-1x1',
+    color: 'red',
+    x: 8,
+    y: 3,
+    z: 20,
+    rot: 0,
+    hinge: 'z',
+  })
+
+  // It should be rejected (count remains 1).
   count = await getBrickCount(page)
   expect(count).toBe(1)
 })
