@@ -65,6 +65,8 @@ export interface BuildActions {
    * `additive` to extend it (e.g. shift-click multi-select).
    */
   selectBrick: (id: string, additive?: boolean) => void
+  /** Replaces the selection with the supplied known brick ids in one transaction. */
+  selectBricks: (ids: Iterable<string>) => void
   clearSelection: () => void
   /** Removes every brick and clears transient build state. */
   clearBricks: () => void
@@ -402,12 +404,20 @@ export const useBuildStore = create<BuildStore>()(
         selectBrick: (id, additive = false) =>
           set((state) => {
             if (!(id in state.bricks)) return state
-            const selection = additive
-              ? new Set(state.selection)
-              : new Set<string>()
-            selection.add(id)
+            const selection = additive ? new Set(state.selection) : new Set()
+            if (additive && selection.has(id)) {
+              selection.delete(id)
+            } else {
+              selection.add(id)
+            }
             return { selection, lastCollapse: null }
           }),
+
+        selectBricks: (ids) =>
+          set((state) => ({
+            selection: new Set([...ids].filter((id) => id in state.bricks)),
+            lastCollapse: null,
+          })),
 
         clearSelection: () =>
           set({ selection: new Set<string>(), lastCollapse: null }),

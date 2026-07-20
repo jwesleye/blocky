@@ -252,6 +252,16 @@ describe('useBuildStore', () => {
     expect(useBuildStore.getState().selection).toEqual(new Set([a, b]))
   })
 
+  it('selectBrick toggles an already selected brick in additive mode', () => {
+    const a = placeBrick(sampleBrick)
+    const b = placeBrick({ ...sampleBrick, x: 4 })
+    useBuildStore.getState().selectBrick(a)
+    useBuildStore.getState().selectBrick(b, true)
+    useBuildStore.getState().selectBrick(a, true)
+
+    expect(useBuildStore.getState().selection).toEqual(new Set([b]))
+  })
+
   it('clearSelection empties the selection', () => {
     const id = placeBrick(sampleBrick)
     useBuildStore.getState().selectBrick(id)
