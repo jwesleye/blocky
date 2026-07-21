@@ -161,6 +161,31 @@ describe('useBuildStore', () => {
     expect(restored.bricks[placed]).toBeUndefined()
   })
 
+  it('collapses a loaded elevated hinge on the next structural edit', () => {
+    const elevatedHinge: PlacedBrick = {
+      id: 'legacy-hinge',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 3,
+      z: 0,
+      rot: 0,
+      hinge: 'z',
+    }
+    useBuildStore.setState({ bricks: { [elevatedHinge.id]: elevatedHinge } })
+
+    placeBrick({ ...sampleBrick, x: 4 })
+
+    const state = useBuildStore.getState()
+    expect(state.bricks[elevatedHinge.id]).toBeUndefined()
+    expect(state.lastCollapse).toEqual({ count: 1, label: 'Undo collapse' })
+
+    state.undo()
+    expect(useBuildStore.getState().bricks[elevatedHinge.id]).toEqual(
+      elevatedHinge,
+    )
+  })
+
   it('undo/redo reverses and reapplies placeBrick', () => {
     const id = placeBrick(sampleBrick)
     expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
