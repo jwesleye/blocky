@@ -46,6 +46,10 @@ export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
 
     if (component.length === 0 || component.every((brick) => brick.y !== 0))
       continue
+    // Hinge contact geometry is intentionally unsupported. Graph construction
+    // already leaves any unsupported hinge connection ungrounded; avoid asking
+    // rigid-body shear logic to collapse a standalone baseplate hinge.
+    if (component.some((brick) => brick.hinge !== undefined)) continue
     if (isBalanced(component, PART_CATALOG)) continue
 
     const { shear } = findShearRegion(component)

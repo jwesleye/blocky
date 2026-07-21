@@ -159,5 +159,6 @@ export function toBrickFootprint(
     hasTopStuds: def.hasTopStuds,
     offset: brick.offset,
     mount: brick.mount,
+    hinge: brick.hinge,
   }
 }

@@ -64,6 +64,17 @@ describe('buildConnectionGraph', () => {
     expect(g.hasEdge('a', 'b')).toBe(false)
   })
 
+  it('reports an elevated hinge brick as floating instead of treating it as rigid', () => {
+    const base = brick('base', 0, 0, 0)
+    const hinge: BrickFootprint = {
+      ...brick('hinge', 0, 0, 3),
+      hinge: 'z',
+    }
+
+    expect(groundedIds([base, hinge])).toEqual(new Set(['base']))
+    expect(floatingIds([base, hinge])).toEqual(new Set(['hinge']))
+  })
+
   it('throws on a non-positive height', () => {
     expect(() => buildConnectionGraph([brick('a', 0, 0, 0, 1, 1, 0)])).toThrow(
       RangeError,

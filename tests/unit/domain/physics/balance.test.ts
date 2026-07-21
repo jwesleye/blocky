@@ -268,6 +268,32 @@ describe('Balance primitives', () => {
       expect(isBalanced(bricks, PART_CATALOG)).toBe(true)
     })
 
+    it('fails closed for a mixed classic+hinge component', () => {
+      const bricks: PlacedBrick[] = [
+        {
+          id: 'base',
+          partId: 'brick-2x2',
+          color: 'red',
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        {
+          id: 'hinge',
+          partId: 'brick-1x1',
+          color: 'blue',
+          x: 0,
+          y: 3,
+          z: 0,
+          rot: 0,
+          hinge: 'x',
+        },
+      ]
+
+      expect(isBalanced(bricks, PART_CATALOG)).toBe(false)
+    })
+
     it('offset brick is balanced when its shifted CoM lands inside the support footprint', () => {
       // plate-1x1 (height=1) at x=2 gives support footprint X [2,3].
       // brick-1x1 (height=3) at x=1 with offset.x=1: true CoM_x = 1.5+0.5 = 2.0 → inside [2,3].

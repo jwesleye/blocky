@@ -130,6 +130,11 @@ export function isBalanced(
 ): boolean {
   if (component.length === 0) return true
 
+  // Hinge pivots have authored/rendered state, but the solver does not yet
+  // model their moving support geometry. A rigid-body CoM result would be
+  // misleading, so callers receive an explicit unsupported result instead.
+  if (component.some((brick) => brick.hinge !== undefined)) return false
+
   const footprint = computeSupportFootprint(component, catalog)
   if (footprint.length === 0) {
     // A floating object is unsupported for ground-balance checks.
