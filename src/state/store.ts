@@ -404,7 +404,9 @@ export const useBuildStore = create<BuildStore>()(
         selectBrick: (id, additive = false) =>
           set((state) => {
             if (!(id in state.bricks)) return state
-            const selection = additive ? new Set(state.selection) : new Set()
+            const selection = additive
+              ? new Set<string>(state.selection)
+              : new Set<string>()
             if (additive && selection.has(id)) {
               selection.delete(id)
             } else {
