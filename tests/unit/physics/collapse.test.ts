@@ -208,6 +208,20 @@ describe('selectCollapsingBricks', () => {
     expect(result).toContain('mnt')
   })
 
+  it('collapses an elevated hinge brick instead of treating it as rigidly supported', () => {
+    const bricks: PlacedBrick[] = [
+      brick('base', 'brick-1x1', 0, 0, 0),
+      {
+        ...brick('hinge', 'brick-1x1', 0, 3, 0),
+        hinge: 'z',
+      },
+    ]
+
+    const result = selectCollapsingBricks(bricks)
+    expect(result).toContain('hinge')
+    expect(result).not.toContain('base')
+  })
+
   it('treats a brick resting only on a tile (hasTopStuds=false) as floating', () => {
     // tile at y=0 is grounded but has no top studs — the plate above cannot couple
     // through it, so the plate has no path to the baseplate and must collapse.

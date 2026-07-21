@@ -153,6 +153,31 @@ describe('buildConnectionGraph', () => {
     expect(graph.hasEdge('m1', 'm2')).toBe(false)
   })
 
+  it('fails closed instead of coupling a hinge brick as a rigid classic brick', () => {
+    const base: PlacedBrick = {
+      id: 'base',
+      partId: 'brick-1x1',
+      color: 'red',
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+    }
+    const hinge: PlacedBrick = {
+      id: 'hinge',
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 0,
+      y: 3,
+      z: 0,
+      rot: 0,
+      hinge: 'x',
+    }
+
+    const graph = buildConnectionGraph([base, hinge], PART_CATALOG)
+    expect(graph.hasEdge('base', 'hinge')).toBe(false)
+  })
+
   it('couples a half-stud-offset (jumper) brick to all supporters it physically overlaps', () => {
     // Two 1x1 supporters side by side in X at y=0.
     // The top brick has offset.x=1 (+0.5 stud shift in X), so its footprint rect

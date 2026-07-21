@@ -13,7 +13,12 @@
  */
 import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
-import type { PlacedBrick, HalfStudOffset, BrickMount } from '../model/types'
+import type {
+  PlacedBrick,
+  HalfStudOffset,
+  BrickMount,
+  BrickHinge,
+} from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
 import {
   toBrickFootprint,
@@ -59,6 +64,12 @@ export interface BrickFootprint {
    * used to establish the connection edge.
    */
   readonly mount?: BrickMount
+  /**
+   * A hinge pivot is rendered and authored, but its moving geometry is not yet
+   * represented by the structural solver. Hinge contact therefore fails closed
+   * instead of being interpreted as a rigid stud connection.
+   */
+  readonly hinge?: BrickHinge
 }
 
 /** Tolerance for comparing world-space contact-face positions (half-integer safe). */
@@ -200,16 +211,18 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   // bricks and additionally handles half-stud-offset (jumper) bricks.
   // Mounted (SNOT) bricks are excluded from this scan: their stud/anti-stud
   // faces are lateral, not vertical, so they connect via hasLateralContact.
+  // Hinges are also excluded because their pivoted contact geometry is not yet
+  // modelled; treating them as rigid classic bricks would be unsound.
   for (const b of all) {
     if (b.hasTopStuds === false) continue
-    if (b.mount !== undefined) continue
+    if (b.mount !== undefined || b.hinge !== undefined) continue
     const topY = b.bottomY + b.height
     const candidates = byBottomY.get(topY)
     if (!candidates) continue
     const bRect = bfpToRect(b)
     for (const other of candidates) {
       if (other.id === b.id) continue
-      if (other.mount !== undefined) continue
+      if (other.mount !== undefined || other.hinge !== undefined) continue
       if (rectsOverlap(bRect, bfpToRect(other))) {
         graph.mergeEdge(b.id, other.id)
       }
@@ -220,9 +233,13 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   // A mounted brick couples to any standard (non-mounted) brick whose contact
   // face aligns with the mounted brick's anti-stud face and whose Y extent
   // physically overlaps.
-  const mountedBricks = all.filter((b) => b.mount !== undefined)
+  const mountedBricks = all.filter(
+    (b) => b.mount !== undefined && b.hinge === undefined,
+  )
   if (mountedBricks.length > 0) {
-    const standardBricks = all.filter((b) => b.mount === undefined)
+    const standardBricks = all.filter(
+      (b) => b.mount === undefined && b.hinge === undefined,
+    )
 
     // Create an array mapping from each mounted brick to its exact Y-bounds.
     // The bounds logic is identical to `hasLateralContact`.
