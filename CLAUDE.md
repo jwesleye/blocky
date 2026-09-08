@@ -23,8 +23,10 @@ npm run test         # vitest run --coverage (enforces coverage thresholds)
 ```
 
 Coverage gates live in `vitest.config.ts` (lines 80 / branches 70 / functions 80
-/ statements 80). The Playwright e2e/perf matrix is local-only and known-flaky;
-run it for rendering/interaction changes but it is not yet a hard merge gate.
+/ statements 80). Chromium E2E runs in CI after the quality checks. The full
+cross-browser e2e/perf matrix remains local validation and can be flaky; run it
+for rendering/interaction changes, but it is not a hard merge gate. Use the
+Node version pinned in `.nvmrc` for local checks.
 
 ## Where things live
 
@@ -96,4 +98,5 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 - Explicit user or orchestrator instructions override this Beads block.
 - Do not commit or push without clear authority from the active profile or the current user request.
 - If a required sync or push is blocked, stop and report the exact command and error.
+
 <!-- END BEADS INTEGRATION -->

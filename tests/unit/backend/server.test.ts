@@ -512,3 +512,37 @@ describe('POST /builds/:id/reports — report', () => {
     expect(JSON.stringify(fetched)).toBe(payloadBefore)
   })
 })
+
+describe('hinge gallery publish/load', () => {
+  it.each(['x', 'z'])(
+    'preserves a %s-axis hinge through the real HTTP API',
+    async (hinge) => {
+      const build = {
+        version: 4,
+        baseplate: { size: 32 },
+        bricks: [
+          {
+            partId: 'brick-1x1',
+            color: 'red',
+            x: 5,
+            y: 0,
+            z: 5,
+            rot: 0,
+            hinge,
+          },
+        ],
+      }
+      const response = await req('/builds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ build, gallery: validGallery }),
+      })
+      expect(response.status).toBe(201)
+      const published = (await response.json()) as SharedBuildPayload
+      expect(published.build).toEqual(build)
+      const loaded = await req(`/builds/${published.buildId}`)
+      expect(loaded.status).toBe(200)
+      expect(((await loaded.json()) as SharedBuildPayload).build).toEqual(build)
+    },
+  )
+})

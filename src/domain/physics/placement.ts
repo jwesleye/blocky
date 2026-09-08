@@ -11,6 +11,7 @@
  * engine needs, keeping grounding independently testable without importing
  * the grid or part catalog.
  */
+import { isUnsupportedHingeGrammar } from './hinge'
 import Graph from 'graphology'
 import { connectedComponents } from 'graphology-components'
 import type {
@@ -215,14 +216,15 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   // modelled; treating them as rigid classic bricks would be unsound.
   for (const b of all) {
     if (b.hasTopStuds === false) continue
-    if (b.mount !== undefined || b.hinge !== undefined) continue
+    if (b.mount !== undefined || isUnsupportedHingeGrammar(b)) continue
     const topY = b.bottomY + b.height
     const candidates = byBottomY.get(topY)
     if (!candidates) continue
     const bRect = bfpToRect(b)
     for (const other of candidates) {
       if (other.id === b.id) continue
-      if (other.mount !== undefined || other.hinge !== undefined) continue
+      if (other.mount !== undefined || isUnsupportedHingeGrammar(other))
+        continue
       if (rectsOverlap(bRect, bfpToRect(other))) {
         graph.mergeEdge(b.id, other.id)
       }
@@ -234,11 +236,11 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   // face aligns with the mounted brick's anti-stud face and whose Y extent
   // physically overlaps.
   const mountedBricks = all.filter(
-    (b) => b.mount !== undefined && b.hinge === undefined,
+    (b) => b.mount !== undefined && !isUnsupportedHingeGrammar(b),
   )
   if (mountedBricks.length > 0) {
     const standardBricks = all.filter(
-      (b) => b.mount === undefined && b.hinge === undefined,
+      (b) => b.mount === undefined && !isUnsupportedHingeGrammar(b),
     )
 
     // Create an array mapping from each mounted brick to its exact Y-bounds.

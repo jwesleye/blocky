@@ -54,6 +54,11 @@ describe('docs/PRD.md — expanded-grammar scope drift guard', () => {
       expect(doc()).toMatch(/version:\s*4/i)
     })
 
+    it('documents the current hinge placement limit and legacy edit warning', () => {
+      expect(doc()).toMatch(/hinge stacking is not supported/i)
+      expect(doc()).toMatch(/elevated hinges.*collapse/i)
+    })
+
     it('names the two pivot axes', () => {
       expect(doc()).toMatch(/'x'\s*\|\s*'z'|x.*z.*pivot|pivot.*x.*z/i)
     })

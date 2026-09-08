@@ -15,6 +15,7 @@ export function useScenePresetPreference() {
 
   useEffect(() => {
     setSelectedPresetId(loadScenePresetPreference())
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount hydration flag, not a render loop
     setHydrated(true)
   }, [setSelectedPresetId])
 

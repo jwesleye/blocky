@@ -12,7 +12,13 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4173',
     trace: 'on-first-retry',
     launchOptions: {
-      args: ['--use-angle=d3d11'],
+      // Prefer the host GPU for benchmarks; software WebGL is the Linux fallback.
+      args:
+        process.platform === 'win32'
+          ? ['--use-angle=d3d11']
+          : process.platform === 'darwin'
+            ? ['--use-angle=metal']
+            : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
     },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

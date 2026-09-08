@@ -208,6 +208,13 @@ the chosen end-state behavior.
   - A build with any `hinge` brick serializes as `version: 4`; builds with only
     `mount` stay `version: 3`; only-offset stays `version: 2`; classic stays
     `version: 1`. No user migration is required for existing builds.
+  - **Current structural limit:** hinge stacking is not supported. A hinge
+    may rest on the baseplate, but neither it nor another brick can use hinge
+    contact as structural support. The editor explains unsupported placement.
+    Older autosaves with elevated hinges warn that those hinges will collapse
+    on the next add/delete operation; Undo collapse restores them. JSON import
+    and shared URLs still reject builds that violate structural invariants.
+    Pivot metadata is preserved; it does not imply animated hinge articulation.
 - **Still out of scope:** Technic pins and angled connections. These remain
   deferred grammar expansions.
 

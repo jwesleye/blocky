@@ -21,7 +21,7 @@ const readPackageJson = (): PackageJson =>
 
 describe('playwright e2e defaults (issue #191)', () => {
   it('uses the preview server instead of the Vite dev server', () => {
-    expect(playwrightConfig.workers).toBe(4)
+    expect(playwrightConfig.workers).toBe(process.env.CI ? 2 : 4)
     expect(playwrightConfig.use?.baseURL).toBe('http://localhost:4174')
     expect(playwrightConfig.webServer).toMatchObject({
       command:
@@ -70,13 +70,16 @@ describe('playwright.config.ts default matrix', () => {
     }
   })
 
-  it('chromium project prefers the D3D11 ANGLE renderer for perf coverage', () => {
+  it('chromium uses a renderer available on the host platform', () => {
     const chromium = playwrightConfig.projects?.find(
       (p) => p.name === 'chromium',
     )
     expect(chromium?.use).toMatchObject({
       launchOptions: {
-        args: ['--use-angle=d3d11'],
+        args:
+          process.platform === 'win32'
+            ? ['--use-angle=d3d11']
+            : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
       },
     })
   })
@@ -107,10 +110,15 @@ describe('playwright.perf.config.ts dedicated perf matrix', () => {
     expect(perfConfig.projects![0].name).toBe('chromium')
   })
 
-  it('uses the D3D11 ANGLE renderer for perf runs', () => {
+  it('uses a renderer available on the host platform for perf runs', () => {
     expect(perfConfig.use).toMatchObject({
       launchOptions: {
-        args: ['--use-angle=d3d11'],
+        args:
+          process.platform === 'win32'
+            ? ['--use-angle=d3d11']
+            : process.platform === 'darwin'
+              ? ['--use-angle=metal']
+              : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
       },
     })
   })

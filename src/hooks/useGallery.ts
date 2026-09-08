@@ -78,6 +78,7 @@ export function useGallery(client?: GalleryClient): GalleryState {
   )
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- refresh() sets state from an async fetch callback, not synchronously
     void refresh()
   }, [refresh])
 

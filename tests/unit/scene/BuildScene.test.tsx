@@ -63,11 +63,11 @@ vi.mock('@/scene/CameraRig', () => ({
 let lastInstancedBricksProps: InstancedBricksProps | null = null
 let lastCanvasOnClick: (() => void) | undefined = undefined
 let lastCanvasOnPointerDown:
-  | ((event: { clientX?: number; clientY?: number }) => void)
-  | undefined = undefined
+  ((event: { clientX?: number; clientY?: number }) => void) | undefined =
+  undefined
 let lastCanvasOnPointerMove:
-  | ((event: { clientX?: number; clientY?: number }) => void)
-  | undefined = undefined
+  ((event: { clientX?: number; clientY?: number }) => void) | undefined =
+  undefined
 
 vi.mock('@/scene/InstancedBricks', () => ({
   InstancedBricks: (props: InstancedBricksProps) => {
@@ -104,6 +104,7 @@ const resetCursorStore = () => {
     rot: 0,
     offset: undefined,
     mount: undefined,
+    hinge: undefined,
     editingTool: 'place',
   })
 }
@@ -709,6 +710,70 @@ describe('BuildScene', () => {
     expect(bricks).toHaveLength(1)
     expect(bricks[0]?.hinge).toBe('z')
 
+    await renderer.unmount()
+  })
+
+  it('reports unsupported hinge stacking and clears the reason on baseplate hover', async () => {
+    useBuildStore.setState({
+      bricks: {
+        brick1: {
+          id: 'brick1',
+          partId: 'brick-2x4',
+          color: DEFAULT_COLOR_ID,
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+      },
+    })
+
+    useCursorStore.setState({ hinge: 'x' })
+    const onPlacementReasonChange = vi.fn()
+    const renderer = await ReactThreeTestRenderer.create(
+      <BuildScene onPlacementReasonChange={onPlacementReasonChange} />,
+    )
+
+    expect(lastInstancedBricksProps).not.toBeNull()
+
+    await ReactThreeTestRenderer.act(async () => {
+      await lastInstancedBricksProps?.onInstancePointerMove?.(
+        {
+          id: 'brick1',
+          partId: 'brick-2x4',
+          partType: 'brick',
+          color: DEFAULT_COLOR_ID,
+          x: 0,
+          y: 0,
+          z: 0,
+          rot: 0,
+        },
+        {
+          face: { normal: { x: 0, y: 1, z: 0 } },
+          point: { x: 0, y: 0, z: 0 },
+          stopPropagation: () => {},
+        } as never,
+      )
+    })
+
+    const [ghost] = renderer.scene.findAll(
+      (node) => node.props.name === 'ghost-brick',
+    )
+
+    expect(ghost?.props.position).toEqual([1, 4.5, 2])
+
+    expect(onPlacementReasonChange).toHaveBeenLastCalledWith(
+      'unsupported-hinge',
+    )
+    const baseplate = renderer.scene.find(
+      (node) =>
+        node.type === 'Mesh' && typeof node.props.onPointerMove === 'function',
+    )
+    await renderer.fireEvent(baseplate, 'onPointerMove', {
+      point: { x: 10 * STUD, z: 10 * STUD },
+      stopPropagation: () => {},
+    })
+    expect(onPlacementReasonChange).toHaveBeenLastCalledWith(null)
     await renderer.unmount()
   })
 })

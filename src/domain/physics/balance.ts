@@ -1,3 +1,4 @@
+import { isUnsupportedHingeGrammar } from './hinge'
 import { polygonContains, polygonHull } from 'd3-polygon'
 import type { PlacedBrick } from '../model/types'
 import type { PartCatalog } from '../parts/catalog'
@@ -133,7 +134,7 @@ export function isBalanced(
   // Hinge pivots have authored/rendered state, but the solver does not yet
   // model their moving support geometry. A rigid-body CoM result would be
   // misleading, so callers receive an explicit unsupported result instead.
-  if (component.some((brick) => brick.hinge !== undefined)) return false
+  if (component.some(isUnsupportedHingeGrammar)) return false
 
   const footprint = computeSupportFootprint(component, catalog)
   if (footprint.length === 0) {

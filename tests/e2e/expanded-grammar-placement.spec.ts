@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { getBrickCount } from './support/devWindow'
+import {
+  getBrickCount,
+  waitForStores,
+  projectToCanvas,
+} from './support/devWindow'
 
 interface PlacedBrick {
   partId: string
@@ -196,4 +200,45 @@ test('places a baseplate-supported z-axis hinge brick and rejects a floating hin
   // It should be rejected (count remains 1).
   count = await getBrickCount(page)
   expect(count).toBe(1)
+})
+
+test('explains unsupported hinge stacking and allows baseplate authoring', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+  await waitForStores(page)
+  await placeBrick(page, {
+    partId: 'brick-2x4',
+    color: 'red',
+    x: 10,
+    y: 0,
+    z: 10,
+    rot: 0,
+  })
+  await page.getByTestId('toggle-hinge-x').click()
+  const top = await projectToCanvas(page, 11, 3, 12)
+  await page.mouse.move(top.x, top.y)
+  await expect(page.getByTestId('placement-feedback')).toContainText(
+    'Hinge stacking is not supported yet',
+  )
+  await page.mouse.click(top.x, top.y)
+  expect(await getBrickCount(page)).toBe(1)
+
+  const ground = await projectToCanvas(page, 4, 0, 4)
+  await page.mouse.move(ground.x, ground.y)
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __blockyGhostGrid: { y: number } | null })
+        .__blockyGhostGrid?.y === 0,
+  )
+  await expect(page.getByTestId('placement-feedback')).toBeEmpty()
+  await page.mouse.click(ground.x, ground.y)
+  await expect(page.locator('.brick-count')).toHaveText('Bricks in build: 2')
+  const hinges = await page.evaluate(() =>
+    Object.values(
+      (window as unknown as WindowWithStore).__blockyStore.getState().bricks,
+    ).filter((brick) => brick.hinge === 'x'),
+  )
+  expect(hinges).toHaveLength(1)
+  expect(hinges[0].y).toBe(0)
 })

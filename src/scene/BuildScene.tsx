@@ -27,7 +27,10 @@ import {
 } from '@/domain/parts/catalog'
 import { useShallow } from 'zustand/react/shallow'
 
-import { isValidPlacement } from '@/domain/physics/validity'
+import {
+  getPlacementValidity,
+  type PlacementInvalidReason,
+} from '@/domain/physics/validity'
 import { useCursorStore } from '@/state/cursor'
 import { useBuildStore } from '@/state/store'
 import { CameraControls } from './CameraControls'
@@ -280,11 +283,13 @@ function brickPointerToGhostGrid(
 interface BuildSceneProps {
   presetId?: SceneEnvironmentPresetId
   onCaptureFnReady?: (fn: CaptureScreenshot) => void
+  onPlacementReasonChange?: (reason: PlacementInvalidReason | null) => void
 }
 
 export function BuildScene({
   presetId = DEFAULT_SCENE_ENVIRONMENT_PRESET_ID,
   onCaptureFnReady,
+  onPlacementReasonChange,
 }: BuildSceneProps = {}) {
   const {
     bricks,
@@ -379,8 +384,8 @@ export function BuildScene({
       }),
     [baseplateSize, placedBricks],
   )
-  const ghostValid = useMemo(() => {
-    if (!ghostGrid) return false
+  const ghostValidity = useMemo(() => {
+    if (!ghostGrid) return null
     const ghost: PlacedBrick = {
       id: '__ghost__',
       partId,
@@ -393,7 +398,12 @@ export function BuildScene({
       mount,
       hinge,
     }
-    return isValidPlacement(ghost, placedBricks, PART_CATALOG, baseplateSize)
+    return getPlacementValidity(
+      ghost,
+      placedBricks,
+      PART_CATALOG,
+      baseplateSize,
+    )
   }, [
     baseplateSize,
     colorId,
@@ -405,6 +415,16 @@ export function BuildScene({
     mount,
     hinge,
   ])
+
+  const ghostValid = ghostValidity?.valid ?? false
+  const placementReason =
+    editingTool === 'place' && ghostValidity && !ghostValidity.valid
+      ? ghostValidity.reason
+      : null
+  useEffect(() => {
+    onPlacementReasonChange?.(placementReason)
+    return () => onPlacementReasonChange?.(null)
+  }, [onPlacementReasonChange, placementReason])
 
   const resetPlacementGesture = () => {
     gestureStartRef.current = null

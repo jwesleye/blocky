@@ -40,14 +40,19 @@ describe('playwright.perf.config.ts', () => {
     )
   })
 
-  it('launches chromium with the D3D11 ANGLE renderer for consistent GPU timing', async () => {
+  it('launches chromium with a renderer available on the host platform', async () => {
     vi.resetModules()
 
     const imported = await import('../../../playwright.perf.config')
 
     expect(imported.default.use).toMatchObject({
       launchOptions: {
-        args: ['--use-angle=d3d11'],
+        args:
+          process.platform === 'win32'
+            ? ['--use-angle=d3d11']
+            : process.platform === 'darwin'
+              ? ['--use-angle=metal']
+              : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
       },
     })
   })
