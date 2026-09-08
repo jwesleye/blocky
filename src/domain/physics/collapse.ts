@@ -1,3 +1,4 @@
+import { isUnsupportedHingeGrammar } from './hinge'
 import type { PlacedBrick } from '../model/types'
 import { CATALOG_BY_ID as PART_CATALOG } from '../parts/catalog'
 import { toBrickFootprint } from '../parts/footprint'
@@ -49,7 +50,7 @@ export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
     // Hinge contact geometry is intentionally unsupported. Graph construction
     // already leaves any unsupported hinge connection ungrounded; avoid asking
     // rigid-body shear logic to collapse a standalone baseplate hinge.
-    if (component.some((brick) => brick.hinge !== undefined)) continue
+    if (component.some(isUnsupportedHingeGrammar)) continue
     if (isBalanced(component, PART_CATALOG)) continue
 
     const { shear } = findShearRegion(component)

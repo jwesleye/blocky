@@ -72,6 +72,58 @@ describe('HUD Components', () => {
     expect(screen.getByRole('button', { name: /Redo/i })).toBeDisabled()
   })
 
+  it('updates Undo and Redo immediately when the build history changes', () => {
+    render(<Toolbar />)
+    act(() => {
+      useBuildStore.getState().placeBrick({
+        partId: 'brick-1x1',
+        color: 'red',
+        x: 0,
+        y: 0,
+        z: 0,
+        rot: 0,
+      })
+    })
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(Object.keys(useBuildStore.getState().bricks)).toHaveLength(1)
+  })
+
+  it('offers Undo collapse after a structural edit removes a legacy hinge', () => {
+    useBuildStore.setState({
+      bricks: {
+        old: {
+          id: 'old',
+          partId: 'brick-1x1',
+          color: 'red',
+          x: 0,
+          y: 3,
+          z: 0,
+          rot: 0,
+          hinge: 'x',
+        },
+      },
+    })
+    render(<Toolbar />)
+    act(() => {
+      useBuildStore.getState().placeBrick({
+        partId: 'brick-1x1',
+        color: 'blue',
+        x: 10,
+        y: 0,
+        z: 10,
+        rot: 0,
+      })
+    })
+    expect(screen.getByRole('button', { name: 'Undo collapse' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Undo collapse' }))
+    expect(useBuildStore.getState().bricks.old.hinge).toBe('x')
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument()
+  })
+
   it('updates brick count', () => {
     render(<BrickCount />)
     expect(screen.getByText('Bricks in build: 0')).toBeInTheDocument()

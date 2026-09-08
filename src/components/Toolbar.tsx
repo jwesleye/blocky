@@ -1,7 +1,4 @@
-import { useEffect, useState } from 'react'
-import type { TemporalState } from 'zundo'
-
-import type { BuildState } from '@/domain/model/types'
+import { useStore } from 'zustand'
 import { type BuildStoreWithTemporal, useBuildStore } from '../state/store'
 import { useCursorStore } from '../state/cursor'
 import {
@@ -27,10 +24,6 @@ interface ToolbarProps {
   onResetView?: () => void
 }
 
-type ToolbarTemporalState = TemporalState<Partial<BuildState>> & {
-  subscribe?: (listener: () => void) => () => void
-}
-
 export const Toolbar: React.FC<ToolbarProps> = ({
   onNew = () => undefined,
   onClear = () => undefined,
@@ -39,6 +32,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 }) => {
   const undo = useBuildStore((state) => state.undo)
   const redo = useBuildStore((state) => state.redo)
+  const undoLabel = useBuildStore(
+    (state) => state.lastCollapse?.label ?? 'Undo',
+  )
   const temporal = (useBuildStore as unknown as BuildStoreWithTemporal).temporal
   const toggleOffset = useCursorStore((state) => state.toggleOffset)
   const isOffset = useCursorStore((state) => state.offset !== undefined)
@@ -46,19 +42,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const isMount = useCursorStore((state) => state.mount !== undefined)
   const toggleHinge = useCursorStore((state) => state.toggleHinge)
   const hinge = useCursorStore((state) => state.hinge)
-  const [, setRefresh] = useState(0)
-
-  useEffect(() => {
-    const temporalState = temporal.getState() as ToolbarTemporalState
-    const unsubscribe = temporalState.subscribe?.(() => {
-      setRefresh((v) => v + 1)
-    })
-    return () => unsubscribe?.()
-  }, [temporal])
-
-  const temporalState = temporal.getState()
-  const pastStatesLength = temporalState.pastStates.length
-  const futureStatesLength = temporalState.futureStates.length
+  const pastStatesLength = useStore(
+    temporal,
+    (state) => state.pastStates.length,
+  )
+  const futureStatesLength = useStore(
+    temporal,
+    (state) => state.futureStates.length,
+  )
 
   return (
     <div className="toolbar" role="toolbar" aria-label="Main Toolbar">
@@ -109,7 +100,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       <button
         type="button"
-        aria-label="Undo"
+        aria-label={undoLabel}
+        title={undoLabel}
         onClick={undo}
         disabled={pastStatesLength === 0}
       >

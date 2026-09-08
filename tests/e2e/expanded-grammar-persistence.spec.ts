@@ -19,6 +19,7 @@ interface SerializedBrick {
   rot: number
   offset?: { x: number; z: number }
   mount?: 'px' | 'nx' | 'pz' | 'nz'
+  hinge?: 'x' | 'z'
 }
 
 interface StoredBrick extends SerializedBrick {
@@ -345,4 +346,110 @@ test('rejects mount in v1 envelope on import without dropping current build', as
   const bricks = await currentBricks(page)
   expect(bricks).toHaveLength(1)
   expect(bricks[0]).toMatchObject({ color: 'blue', mount: 'px' })
+})
+
+for (const hinge of ['x', 'z'] as const) {
+  test(`round-trips a ${hinge}-axis hinge through JSON, autosave and a share URL`, async ({
+    page,
+  }) => {
+    await gotoWithStore(page)
+    const brick: SerializedBrick = { ...classicBrick, x: 10, z: 10, hinge }
+    await seedBricks(page, [brick])
+    const exported = await exportBuild(page)
+    expect(JSON.parse(exported)).toMatchObject({ version: 4, bricks: [brick] })
+    await seedBricks(page, [])
+    await importBuild(page, exported)
+    await expect
+      .poll(async () => (await currentBricks(page))[0]?.hinge)
+      .toBe(hinge)
+    await page.waitForFunction(
+      ({ key, axis }) => {
+        const saved = JSON.parse(localStorage.getItem(key) ?? 'null')
+        return saved?.version === 4 && saved.bricks[0]?.hinge === axis
+      },
+      { key: AUTOSAVE_STORAGE_KEY, axis: hinge },
+    )
+    await page.reload()
+    await expect
+      .poll(async () => (await currentBricks(page))[0]?.hinge)
+      .toBe(hinge)
+    await page.getByRole('button', { name: 'Share Link', exact: true }).click()
+    const url = await page.getByTestId('share-url').inputValue()
+    await seedBricks(page, [])
+    await page.goto(url)
+    await expect
+      .poll(async () => (await currentBricks(page))[0]?.hinge)
+      .toBe(hinge)
+    expect(JSON.parse(await exportBuild(page))).toMatchObject({
+      version: 4,
+      bricks: [brick],
+    })
+  })
+}
+
+test('warns before a legacy elevated hinge collapses on edit and supports undo', async ({
+  page,
+}) => {
+  await page.addInitScript(
+    ({ key, build }) => localStorage.setItem(key, JSON.stringify(build)),
+    {
+      key: AUTOSAVE_STORAGE_KEY,
+      build: {
+        version: 4,
+        baseplate: { size: 32 },
+        bricks: [classicBrick, { ...classicBrick, y: 3, hinge: 'x' }],
+      },
+    },
+  )
+  await gotoWithStore(page)
+  await expect(page.getByTestId('placement-feedback')).toContainText(
+    'Adding or deleting a brick will make these hinges collapse',
+  )
+  await page.evaluate(() => {
+    const store = (
+      window as unknown as {
+        __blockyStore: {
+          getState: () => { placeBrick: (brick: SerializedBrick) => void }
+        }
+      }
+    ).__blockyStore
+    store.getState().placeBrick({
+      partId: 'brick-1x1',
+      color: 'blue',
+      x: 20,
+      y: 0,
+      z: 20,
+      rot: 0,
+    })
+  })
+  await expect(page.getByTestId('placement-feedback')).toBeEmpty()
+  await page.getByRole('button', { name: 'Undo collapse' }).click()
+  await expect(page.getByTestId('placement-feedback')).toContainText(
+    'unsupported elevated hinges',
+  )
+  expect(
+    (await currentBricks(page)).some(
+      (brick) => brick.hinge === 'x' && brick.y === 3,
+    ),
+  ).toBe(true)
+})
+
+test('rejects a hinge in a legacy envelope without replacing the current build', async ({
+  page,
+}) => {
+  await gotoWithStore(page)
+  await seedBricks(page, [classicBrick])
+  const dialog = page.waitForEvent('dialog')
+  await importBuild(
+    page,
+    JSON.stringify({
+      version: 3,
+      baseplate: { size: 32 },
+      bricks: [{ ...classicBrick, hinge: 'x' }],
+    }),
+  )
+  const error = await dialog
+  expect(error.message()).toContain('Invalid build file')
+  await error.dismiss()
+  expect(await currentBricks(page)).toMatchObject([classicBrick])
 })

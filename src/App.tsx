@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { PlacementFeedback } from '@/components/PlacementFeedback'
+import type { PlacementInvalidReason } from '@/domain/physics/validity'
 import { Gallery } from '@/components/Gallery'
 import { HUD } from '@/components/HUD'
 import { PersistenceControls } from '@/components/PersistenceControls'
@@ -49,6 +51,8 @@ function getStructuralInvariantError(build: Build | null): string | null {
 }
 
 export function App() {
+  const [placementReason, setPlacementReason] =
+    useState<PlacementInvalidReason | null>(null)
   const [galleryOpen, setGalleryOpen] = useState(false)
   useScenePresetPreference()
   const captureScreenshotRef = useRef<CaptureScreenshot | null>(null)
@@ -89,6 +93,7 @@ export function App() {
         baseplateSize: initialBuild.baseplate.size,
       })
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount hydration flag, not a render loop
     setHasHydratedPersistence(true)
   }, [])
 
@@ -137,7 +142,9 @@ export function App() {
           <BuildScene
             presetId={selectedPresetId}
             onCaptureFnReady={handleCaptureFnReady}
+            onPlacementReasonChange={setPlacementReason}
           />
+          <PlacementFeedback reason={placementReason} />
           <ViewControls />
           <HUD />
           <TouchToolbar />

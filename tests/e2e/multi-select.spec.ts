@@ -59,12 +59,49 @@ test('select mode supports click toggling and baseplate box selection', async ({
     '1 brick selected',
   )
 
-  const boxStart = await projectToCanvas(page, 9, 0, 9)
-  const boxEnd = await projectToCanvas(page, 15, 0, 11)
+  // (9, 0, 9) is hidden behind the first brick from the default camera.
+  // Start on visible empty baseplate so this actually begins a box gesture.
+  const boxStart = await projectToCanvas(page, 9, 0, 7)
+  // Leave a full stud of clearance from brick edges at the end as well;
+  // subpixel rounding on tablet must not turn the endpoint into a brick hit.
+  const boxEnd = await projectToCanvas(page, 16, 0, 12)
   await page.mouse.move(boxStart.x, boxStart.y)
+  await page.waitForFunction(() => {
+    const grid = (
+      window as unknown as {
+        __blockyGhostGrid: { x: number; y: number; z: number } | null
+      }
+    ).__blockyGhostGrid
+    return grid?.x === 9 && grid.y === 0 && grid.z === 7
+  })
+  const cameraBefore = await page.evaluate(() => {
+    const position = (
+      window as unknown as {
+        __blockyCamera: { position: { x: number; y: number; z: number } }
+      }
+    ).__blockyCamera.position
+    return { x: position.x, y: position.y, z: position.z }
+  })
   await page.mouse.down()
   await page.mouse.move(boxEnd.x, boxEnd.y, { steps: 4 })
+  await page.waitForFunction(() => {
+    const grid = (
+      window as unknown as {
+        __blockyGhostGrid: { x: number; y: number; z: number } | null
+      }
+    ).__blockyGhostGrid
+    return grid?.x === 16 && grid.y === 0 && grid.z === 12
+  })
   await page.mouse.up()
+  const cameraAfter = await page.evaluate(() => {
+    const position = (
+      window as unknown as {
+        __blockyCamera: { position: { x: number; y: number; z: number } }
+      }
+    ).__blockyCamera.position
+    return { x: position.x, y: position.y, z: position.z }
+  })
+  expect(cameraAfter).toEqual(cameraBefore)
 
   await page.waitForFunction((selectedIds) => {
     const selection = (

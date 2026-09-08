@@ -15,7 +15,7 @@ export function EnvironmentPresetPicker() {
     const idx = SCENE_ENVIRONMENT_PRESETS.findIndex(
       (preset) => preset.id === selectedPresetId,
     )
-    let nextIdx = idx
+    let nextIdx: number
 
     switch (e.key) {
       case 'ArrowDown':

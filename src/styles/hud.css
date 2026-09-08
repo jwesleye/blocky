@@ -213,3 +213,23 @@
     Consolas,
     monospace;
 }
+
+.placement-feedback {
+  position: absolute;
+  top: 4.5rem;
+  left: 1rem;
+  right: 1rem;
+  margin-inline: auto;
+  max-width: 32rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.placement-feedback p {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: var(--color-panel-strong);
+  color: var(--color-text);
+  font-size: 0.875rem;
+}

@@ -45,7 +45,9 @@ docker/               nginx config for the production image
 ## Getting started (local)
 
 ```bash
-npm install
+nvm install         # uses the Node version pinned in .nvmrc
+nvm use
+npm ci
 npm run dev          # http://localhost:5173
 ```
 
@@ -71,7 +73,20 @@ npx playwright install   # first-time browser download
 npm run test:e2e         # runs all three browser projects locally
 ```
 
-**CI scope:** GitHub Actions runs on every pull request and push to `main`: `npm run typecheck`, `npm run lint`, and `npm run test` (Vitest unit/integration tests with coverage). The cross-browser Playwright matrix (`npm run test:e2e`) is currently local-only; contributors validate it before merging. A follow-up milestone will add a headless CI run (see issue #117); the WebGL2 test may require a software-rasteriser flag (`--use-gl=swiftshader`) or `xvfb` on Linux runners.
+**CI scope:** The workflow runs typecheck, lint, Vitest with coverage, and a
+production build on pull requests and pushes to `main`. A dependent Chromium
+job installs its browser/system dependencies and runs the E2E suite, retaining
+HTML reports and traces on failure. Both jobs use the Node version in `.nvmrc`.
+Firefox, WebKit, tablet and performance runs remain local validation; they are
+not required remote checks. E2E Chromium uses software WebGL on macOS/Linux
+and D3D11 on Windows. Performance runs use Metal on macOS, D3D11 on Windows,
+and software WebGL on Linux. Run benchmarks without other test suites running;
+software-renderer timings are not comparable to hardware GPU measurements.
+
+Run `npx playwright install` after upgrading Playwright so installed browser
+binaries match the package version. Run `nvm use` before local checks; the
+machine's Node 25 runtime exposes a different global Web Storage implementation
+and does not match this project's tested Node 22 configuration.
 
 ## Docker
 

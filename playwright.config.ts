@@ -6,7 +6,7 @@ export default defineConfig({
   testDir: './tests',
   testMatch: ['e2e/**/*.spec.ts'],
   fullyParallel: true,
-  workers: 4,
+  workers: process.env.CI ? 2 : 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: 'html',
@@ -20,7 +20,11 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
-          args: ['--use-angle=d3d11'],
+          // D3D11 is Windows-only; use software WebGL on macOS/Linux CI.
+          args:
+            process.platform === 'win32'
+              ? ['--use-angle=d3d11']
+              : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
         },
       },
     },

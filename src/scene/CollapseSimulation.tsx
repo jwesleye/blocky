@@ -78,10 +78,12 @@ export function CollapseSimulation({
   ground = true,
 }: CollapseSimulationProps) {
   const [current, setCurrent] = useState(transaction)
+  const [prevTransaction, setPrevTransaction] = useState(transaction)
 
-  useEffect(() => {
+  if (transaction !== prevTransaction) {
+    setPrevTransaction(transaction)
     setCurrent(transaction)
-  }, [transaction])
+  }
 
   useEffect(() => {
     if (current.phase === 'complete') {

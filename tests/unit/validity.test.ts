@@ -7,7 +7,10 @@ import {
   STUD,
 } from '@/domain/grid'
 import { CATALOG_BY_ID as PART_CATALOG } from '@/domain/parts/catalog'
-import { isValidPlacement } from '@/domain/physics/validity'
+import {
+  getPlacementValidity,
+  isValidPlacement,
+} from '@/domain/physics/validity'
 import type { PlacedBrick } from '@/domain/model/types'
 
 function brick(overrides: Partial<PlacedBrick> = {}): PlacedBrick {
@@ -258,6 +261,42 @@ describe('isValidPlacement', () => {
       expect(isValidPlacement(brick({ y: 3, hinge: 'z' }), [support])).toBe(
         false,
       )
+    })
+  })
+})
+
+describe('placement feedback', () => {
+  it.each(['x', 'z'] as const)(
+    'explains unsupported %s-axis hinge stacking',
+    (hinge) => {
+      expect(
+        getPlacementValidity(brick({ y: 3, hinge }), [
+          brick({ id: 'support' }),
+        ]),
+      ).toEqual({ valid: false, reason: 'unsupported-hinge' })
+      expect(getPlacementValidity(brick({ hinge }), [])).toEqual({
+        valid: true,
+      })
+    },
+  )
+
+  it('explains why a classic brick cannot use a hinge as its support', () => {
+    expect(
+      getPlacementValidity(brick({ y: 3 }), [
+        brick({ id: 'hinge', hinge: 'x' }),
+      ]),
+    ).toEqual({ valid: false, reason: 'unsupported-hinge' })
+  })
+
+  it('does not blame unrelated hinge bricks for collisions or floating classic bricks', () => {
+    const placed = [brick({ id: 'hinge', hinge: 'x' })]
+    expect(getPlacementValidity(brick(), placed)).toEqual({
+      valid: false,
+      reason: 'invalid-placement',
+    })
+    expect(getPlacementValidity(brick({ x: 10, y: 3 }), placed)).toEqual({
+      valid: false,
+      reason: 'invalid-placement',
     })
   })
 })
