@@ -40,18 +40,16 @@ function readStoredTheme(): ThemePreference {
     if (stored === 'auto' || stored === 'light' || stored === 'dark') {
       return stored
     }
-  } catch {
-    // localStorage unavailable
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
   return 'auto'
 }
 
 function writeStoredTheme(theme: ThemePreference) {
   try {
     localStorage.setItem(STORAGE_KEY, theme)
-  } catch {
-    // localStorage unavailable
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
 }
 
 export const useThemeStore = create<ThemeState>((set, get) => ({

@@ -14,8 +14,8 @@ const pickersCss = readFileSync(
 )
 
 const partAndColorPickerRules = pickersCss.slice(
-  pickersCss.indexOf('/* Color picker */'),
-  pickersCss.indexOf('/* Baseplate size picker */'),
+  pickersCss.indexOf('.color-picker'),
+  pickersCss.indexOf('.baseplate-size-picker'),
 )
 
 describe('picker token styling', () => {

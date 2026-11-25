@@ -26,7 +26,6 @@ describe('findBuildInvariantViolations', () => {
   })
 
   it('reports no violations for a legitimately stacked, connected build', () => {
-    // Standard bricks are 3 plate units tall; 'top' rests on 'base' top studs.
     const result = findBuildInvariantViolations([
       brick({ id: 'base', x: 0, z: 0, y: 0 }),
       brick({ id: 'top', x: 0, z: 0, y: 3 }),
@@ -55,9 +54,6 @@ describe('findBuildInvariantViolations', () => {
   })
 
   it('does not flag an unknown-part brick resting on the baseplate', () => {
-    // Unknown parts are skipped by collision detection and, when sitting at
-    // y=0, count as directly grounded — matching existing placement semantics
-    // rather than introducing a stricter rule than the issue asks for.
     const result = findBuildInvariantViolations([
       brick({ id: 'unknown', partId: 'not-a-real-part', x: 5, z: 5, y: 0 }),
     ])

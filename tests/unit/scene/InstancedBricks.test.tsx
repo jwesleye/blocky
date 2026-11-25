@@ -1,8 +1,6 @@
 import ReactThreeTestRenderer from '@react-three/test-renderer'
 import { describe, expect, it, vi } from 'vitest'
 
-// We must mock `@react-three/drei`'s Instances and Instance components
-// to avoid deep nested errors inside r3f testing without a real DOM/canvas.
 vi.mock('@react-three/drei', () => ({
   Instances: (props: { limit?: number; [key: string]: unknown }) => (
     <group data-testid="Instances" limit={props.limit} {...props} />
@@ -15,7 +13,6 @@ vi.mock('@react-three/drei', () => ({
 import { InstancedBricks } from '@/scene/InstancedBricks'
 import type { RenderBrick } from '@/scene/instancing'
 
-// Mock the parts geometry to avoid WebGL context issues and simplify test output
 vi.mock('@/scene/parts/geometries', () => ({
   getPartGeometry: vi.fn((partId, dims) => ({
     isBufferGeometry: true,
@@ -99,7 +96,6 @@ describe('InstancedBricks', () => {
     const group1 = instancesGroups[0]
     const group2 = instancesGroups[1]
 
-    // Sort them so tests aren't flaky
     const [redGroup, blueGroup] =
       group1.props.limit === 2 ? [group1, group2] : [group2, group1]
 
@@ -153,7 +149,7 @@ describe('InstancedBricks', () => {
     const instancesGroups = renderer.scene.findAll(
       (node) => node.props['data-testid'] === 'Instances',
     )
-    // Get the instance corresponding to sampleBricks[0] (which is brick-1, 2x4, red)
+
     let instance: ReturnType<typeof renderer.scene.find> | undefined
     let expectedBrick: RenderBrick | undefined
 
@@ -167,7 +163,6 @@ describe('InstancedBricks', () => {
       }
     }
 
-    // Simulate events
     const mockEvent = {} as unknown
 
     instance!.props.onClick(mockEvent)
@@ -175,7 +170,6 @@ describe('InstancedBricks', () => {
     instance!.props.onPointerDown(mockEvent)
     instance!.props.onContextMenu(mockEvent)
 
-    // The handler should receive the correct original RenderBrick object
     expect(onInstanceClick).toHaveBeenCalledWith(expectedBrick, mockEvent)
     expect(onInstancePointerMove).toHaveBeenCalledWith(expectedBrick, mockEvent)
     expect(onInstancePointerDown).toHaveBeenCalledWith(expectedBrick, mockEvent)
@@ -194,14 +188,11 @@ describe('InstancedBricks', () => {
     const instancesGroup = renderer.scene.findAll(
       (node) => node.props['data-testid'] === 'Instances',
     )[0]
-    // Get the primitive element that has the geometry attached
+
     const geometry = instancesGroup.findAll(
       (node) => node.props.attach === 'geometry',
     )[0]
 
-    // getDims returns { w: 2, d: 4, h: 3 } for 'brick-2x4'
-    // groupBricksForInstancing scales this to { w: 2 * STUD_SCENE_UNIT, h: 3 * PLATE_SCENE_UNIT, d: 4 * STUD_SCENE_UNIT }
-    // InstancedBricks un-scales it back to { w: 2, h: 3, d: 4 } before passing it to getPartGeometry
     expect(geometry.props.object.w).toBeCloseTo(2)
     expect(geometry.props.object.h).toBeCloseTo(3)
     expect(geometry.props.object.d).toBeCloseTo(4)

@@ -285,13 +285,11 @@ test('z-axis hinge authoring: toolbar button sets hinge and placed brick carries
   await page.goto('/')
   await waitForStores(page)
 
-  // Activate the z-axis hinge toolbar button
   await page.click('[data-testid="toggle-hinge-z"]')
   await expect(page.locator('[data-testid="toggle-hinge-z"]')).toHaveClass(
     /active/,
   )
 
-  // Hover the baseplate to trigger ghost snapping, then click to place
   const pos = await projectToCanvas(page, 4, 0, 4)
   await page.mouse.move(pos.x, pos.y)
   await waitForGhostGrid(page)

@@ -17,7 +17,7 @@ describe('useScenePresetPreference', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useSceneSettingsStore.setState({
-      selectedPresetId: 'studio', // Using a default value to avoid state pollution
+      selectedPresetId: 'studio',
     })
   })
 
@@ -35,17 +35,13 @@ describe('useScenePresetPreference', () => {
 
     renderHook(() => useScenePresetPreference())
 
-    // On mount, it should load 'daylight' and hydrate
     expect(loadScenePresetPreference).toHaveBeenCalledTimes(1)
     expect(useSceneSettingsStore.getState().selectedPresetId).toBe('daylight')
 
-    // At this point, saveScenePresetPreference should have been called during hydration
-    // because the selected preset id changed to 'daylight' and hydration became true
     expect(saveScenePresetPreference).toHaveBeenCalledWith('daylight')
 
-    vi.clearAllMocks() // Clear mock calls
+    vi.clearAllMocks()
 
-    // Change the preset id
     act(() => {
       useSceneSettingsStore.getState().setSelectedPresetId('night')
     })
@@ -57,16 +53,12 @@ describe('useScenePresetPreference', () => {
   it('does not save preference before hydration', () => {
     vi.mocked(loadScenePresetPreference).mockReturnValue('studio')
 
-    // Set some state before running hook
     useSceneSettingsStore.setState({
       selectedPresetId: 'night',
     })
 
     renderHook(() => useScenePresetPreference())
 
-    // In our implementation, hydration is instantaneous inside useEffect.
-    // However, we verify it only saves the loaded preset and doesn't get called twice
-    // accidentally.
     expect(saveScenePresetPreference).toHaveBeenCalledTimes(1)
     expect(saveScenePresetPreference).toHaveBeenCalledWith('studio')
   })

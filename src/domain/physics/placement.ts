@@ -7,9 +7,7 @@
  * baseplate or couples — transitively — to a brick that is. Floating is
  * hard-prevented: a placement that has no path to the baseplate is rejected.
  *
- * Callers reduce a placed brick to the {@link BrickFootprint} geometry this
- * engine needs, keeping grounding independently testable without importing
- * the grid or part catalog.
+ * Callers supply the {@link BrickFootprint} geometry for each placed brick.
  */
 import { isUnsupportedHingeGrammar } from './hinge'
 import Graph from 'graphology'
@@ -94,9 +92,6 @@ function hasLateralContact(
   const sr = bfpToRect(standard)
   const H = mounted.height
 
-  // Physical Y extent of the mounted brick after rotation.
-  // 'px'/'nx' rotate around Z: Y half-width = W (footprint X extent / 2).
-  // 'pz'/'nz' rotate around X: Y half-width = L (footprint Z extent / 2).
   const W = mr.xHi - mr.xLo
   const L = mr.zHi - mr.zLo
   const mountedYHalfWidth =
@@ -105,7 +100,6 @@ function hasLateralContact(
   const mountedYLo = mountedYCenter - mountedYHalfWidth
   const mountedYHi = mountedYCenter + mountedYHalfWidth
 
-  // Y ranges must strictly overlap (positive-measure contact).
   if (mountedYLo >= standard.bottomY + standard.height) return false
   if (mountedYHi <= standard.bottomY) return false
 
@@ -114,8 +108,6 @@ function hasLateralContact(
 
   switch (mounted.mount) {
     case 'px':
-      // Stud face → +X; anti-stud at world X = xCenter − H/2.
-      // The standard brick's +X face (sr.xHi) must sit at that position.
       return (
         Math.abs(sr.xHi - (xCenter - H / 2)) <= FACE_EPS &&
         sr.zLo < mr.zHi &&
@@ -123,7 +115,6 @@ function hasLateralContact(
       )
 
     case 'nx':
-      // Stud face → −X; anti-stud at world X = xCenter + H/2.
       return (
         Math.abs(sr.xLo - (xCenter + H / 2)) <= FACE_EPS &&
         sr.zLo < mr.zHi &&
@@ -131,7 +122,6 @@ function hasLateralContact(
       )
 
     case 'pz':
-      // Stud face → +Z; anti-stud at world Z = zCenter − H/2.
       return (
         Math.abs(sr.zHi - (zCenter - H / 2)) <= FACE_EPS &&
         sr.xLo < mr.xHi &&
@@ -139,7 +129,6 @@ function hasLateralContact(
       )
 
     case 'nz':
-      // Stud face → −Z; anti-stud at world Z = zCenter + H/2.
       return (
         Math.abs(sr.zLo - (zCenter + H / 2)) <= FACE_EPS &&
         sr.xLo < mr.xHi &&
@@ -188,7 +177,6 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
   const graph = new Graph({ type: 'undirected', allowSelfLoops: false })
   graph.mergeNode(BASEPLATE)
 
-  // Index bricks by bottomY so the coupling scan stays O(n²)-per-plane.
   const byBottomY = new Map<number, BrickFootprint[]>()
 
   for (const b of all) {
@@ -206,14 +194,6 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
     else byBottomY.set(b.bottomY, [b])
   }
 
-  // For each brick whose top exposes studs, couple it to every brick whose
-  // bottom sits at the same Y plane and whose footprint rect overlaps with
-  // positive area. This reproduces exact-cell coupling for integer-aligned
-  // bricks and additionally handles half-stud-offset (jumper) bricks.
-  // Mounted (SNOT) bricks are excluded from this scan: their stud/anti-stud
-  // faces are lateral, not vertical, so they connect via hasLateralContact.
-  // Hinges are also excluded because their pivoted contact geometry is not yet
-  // modelled; treating them as rigid classic bricks would be unsound.
   for (const b of all) {
     if (b.hasTopStuds === false) continue
     if (b.mount !== undefined || isUnsupportedHingeGrammar(b)) continue
@@ -231,10 +211,6 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
     }
   }
 
-  // Lateral connections for mounted (SNOT) bricks.
-  // A mounted brick couples to any standard (non-mounted) brick whose contact
-  // face aligns with the mounted brick's anti-stud face and whose Y extent
-  // physically overlaps.
   const mountedBricks = all.filter(
     (b) => b.mount !== undefined && !isUnsupportedHingeGrammar(b),
   )
@@ -243,8 +219,6 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
       (b) => b.mount === undefined && !isUnsupportedHingeGrammar(b),
     )
 
-    // Create an array mapping from each mounted brick to its exact Y-bounds.
-    // The bounds logic is identical to `hasLateralContact`.
     const mountedBounds = mountedBricks.map((m) => {
       const mr = bfpToRect(m)
       const H = m.height
@@ -260,10 +234,6 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
       }
     })
 
-    // Group standard bricks by bottomY for spatial indexing
-    // Use an array indexed by integer `bottomY` if possible, otherwise Map.
-    // `byBottomY` from earlier already maps standard bricks (because mounted were skipped there),
-    // but the `byBottomY` there has all bricks.
     const stdByBottomY = new Map<number, BrickFootprint[]>()
     for (const s of standardBricks) {
       const bucket = stdByBottomY.get(s.bottomY)
@@ -273,15 +243,12 @@ export function buildConnectionGraph(bricks: Iterable<BrickFootprint>): Graph {
     const stdLevels = Array.from(stdByBottomY.keys()).sort((a, b) => a - b)
 
     for (const { m, yLo, yHi } of mountedBounds) {
-      // standard.bottomY + standard.height > yLo  =>  standard.bottomY > yLo - height
-      // To ensure overlap, we need to iterate standard levels that could possibly overlap.
-      // std.bottomY < yHi (exclusive)
       for (const levelY of stdLevels) {
-        if (levelY >= yHi) break // standard brick is completely above mounted brick
+        if (levelY >= yHi) break
 
         const candidates = stdByBottomY.get(levelY)!
         for (const s of candidates) {
-          if (levelY + s.height <= yLo) continue // standard brick is completely below
+          if (levelY + s.height <= yLo) continue
 
           if (hasLateralContact(m, s)) {
             graph.mergeEdge(m.id, s.id)
@@ -339,8 +306,7 @@ export function isGrounded(
  * only if, once added to the `existing` structure, it is grounded — i.e. it
  * rests on the baseplate or couples (transitively) to a grounded brick.
  *
- * This enforces grounding only; collision/overlap validity is the ghost-cursor
- * placement concern (#9) and is out of scope here.
+ * This enforces grounding only, without checking collision or overlap.
  */
 export function canPlace(
   candidate: BrickFootprint,

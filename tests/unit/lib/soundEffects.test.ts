@@ -122,8 +122,6 @@ describe('soundEffects', () => {
   })
 
   describe('global default controller functions', () => {
-    // We need to restore the global state after these tests
-    // since the default controller is a singleton
     let originalEnabled: boolean
 
     beforeEach(() => {
@@ -223,7 +221,6 @@ describe('soundEffects', () => {
     })
 
     it('handles play execution safely when audio context initialization yields null', () => {
-      // Provide an initializer that simply returns null
       const controller = createSoundEffectsController({
         createAudioContext: () => null,
       })
@@ -238,7 +235,7 @@ describe('soundEffects', () => {
       const controller = createSoundEffectsController({
         createAudioContext: () => badAudioContext as unknown as AudioContext,
       })
-      // Since the resume is voided and not awaited, it shouldn't throw synchronously
+
       expect(() => controller.play('place')).not.toThrow()
     })
   })
@@ -247,32 +244,26 @@ describe('soundEffects', () => {
     const originalWindow = global.window
 
     beforeEach(() => {
-      // Restore global.window before each test in case a previous test broke it
       global.window = originalWindow
     })
 
     afterAll(() => {
-      // Ensure global.window is fully restored when all tests are done
       global.window = originalWindow
     })
 
     it('handles missing window securely (undefined typeof)', () => {
-      // JSDOM prevents true deletion of window, so we temporarily override
-      // the global properties to trigger the branch in getBrowserStorage and getBrowserAudioContext
       const windowSpy = vi
         .spyOn(globalThis, 'window', 'get')
         .mockReturnValue(undefined as unknown as Window & typeof globalThis)
 
       const controller = createSoundEffectsController()
 
-      // Storage falls back to null, readEnabled defaults to true
       expect(controller.isEnabled()).toBe(true)
-      // Calling play without window shouldn't throw
+
       expect(() => controller.play('place')).not.toThrow()
 
       windowSpy.mockRestore()
 
-      // Also hit the branch for catch blocks by throwing in getItem
       const errStorage = {
         getItem: () => {
           throw new Error()

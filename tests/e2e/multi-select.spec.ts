@@ -59,11 +59,8 @@ test('select mode supports click toggling and baseplate box selection', async ({
     '1 brick selected',
   )
 
-  // (9, 0, 9) is hidden behind the first brick from the default camera.
-  // Start on visible empty baseplate so this actually begins a box gesture.
   const boxStart = await projectToCanvas(page, 9, 0, 7)
-  // Leave a full stud of clearance from brick edges at the end as well;
-  // subpixel rounding on tablet must not turn the endpoint into a brick hit.
+
   const boxEnd = await projectToCanvas(page, 16, 0, 12)
   await page.mouse.move(boxStart.x, boxStart.y)
   await page.waitForFunction(() => {

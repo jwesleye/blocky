@@ -143,9 +143,8 @@ export function createSoundEffectsController(
       enabled = nextEnabled
       try {
         storage?.setItem(SOUND_EFFECTS_ENABLED_KEY, String(nextEnabled))
-      } catch {
-        // Storage failures must not affect editing actions or UI interaction.
-      }
+        // eslint-disable-next-line no-empty
+      } catch {}
       listeners.forEach((listener) => listener(enabled))
     },
 
@@ -179,9 +178,8 @@ export function createSoundEffectsController(
         gainNode.connect(context.destination)
         oscillator.start(now)
         oscillator.stop(now + durationSeconds)
-      } catch {
-        // Autoplay policy or Web Audio failures should silently degrade.
-      }
+        // eslint-disable-next-line no-empty
+      } catch {}
     },
   }
 }

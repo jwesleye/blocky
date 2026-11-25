@@ -214,8 +214,6 @@ describe('hinge geometry disposal', () => {
       })
 
     try {
-      // tile-2x4 base geometry is a BoxGeometry, so any CylinderGeometry
-      // disposal must come from the hinge marker alone.
       getPartGeometry('tile-2x4', { w: 2, d: 4, h: 1, hinge: 'x' })
       expect(disposedCount.value).toBe(1)
     } finally {

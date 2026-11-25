@@ -104,7 +104,7 @@ export function getMountedBrickVolumeBounds(
   const [W, L] =
     brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
   const H = def.height
-  // 2*(brick.y + H/2) — integer arithmetic avoids floating-point in Y centre.
+
   const yCenter2 = 2 * brick.y + H
 
   switch (brick.mount) {

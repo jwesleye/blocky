@@ -21,14 +21,12 @@ interface DevStore {
 test('group move and duplicate via store handle', async ({ page }) => {
   await page.goto('/')
 
-  // Wait for store to be ready
   await page.waitForFunction(
     () =>
       (window as unknown as { __blockyStore: unknown }).__blockyStore !==
       undefined,
   )
 
-  // Place two bricks
   await page.evaluate(() => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
@@ -52,12 +50,11 @@ test('group move and duplicate via store handle', async ({ page }) => {
     if (id1 === null || id2 === null) {
       throw new Error('grounded brick placement unexpectedly rejected')
     }
-    // Select both
+
     store.selectBrick(id1)
     store.selectBrick(id2, true)
   })
 
-  // Verify selection
   const selectionSize = await page.evaluate(() => {
     return (
       window as unknown as { __blockyStore: DevStore }
@@ -65,7 +62,6 @@ test('group move and duplicate via store handle', async ({ page }) => {
   })
   expect(selectionSize).toBe(2)
 
-  // Move selection
   const moveSuccess = await page.evaluate(() => {
     return (window as unknown as { __blockyStore: DevStore }).__blockyStore
       .getState()
@@ -73,7 +69,6 @@ test('group move and duplicate via store handle', async ({ page }) => {
   })
   expect(moveSuccess).toBe(true)
 
-  // Check positions
   const positions = await page.evaluate(() => {
     const bricks = (
       window as unknown as { __blockyStore: DevStore }
@@ -83,7 +78,6 @@ test('group move and duplicate via store handle', async ({ page }) => {
   expect(positions).toContainEqual({ x: 1, z: 0 })
   expect(positions).toContainEqual({ x: 3, z: 0 })
 
-  // Duplicate selection
   const duplicateSuccess = await page.evaluate(() => {
     return (window as unknown as { __blockyStore: DevStore }).__blockyStore
       .getState()
@@ -91,7 +85,6 @@ test('group move and duplicate via store handle', async ({ page }) => {
   })
   expect(duplicateSuccess).toBe(true)
 
-  // Check brick count (should be 4)
   const brickCount = await page.evaluate(() => {
     return Object.keys(
       (
@@ -101,7 +94,6 @@ test('group move and duplicate via store handle', async ({ page }) => {
   })
   expect(brickCount).toBe(4)
 
-  // Selection should now be the 2 new clones
   const newSelectionSize = await page.evaluate(() => {
     return (
       window as unknown as { __blockyStore: DevStore }
@@ -109,7 +101,6 @@ test('group move and duplicate via store handle', async ({ page }) => {
   })
   expect(newSelectionSize).toBe(2)
 
-  // Undo duplicate
   await page.evaluate(() => {
     ;(window as unknown as { __blockyStore: DevStore }).__blockyStore
       .getState()
@@ -125,7 +116,6 @@ test('group move and duplicate via store handle', async ({ page }) => {
   })
   expect(countAfterUndo).toBe(2)
 
-  // Redo duplicate
   await page.evaluate(() => {
     ;(window as unknown as { __blockyStore: DevStore }).__blockyStore
       .getState()
@@ -151,9 +141,6 @@ test('mirror selection via UI controls', async ({ page }) => {
       undefined,
   )
 
-  // Asymmetric group: brick-2x4 at x=0 (W=2) and brick-1x1 at x=5 (W=1)
-  // bounding box X: cells {0,1} and {5} → minX=0, maxX=5
-  // mirror x: id1 new_x=0+5-(0+2-1)=4; id2 new_x=0+5-(5+1-1)=0
   const ids = await page.evaluate(() => {
     const store = (
       window as unknown as { __blockyStore: DevStore }
@@ -182,10 +169,8 @@ test('mirror selection via UI controls', async ({ page }) => {
     return [id1, id2]
   })
 
-  // Drive the mirror through the real editing-UI button
   await page.click('[data-testid="mirror-x"]')
 
-  // Verify reflected positions (asymmetric: id1 moves from 0→4, id2 from 5→0)
   const posAfterMirror = await page.evaluate((ids) => {
     const bricks = (
       window as unknown as { __blockyStore: DevStore }
@@ -195,7 +180,6 @@ test('mirror selection via UI controls', async ({ page }) => {
   expect(posAfterMirror.id1x).toBe(4)
   expect(posAfterMirror.id2x).toBe(0)
 
-  // Undo restores original positions
   await page.evaluate(() => {
     ;(window as unknown as { __blockyStore: DevStore }).__blockyStore
       .getState()
@@ -210,7 +194,6 @@ test('mirror selection via UI controls', async ({ page }) => {
   expect(posAfterUndo.id1x).toBe(0)
   expect(posAfterUndo.id2x).toBe(5)
 
-  // Redo re-applies the mirror
   await page.evaluate(() => {
     ;(window as unknown as { __blockyStore: DevStore }).__blockyStore
       .getState()
@@ -225,9 +208,6 @@ test('mirror selection via UI controls', async ({ page }) => {
   expect(posAfterRedo.id1x).toBe(4)
   expect(posAfterRedo.id2x).toBe(0)
 
-  // Invalid mirror: floating + grounded selection where mirror leaves the
-  // floating brick with no support → rejected with user-visible feedback
-  // We use setState to inject the floating brick bypassing the grounding gate.
   await page.evaluate(() => {
     const store = (window as unknown as { __blockyStore: DevStore })
       .__blockyStore
@@ -268,10 +248,10 @@ test('mirror selection via UI controls', async ({ page }) => {
         ).__blockyStore.getState().bricks,
       ).length,
   )
-  // Drive the invalid mirror through the UI button — expects visible rejection feedback
+
   await page.click('[data-testid="mirror-x"]')
   await expect(page.locator('[data-testid="mirror-feedback"]')).toBeVisible()
-  // State must be unchanged
+
   const countAfter = await page.evaluate(
     () =>
       Object.keys(

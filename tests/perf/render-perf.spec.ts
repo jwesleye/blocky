@@ -7,9 +7,7 @@
  * invalidated redraws and asserts the p95 frame time stays within budget.
  *
  * The strict 17 ms p95 budget runs under playwright.perf.config.ts, which is
- * Chromium-only. Headless Firefox/WebKit rAF cadence can exceed 17 ms even
- * without app work, so cross-browser coverage stays in the e2e WebGL2 and smoke
- * specs while this budget remains tied to the stable Chromium perf harness.
+ * Chromium-only.
  */
 
 import { expect, test } from '@playwright/test'

@@ -110,8 +110,6 @@ describe('ThemeToggle', () => {
   })
 
   it('buttons do not have animation when prefers-reduced-motion is reduce', () => {
-    // The component should not add animation classes; CSS handles
-    // reduced-motion via @media query. Verify no inline transition style.
     render(<ThemeToggle />)
     const buttons = screen.getAllByRole('button')
     for (const btn of buttons) {

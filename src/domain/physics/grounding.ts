@@ -20,7 +20,6 @@ export function getFloatingBricks(
     }
   }
 
-  // BFS through the connection graph
   let i = 0
   while (i < queue.length) {
     const current = queue[i++]

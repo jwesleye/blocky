@@ -7,9 +7,7 @@ const DOC_PATH = join(process.cwd(), 'docs/PRD.md')
  * Drift guard: the PRD must keep documenting the expanded-grammar scope —
  * half-stud (jumper) offsets, SNOT (sideways building) as the first supported
  * post-offset family, the v1↔v2↔v3 migration guarantee, and the connection
- * types that remain out of scope. If the doc stops stating any of these, this
- * test fails so the documented contract and shipped persistence behavior cannot
- * silently diverge.
+ * types that remain out of scope.
  */
 describe('docs/PRD.md — expanded-grammar scope drift guard', () => {
   it('exists', () => {

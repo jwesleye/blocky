@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import ReactThreeTestRenderer from '@react-three/test-renderer'
 import type { ReactNode } from 'react'
 
-// Mock rapier physics to return pure react elements instead of complicated Context providers which may not render easily
 vi.mock('@react-three/rapier', () => {
   return {
     Physics: ({ children }: { children: ReactNode }) => (
@@ -91,14 +90,12 @@ describe('CollapseSimulation', () => {
       />,
     )
 
-    // Not settled yet
     expect(onComplete).not.toHaveBeenCalled()
 
     await ReactThreeTestRenderer.act(async () => {
       vi.advanceTimersByTime(1000)
     })
 
-    // Nothing settled
     expect(onComplete).not.toHaveBeenCalled()
 
     await renderer.unmount()
@@ -124,7 +121,6 @@ describe('CollapseSimulation', () => {
       ;(dynamicBody?.props.onSleep as () => void)?.()
     })
 
-    // settle delay + fade out
     await ReactThreeTestRenderer.act(async () => {
       vi.advanceTimersByTime(2000)
     })

@@ -37,11 +37,10 @@ describe('collapsePerfHarness', () => {
       targetFrames: 5,
     })
 
-    // At least one brick (the floating one) should collapse
     expect(result.collapsingCount).toBeGreaterThanOrEqual(1)
-    // Should have sampled at least the requested target frames
+
     expect(result.frameTimes.length).toBeGreaterThanOrEqual(5)
-    // Should have 10 setup frames as hardcoded in the harness
+
     expect(result.setupFrameTimes.length).toBe(10)
     expect(typeof result.computeMs).toBe('number')
     expect(result.computeMs).toBeGreaterThanOrEqual(0)

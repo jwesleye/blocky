@@ -27,10 +27,7 @@ const classicBrick: PlacedBrick = {
 }
 
 /**
- * jsdom's Blob does not implement `.text()`, so stub the Blob constructor to
- * capture the serialized parts. URL.createObjectURL/revokeObjectURL and the
- * anchor download are also stubbed (jsdom implements none of them) to mirror
- * the export flow in src/hooks/useBuildPersistence.ts.
+ * Blob stub that captures the serialized parts of an exported build.
  */
 class CapturingBlob {
   parts: BlobPart[]
@@ -98,7 +95,7 @@ describe('useBuildPersistence.exportToJSON (issue #101)', () => {
       rot: 1,
       offset: { x: 1, z: 0 },
     })
-    // The classic brick must not gain an offset on export.
+
     expect(build.bricks[1]).not.toHaveProperty('offset')
   })
 

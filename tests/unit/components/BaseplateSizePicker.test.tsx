@@ -7,8 +7,6 @@ import { SUPPORTED_BASEPLATE_SIZES } from '@/domain/grid'
 import type { PlacedBrick } from '@/domain/model/types'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
-// A 2×4 brick anchored at (20, 20) occupies cells x∈[20,21], z∈[20,23]: inside a
-// 32-stud plate (cells 0..31) but outside a 16-stud plate (cells 0..15).
 const outsideOnShrinkBrick: PlacedBrick = {
   id: 'outside-on-shrink',
   partId: 'brick-2x4',
@@ -190,13 +188,11 @@ describe('BaseplateSizePicker', () => {
     const btn32 = screen.getByRole('radio', { name: '32 × 32' })
     btn32.focus()
 
-    // ArrowUp tries 16×16 but user cancels — focus must not move
     fireEvent.keyDown(group, { key: 'ArrowUp' })
 
     expect(document.activeElement).toBe(btn32)
     expect(useBuildStore.getState().baseplateSize).toBe(32)
 
-    // Second ArrowUp should still target 16×16 (derived from baseplateSize=32), not wrap
     fireEvent.keyDown(group, { key: 'ArrowUp' })
 
     expect(document.activeElement).toBe(btn32)

@@ -8,7 +8,6 @@ export type Point2D = [number, number]
 export type Polygon2D = Point2D[]
 export type Vec3 = { x: number; y: number; z: number }
 
-// Tolerance for boundary containment checks on integer-grid footprints.
 const BOUNDARY_EPS = 1e-9
 
 function isPointOnPolygonBoundary(point: Point2D, polygon: Polygon2D): boolean {
@@ -16,11 +15,11 @@ function isPointOnPolygonBoundary(point: Point2D, polygon: Polygon2D): boolean {
   for (let i = 0; i < n; i++) {
     const a = polygon[i]
     const b = polygon[(i + 1) % n]
-    // Cross product of (point - a) and (b - a) is zero iff point is collinear with a and b.
+
     const cross =
       (point[0] - a[0]) * (b[1] - a[1]) - (point[1] - a[1]) * (b[0] - a[0])
     if (Math.abs(cross) > BOUNDARY_EPS) continue
-    // Confirm the point lies within the segment's bounding box.
+
     if (
       point[0] >= Math.min(a[0], b[0]) - BOUNDARY_EPS &&
       point[0] <= Math.max(a[0], b[0]) + BOUNDARY_EPS &&
@@ -62,7 +61,6 @@ export function computeSupportFootprint(
 
   const hull = polygonHull(supportCorners)
   if (!hull) {
-    // Degenerate (all points collinear): check bounding box.
     const xs = supportCorners.map((c) => c[0])
     const zs = supportCorners.map((c) => c[1])
     const minX = Math.min(...xs)
@@ -103,7 +101,6 @@ export function computeCoM(
     const cx = cells.reduce((s, c) => s + c.x + 0.5, 0) / cells.length + ox
     const cz = cells.reduce((s, c) => s + c.z + 0.5, 0) / cells.length + oz
 
-    // For y, it's the vertical center of the brick.
     const cy = brick.y + def.height / 2
 
     comX += cx * mass
@@ -131,14 +128,10 @@ export function isBalanced(
 ): boolean {
   if (component.length === 0) return true
 
-  // Hinge pivots have authored/rendered state, but the solver does not yet
-  // model their moving support geometry. A rigid-body CoM result would be
-  // misleading, so callers receive an explicit unsupported result instead.
   if (component.some(isUnsupportedHingeGrammar)) return false
 
   const footprint = computeSupportFootprint(component, catalog)
   if (footprint.length === 0) {
-    // A floating object is unsupported for ground-balance checks.
     return false
   }
 

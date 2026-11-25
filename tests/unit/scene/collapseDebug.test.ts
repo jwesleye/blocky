@@ -11,7 +11,6 @@ describe('collapseDebug', () => {
     collapseDebug.dynamicBodyCount = 5
     expect(collapseDebug.dynamicBodyCount).toBe(5)
 
-    // Reset for other tests
     collapseDebug.dynamicBodyCount = 0
   })
 })

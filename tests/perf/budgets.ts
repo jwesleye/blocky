@@ -2,7 +2,7 @@
  * Shared performance budget constants for the blocky app.
  * Reused by collapse-perf.spec.ts, render-perf.spec.ts, and load-perf.spec.ts.
  *
- * @see {@link BUDGET_DOC_URL} for rationale and browser matrix.
+ * @see {@link BUDGET_DOC_URL} for the browser matrix.
  */
 
 /** Canonical URL for the performance budgets documentation. */
@@ -26,9 +26,6 @@ export const BUNDLE_ENTRY_BUDGET_BYTES = BUNDLE_ENTRY_BUDGET_KIB * 1024
 
 /**
  * Vite's chunkSizeWarningLimit (uncompressed KiB) for async/runtime chunks.
- * Larger than BUNDLE_ENTRY_BUDGET_KIB because Three.js and Rapier produce
- * large uncompressed chunks that still pass the gzip entry gate; this
- * threshold is a documented exception for the current 3D/physics stack.
  */
 export const BUNDLE_CHUNK_WARNING_LIMIT_KIB = 3000
 

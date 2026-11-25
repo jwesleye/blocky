@@ -71,11 +71,6 @@ function makeMockInput() {
     const mockTarget = originalCreateElement('input')
     mockTarget.type = 'file'
 
-    // Some versions of jsdom don't let you directly define `files` on the
-    // element itself because it's a getter on the prototype. We can define
-    // it on the object directly if we use `value` and it's configurable.
-    // However, an even simpler way is to just pass a mock event object.
-
     const mockEvent = {
       target: {
         ...mockTarget,
@@ -83,7 +78,6 @@ function makeMockInput() {
       },
     }
 
-    // We need target to pass instanceof HTMLInputElement
     Object.setPrototypeOf(mockEvent.target, HTMLInputElement.prototype)
 
     await act(async () => {
@@ -221,7 +215,6 @@ describe('useBuildPersistence', () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
     const { triggerChange } = makeMockInput()
 
-    // version 99 is not in the valid version union, so validateBuild rejects it
     const schemaInvalid = JSON.stringify({
       version: 99,
       baseplate: { size: 32 },
@@ -244,7 +237,7 @@ describe('useBuildPersistence', () => {
 
   it('alerts and does not update store when imported build has a floating brick', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
-    // A brick hovering at y=30 with no path to the baseplate.
+
     const floating = JSON.stringify({
       version: 1,
       baseplate: { size: 32 },
@@ -270,7 +263,7 @@ describe('useBuildPersistence', () => {
 
   it('alerts and does not update store when imported build has overlapping bricks', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
-    // Two bricks occupying the same cell.
+
     const overlapping = JSON.stringify({
       version: 1,
       baseplate: { size: 32 },

@@ -87,7 +87,6 @@ test.describe('touch edit controls', () => {
       timeout: 10000,
     })
 
-    // Place a brick via store
     const brickId = await page.evaluate(() => {
       return (window as unknown as TouchEditWindow).__blockyStore
         .getState()
@@ -105,10 +104,8 @@ test.describe('touch edit controls', () => {
     const brickPos = await projectToCanvas(page, 5, 1.5, 6)
     await tapUntilBrickHovered(page, brickPos)
 
-    // Tap the delete button
     await page.locator('[data-testid="touch-delete"]').tap()
 
-    // Assert the brick was removed
     await page.waitForFunction(
       (id) =>
         !(

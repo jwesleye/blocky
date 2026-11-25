@@ -15,8 +15,7 @@ function usesUnsupportedMountPlacement(brick: PlacedBrick): boolean {
 
 /**
  * Rebuilds a mirrored brick with normalized half-stud offsets. A `{ x: 0, z: 0 }`
- * offset is omitted entirely so mirrored classic bricks match the no-offset
- * representation used elsewhere in the model.
+ * offset is omitted entirely.
  */
 function withOffset(
   brick: PlacedBrick,
@@ -39,10 +38,9 @@ function withOffset(
  * axis='x' reflects X coordinates; axis='z' reflects Z coordinates.
  * Returns a new array with the same ids; validity is enforced separately.
  *
- * All bounds and reflections are computed in half-stud coordinates so that
- * half-stud-offset (jumper) bricks reflect about their true physical footprint
- * rather than their full-stud origin. The mirrored half-stud origin is then
- * split back into an integer position plus a `0 | 1` offset component.
+ * All bounds and reflections are computed in half-stud coordinates. The
+ * mirrored half-stud origin is split into an integer position plus a `0 | 1`
+ * offset component.
  */
 export function mirrorBricks(
   selection: Iterable<PlacedBrick>,
@@ -75,8 +73,6 @@ export function mirrorBricks(
     const L = brick.rot % 2 === 0 ? def.length : def.width
 
     if (axis === 'x') {
-      // Reflect the half-stud footprint [origin .. origin + 2W - 1] about the
-      // selection's half-stud X span, then recover position + offset.
       const originHalf = 2 * brick.x + (brick.offset?.x ?? 0)
       const newOriginHalf = minHX + maxHX - (originHalf + 2 * W - 1)
       const newX = Math.floor(newOriginHalf / 2)
@@ -124,14 +120,13 @@ export function findCollisions(
   catalog: PartCatalog,
 ): Set<string> {
   const collisions = new Set<string>()
-  const occupancy = new Map<string, string>() // key -> brickId
+  const occupancy = new Map<string, string>()
 
   for (const brick of bricks) {
     const def = catalog[brick.partId]
     if (!def) continue
 
     if (brick.mount !== undefined) {
-      // Mounted bricks are rotated 90°; compute their actual physical volume.
       const { xHalfMin, xHalfMax, yMin, yMax, zHalfMin, zHalfMax } =
         getMountedBrickVolumeBounds(brick, def)
       for (let hx = xHalfMin; hx <= xHalfMax; hx++) {
@@ -151,7 +146,6 @@ export function findCollisions(
     } else {
       const cells = getOccupiedHalfStudCells(brick, def)
       for (const cell of cells) {
-        // A brick occupies cells from y to y + height - 1
         for (let dy = 0; dy < def.height; dy++) {
           const key = `${cell.x}|${cell.z}|${brick.y + dy}`
           const existingId = occupancy.get(key)
@@ -219,12 +213,10 @@ export function canPlaceGroup(
   const others = Array.from(otherBricks)
   const all = [...moved, ...others]
 
-  // 1. Collision check
   if (findCollisions(all, catalog).size > 0) {
     return false
   }
 
-  // 2. Bounds check
   for (const brick of moved) {
     if (usesUnsupportedMountPlacement(brick)) {
       return false
@@ -256,13 +248,12 @@ export function canPlaceGroup(
         }
       }
     }
-    // Also check Y bounds (bottom >= 0)
+
     if (brick.y < 0) {
       return false
     }
   }
 
-  // 3. Grounding check
   const allFootprints = all.map((b) => toBrickFootprint(b, catalog))
   const grounded = groundedIds(allFootprints)
 

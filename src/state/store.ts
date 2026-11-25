@@ -94,8 +94,7 @@ export interface BuildActions {
 /**
  * Transient simulation slice for the collapse animation. Holds the Rapier
  * dynamic-body transaction for the most recent {@link BuildActions.triggerCollapse}.
- * Deliberately kept out of the zundo history (see `partialize`) so it never adds
- * an undo step and never restores a stale animation on undo/redo.
+ * Excluded from zundo history (see `partialize`); undo/redo does not restore it.
  */
 export interface CollapseSlice {
   activeCollapse: CollapseTransaction | null

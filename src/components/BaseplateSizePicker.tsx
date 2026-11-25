@@ -48,8 +48,7 @@ function getNextIndex(
 /**
  * Sidebar control for choosing the active baseplate side length. Growing or
  * keeping the plate applies immediately; shrinking to a size that would leave
- * one or more placed bricks outside the new bounds first asks for confirmation
- * so existing builds are not silently invalidated.
+ * one or more placed bricks outside the new bounds first asks for confirmation.
  */
 export function BaseplateSizePicker() {
   const baseplateSize = useBuildStore((s) => s.baseplateSize)

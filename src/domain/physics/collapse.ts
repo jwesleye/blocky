@@ -19,14 +19,10 @@ import { connectedComponents } from 'graphology-components'
 export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
   if (bricks.length === 0) return new Set()
 
-  // Use the shared footprint-based grounding helper so tile coupling (hasTopStuds)
-  // is evaluated by the same rule as the placement path.
   const floating = floatingIds(
     bricks.map((b) => toBrickFootprint(b, PART_CATALOG)),
   )
 
-  // Brick-only graph (no BASEPLATE node) for shear connected-component analysis
-  // so physically disconnected grounded components are evaluated independently.
   const graph = buildConnectionGraph(bricks, PART_CATALOG)
 
   const brickById = new Map<string, PlacedBrick>()
@@ -47,9 +43,7 @@ export function selectCollapsingBricks(bricks: PlacedBrick[]): Set<string> {
 
     if (component.length === 0 || component.every((brick) => brick.y !== 0))
       continue
-    // Hinge contact geometry is intentionally unsupported. Graph construction
-    // already leaves any unsupported hinge connection ungrounded; avoid asking
-    // rigid-body shear logic to collapse a standalone baseplate hinge.
+
     if (component.some(isUnsupportedHingeGrammar)) continue
     if (isBalanced(component, PART_CATALOG)) continue
 

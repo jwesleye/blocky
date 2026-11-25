@@ -21,9 +21,7 @@ export interface BuildInvariantViolations {
  *
  * This is a pure helper for the build-load paths (JSON import, shareable-URL
  * load, startup restore), which bypass the interactive placement-validity path.
- * It reuses the existing physics helpers rather than reimplementing collision
- * or grounding logic, so its semantics match interactive placement — including
- * skipping bricks whose `partId` is absent from the catalog.
+ * Skips bricks whose `partId` is absent from the catalog.
  */
 export function findBuildInvariantViolations(
   bricks: PlacedBrick[],

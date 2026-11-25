@@ -33,7 +33,6 @@ describe('useGallery', () => {
     expect(result.current.mode).toBe('local')
     expect(result.current.loadingBuildId).toBe(null)
 
-    // Wait for the initial refresh to complete
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
     })
@@ -44,7 +43,6 @@ describe('useGallery', () => {
       const { result } = renderHook(() => useGallery())
 
       await act(async () => {
-        // Wait for the initial effect to run
         await new Promise((resolve) => setTimeout(resolve, 0))
         await result.current.refresh()
       })
@@ -55,7 +53,6 @@ describe('useGallery', () => {
     })
 
     it('sets error when fetch fails', async () => {
-      // Mock list to return an error just for this test
       vi.spyOn(mockClient, 'list').mockResolvedValueOnce({
         ok: false,
         reason: 'network-error',
@@ -65,7 +62,6 @@ describe('useGallery', () => {
       const { result } = renderHook(() => useGallery())
 
       await act(async () => {
-        // Wait for the initial effect, which will use the mocked error
         await new Promise((resolve) => setTimeout(resolve, 0))
       })
 
@@ -81,7 +77,6 @@ describe('useGallery', () => {
 
       let loadResult = false
       await act(async () => {
-        // Wait for initial refresh to complete
         await new Promise((resolve) => setTimeout(resolve, 0))
         loadResult = await result.current.loadBuild('fixture-starter-house')
       })
@@ -105,7 +100,6 @@ describe('useGallery', () => {
 
       let loadResult = true
       await act(async () => {
-        // Wait for initial refresh
         await new Promise((resolve) => setTimeout(resolve, 0))
         loadResult = await result.current.loadBuild('non-existent-build')
       })
@@ -125,7 +119,7 @@ describe('useGallery', () => {
           buildId: 'invalid-build',
           contractVersion: 1,
           build: {
-            version: 999, // Invalid version
+            version: 999,
             baseplate: { size: 32 },
             bricks: [],
           },
@@ -144,7 +138,6 @@ describe('useGallery', () => {
 
       let loadResult = true
       await act(async () => {
-        // Wait for initial refresh
         await new Promise((resolve) => setTimeout(resolve, 0))
         loadResult = await result.current.loadBuild('invalid-build')
       })

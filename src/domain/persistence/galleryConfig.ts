@@ -32,8 +32,6 @@ export function resolveDefaultGalleryClient(): {
     }
   }
 
-  // Demo fixtures remain the temporary post-v1 placeholder documented in
-  // docs/design/community-sharing.md until a backend is explicitly configured.
   return {
     client: createFixtureGalleryClient(),
     mode: 'demo',

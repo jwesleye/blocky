@@ -3,10 +3,9 @@ import { readFileSync } from 'node:fs'
 import { test, expect } from '@playwright/test'
 
 /**
- * End-to-end persistence coverage for the expanded grammar (issue #101).
+ * End-to-end persistence coverage for the expanded grammar.
  *
- * The placement UI for half-stud offsets lands in #99, so offsets are injected
- * through the dev-exposed canonical store (`window.__blockyStore`) and the
+ * Offsets are injected through the canonical store (`window.__blockyStore`) and the
  * round-trip is driven through the real buttons (download + file chooser).
  */
 
@@ -342,7 +341,6 @@ test('rejects mount in v1 envelope on import without dropping current build', as
   page.on('dialog', (dialog) => dialog.dismiss())
   await importBuild(page, JSON.stringify(invalid))
 
-  // Current build (the SNOT brick) should remain intact.
   const bricks = await currentBricks(page)
   expect(bricks).toHaveLength(1)
   expect(bricks[0]).toMatchObject({ color: 'blue', mount: 'px' })

@@ -12,7 +12,6 @@ import {
 } from '@/domain/persistence'
 import { type BuildStoreWithTemporal, useBuildStore } from '@/state/store'
 
-// jsdom has no WebGL context, so mock the r3f <Canvas> (see BuildScene.test.tsx).
 vi.mock('@react-three/fiber', () => ({
   Canvas: () => <canvas data-testid="scene-canvas" />,
 }))
@@ -149,7 +148,7 @@ describe('App', () => {
       },
       48,
     )
-    // A floating brick (y=30, unconnected) — valid schema, invalid structure.
+
     const invalidSharedBuild: Build = {
       version: 1,
       baseplate: { size: 32 },

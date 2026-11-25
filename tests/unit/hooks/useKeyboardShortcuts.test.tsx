@@ -61,7 +61,7 @@ describe('useKeyboardShortcuts', () => {
     fireEvent.keyDown(getByRole('textbox', { name: 'Notes' }), { key: 'r' })
 
     const editorEl = getByLabelText('Editor')
-    // JSDOM doesn't fully support isContentEditable, so we have to mock it for the test
+
     Object.defineProperty(editorEl, 'isContentEditable', {
       value: true,
       configurable: true,
@@ -97,7 +97,6 @@ describe('useKeyboardShortcuts', () => {
     expect(handlers.setPlaceTool).toHaveBeenCalledTimes(1)
     expect(handlers.setPaintTool).toHaveBeenCalledTimes(1)
     expect(handlers.setEyedropperTool).toHaveBeenCalledTimes(1)
-    // No other handlers exist to test 'x' against here directly, but the main file should branch false gracefully
   })
 
   it('unmapped keys are ignored', () => {

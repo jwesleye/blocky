@@ -20,7 +20,6 @@ test('collapse spawns dynamic bodies and shrinks the build', async ({
 }) => {
   await page.goto('/')
 
-  // Wait for the dev store and collapse debug hook to be exposed on window.
   await page.waitForFunction(
     () =>
       (window as unknown as { __blockyStore?: unknown }).__blockyStore !==
@@ -29,9 +28,6 @@ test('collapse spawns dynamic bodies and shrinks the build', async ({
         .__blockyCollapseDebug !== undefined,
   )
 
-  // Seed a deterministic unbalanced build: one grounded brick that stays put and
-  // two bricks floating far away with no stud path to the baseplate (they fall).
-  // We use setState to bypass the grounding gate for the floating bricks.
   const initialCount = await page.evaluate(() => {
     const store = (window as unknown as { __blockyStore: CollapseDevStore })
       .__blockyStore
@@ -71,14 +67,12 @@ test('collapse spawns dynamic bodies and shrinks the build', async ({
   })
   expect(initialCount).toBe(3)
 
-  // Trigger the collapse.
   await page.evaluate(() => {
     ;(window as unknown as { __blockyStore: CollapseDevStore }).__blockyStore
       .getState()
       .triggerCollapse()
   })
 
-  // The sheared bricks are removed from the build model immediately.
   const afterCount = await page.evaluate(
     () =>
       Object.keys(
@@ -90,7 +84,6 @@ test('collapse spawns dynamic bodies and shrinks the build', async ({
   expect(afterCount).toBeLessThan(initialCount)
   expect(afterCount).toBe(1)
 
-  // At least one dynamic body exists during the collapse animation.
   await page.waitForFunction(
     () =>
       (window as unknown as { __blockyCollapseDebug: CollapseDebug })

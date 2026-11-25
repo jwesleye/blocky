@@ -26,7 +26,6 @@ export const PART_TYPE_LABELS: Record<PartType, string> = {
 }
 
 export const PART_CATALOG: readonly PartDef[] = [
-  // Bricks (heightY = 3 plate units, hasTopStuds = true)
   {
     id: 'brick-1x1',
     label: 'Brick 1×1',
@@ -144,7 +143,7 @@ export const PART_CATALOG: readonly PartDef[] = [
     heightY: 3,
     hasTopStuds: true,
   },
-  // Plates (heightY = 1, hasTopStuds = true)
+
   {
     id: 'plate-1x1',
     label: 'Plate 1×1',
@@ -226,7 +225,7 @@ export const PART_CATALOG: readonly PartDef[] = [
     heightY: 1,
     hasTopStuds: true,
   },
-  // Tiles (heightY = 1, smooth top — no top studs)
+
   {
     id: 'tile-1x1',
     label: 'Tile 1×1',
@@ -263,7 +262,7 @@ export const PART_CATALOG: readonly PartDef[] = [
     heightY: 1,
     hasTopStuds: false,
   },
-  // Slopes (heightY = 3, hasTopStuds = true)
+
   {
     id: 'slope-2x1',
     label: 'Slope 2×1',
@@ -300,7 +299,7 @@ export const PART_CATALOG: readonly PartDef[] = [
     heightY: 3,
     hasTopStuds: true,
   },
-  // Rounds & specials
+
   {
     id: 'round-brick-1x1',
     label: 'Round Brick 1×1',
@@ -328,7 +327,7 @@ export const PART_CATALOG: readonly PartDef[] = [
     heightY: 3,
     hasTopStuds: true,
   },
-  // Baseplate
+
   {
     id: 'baseplate-32x32',
     label: 'Baseplate 32×32',

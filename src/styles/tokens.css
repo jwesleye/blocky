@@ -1,4 +1,3 @@
-/* Design tokens — light theme (default) */
 :root {
   color-scheme: light;
 
@@ -15,7 +14,6 @@
   --color-overlay: rgb(31 41 64 / 0.66);
 }
 
-/* Dark theme — applied when data-theme="dark" */
 [data-theme='dark'] {
   color-scheme: dark;
 
@@ -32,7 +30,6 @@
   --color-overlay: rgb(0 0 0 / 0.8);
 }
 
-/* Pure-CSS fallback for auto theme when JS has not yet written data-theme */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;

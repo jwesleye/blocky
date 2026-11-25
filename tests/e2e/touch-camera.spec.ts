@@ -8,7 +8,6 @@ test.describe('touch camera controls', () => {
     await page.goto('/')
     await expect(page.locator('canvas')).toBeVisible()
 
-    // Wait for the dev camera handle to be available
     await page.waitForFunction(
       () =>
         (window as unknown as { __blockyCamera?: unknown }).__blockyCamera !==
@@ -33,7 +32,6 @@ test.describe('touch camera controls', () => {
 
     await touchPointerDrag(page, { x: cx, y: cy }, { x: cx + 120, y: cy + 60 })
 
-    // Allow the camera update to propagate
     await page.waitForTimeout(150)
 
     const after = await page.evaluate(() => {

@@ -41,7 +41,6 @@ describe('buildConnectionGraph', () => {
   })
 
   it('couples a stud face to the anti-stud face directly above it', () => {
-    // 'a' is a brick (height 3) on the baseplate; 'b' rests on its top studs.
     const g = buildConnectionGraph([brick('a', 0, 0, 0), brick('b', 0, 0, 3)])
     expect(g.hasEdge('a', 'b')).toBe(true)
   })
@@ -52,13 +51,11 @@ describe('buildConnectionGraph', () => {
   })
 
   it('does not couple bricks separated by a vertical gap', () => {
-    // 'b' bottom is at y=4 while 'a' top is at y=3 — no shared face.
     const g = buildConnectionGraph([brick('a', 0, 0, 0), brick('b', 0, 0, 4)])
     expect(g.hasEdge('a', 'b')).toBe(false)
   })
 
   it('does not couple onto a tile (no top studs)', () => {
-    // tile 'a' has no top studs, so 'b' resting on it does not connect.
     const tile = brick('a', 0, 0, 0, 1, 1, 1, false)
     const g = buildConnectionGraph([tile, brick('b', 0, 0, 1)])
     expect(g.hasEdge('a', 'b')).toBe(false)
@@ -82,8 +79,6 @@ describe('buildConnectionGraph', () => {
   })
 
   it('works correctly when passed a one-shot generator (not re-iterable)', () => {
-    // A generator is a one-shot iterable; if the impl iterates twice the second
-    // pass is a no-op and the stud→anti-stud edge between 'a' and 'b' is lost.
     function* gen(): Generator<BrickFootprint> {
       yield brick('a', 0, 0, 0)
       yield brick('b', 0, 0, 3)
@@ -106,7 +101,6 @@ describe('groundedIds / isGrounded', () => {
   })
 
   it('treats a brick with no path to the baseplate as floating', () => {
-    // 'a' grounds; 'float' hovers two bricks up with nothing beneath it.
     const bricks = [brick('a', 0, 0, 0), brick('float', 10, 10, 6)]
     expect(groundedIds(bricks)).toEqual(new Set(['a']))
     expect(isGrounded('float', bricks)).toBe(false)
@@ -114,14 +108,11 @@ describe('groundedIds / isGrounded', () => {
   })
 
   it('reports the bricks that lose grounding when a support is removed', () => {
-    // Tower a→b→c. Remove 'a': b and c lose their path to the baseplate.
     const remaining = [brick('b', 0, 0, 3), brick('c', 0, 0, 6)]
     expect(floatingIds(remaining)).toEqual(new Set(['b', 'c']))
   })
 
   it('grounds a cantilever through a lateral chain of couplings', () => {
-    // a on baseplate; b stacked on a; c stacked on b but shifted so it
-    // overhangs — still grounded because it couples down through b → a.
     const bricks = [
       brick('a', 0, 0, 0, 2, 1),
       brick('b', 0, 0, 3, 2, 1),
@@ -133,11 +124,6 @@ describe('groundedIds / isGrounded', () => {
 
 describe('offset-aware grounding (placement path)', () => {
   it('grounds an offset brick whose rect overlaps a supporter even when integer cells do not match', () => {
-    // Supporter at x=1, cells (1,0). Top brick at integer x=0 with offset.x=1:
-    // its footprint rect is X [0.5, 1.5], which overlaps the supporter rect [1, 2]
-    // with positive area. Integer cell matching (cells (0,0) vs (1,0)) produces no
-    // match, so the current code reports the top as floating — the rect-overlap
-    // fix is required for the correct grounded result.
     const support: BrickFootprint = {
       id: 'support',
       bottomY: 0,
@@ -171,8 +157,6 @@ describe('lateral connections for mounted (SNOT) bricks', () => {
   })
 
   it('grounds an elevated mounted brick that has lateral contact with a grounded standard brick', () => {
-    // standard 1x1 at (0,0,0): xHi=1.0. Mounted 'px' at (2,1,0): anti-stud = 2.5-1.5 = 1.0 ✓
-    // Y overlap: mounted [2.0, 3.0] vs standard [0, 3] → overlap ✓
     const s: BrickFootprint = {
       id: 's',
       bottomY: 0,
@@ -191,7 +175,6 @@ describe('lateral connections for mounted (SNOT) bricks', () => {
   })
 
   it('reports a mounted brick as floating when no standard brick makes lateral contact', () => {
-    // Standard at x=0 (xHi=1). Mounted 'px' at (5,1,0): anti-stud = 5.5-1.5 = 4.0 ≠ 1.0.
     const s: BrickFootprint = {
       id: 's',
       bottomY: 0,
@@ -210,9 +193,6 @@ describe('lateral connections for mounted (SNOT) bricks', () => {
   })
 
   it('does not spuriously couple a mounted brick via the vertical stud scan', () => {
-    // If mounted were included in the vertical scan, a standard brick at y=0 (topY=3)
-    // would couple to a mounted brick at bottomY=3 just because their Y faces touch.
-    // The mount flag must prevent this — the mounted brick must be explicitly floating.
     const s: BrickFootprint = {
       id: 's',
       bottomY: 0,
@@ -226,8 +206,7 @@ describe('lateral connections for mounted (SNOT) bricks', () => {
       cells: [{ x: 0, z: 0 }],
       mount: 'px',
     }
-    // Lateral contact check: mounted 'px' anti-stud = 0.5-1.5 = -1.0, standard xHi=1.0 → no contact.
-    // Vertical scan skips mounted bricks as recipients.
+
     expect(floatingIds([s, m])).toContain('m')
   })
 })
@@ -249,7 +228,7 @@ describe('canPlace (anti-floating hard rule)', () => {
 
   it('rejects a brick resting only on a tile top (no studs to grab)', () => {
     const existing = [brick('tile', 0, 0, 0, 1, 1, 1, false)]
-    // The tile itself is grounded, but its smooth top offers no coupling.
+
     expect(canPlace(brick('new', 0, 0, 1), existing)).toBe(false)
   })
 })

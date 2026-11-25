@@ -56,15 +56,9 @@ type BlockyWindow = Window & {
 test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
-  // Stress fixture: two bricks form an unbalanced tower (narrow 1×1 base with a
-  // wide 2x4 overhang) to exercise findShearRegion, computeSupportFootprint,
-  // computeCoM, isBalanced, and the d3-polygon convex hull path.
-  // The remaining bricks are floating (y=3, far from any y=0 brick) to exercise
-  // buildConnectionGraph + getFloatingBricks BFS with mixed partIds and all four
-  // rotations — covering PART_CATALOG footprint and rotation-aware cell geometry.
   const bricks: FixtureBrick[] = [
     { id: 'base', partId: 'brick-1x1', color: 'red', x: 0, y: 0, z: 0, rot: 0 },
-    // CoM of this component projects outside the 1×1 support hull → unbalanced
+
     {
       id: 'overhang',
       partId: 'brick-2x4',
@@ -81,7 +75,7 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
       id: `f${i}`,
       partId: floatingPartIds[i % floatingPartIds.length] as string,
       color: 'light-gray',
-      // Offset far from the anchor so no stud connection forms
+
       x: 50 + (i % 20) * 5,
       y: 3,
       z: Math.floor(i / 20) * 5,
@@ -127,23 +121,18 @@ test('@perf collapse smoothness: frame-stall budget', async ({ page }) => {
   const maxFrame =
     collapseFrameTimes.length > 0 ? Math.max(...collapseFrameTimes) : 0
 
-  // Sanity: the real selectCollapsingBricks classified at least one brick
   expect(result.collapsingCount).toBeGreaterThan(0)
 
-  // The synchronous collapse computation alone must not block the main thread
-  // long enough to cause a frame stall.
   expect(
     result.computeMs,
     `collapse computation (${COLLAPSE_BRICK_COUNT} bricks) took ${result.computeMs.toFixed(1)} ms — must stay under the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold. See ${BUDGET_DOC_URL} for details.`,
   ).toBeLessThan(LONG_FRAME_THRESHOLD_MS)
 
-  // No single frame during the collapse animation window may stall.
   expect(
     maxFrame,
     `max frame time above baseline ${maxFrame.toFixed(1)} ms exceeds the ${LONG_FRAME_THRESHOLD_MS} ms long-frame threshold. See ${BUDGET_DOC_URL} for details.`,
   ).toBeLessThan(LONG_FRAME_THRESHOLD_MS)
 
-  // p95 must stay within the ~60 fps render budget.
   expect(
     p95,
     `p95 frame time above baseline ${p95.toFixed(1)} ms exceeds the ${P95_FRAME_BUDGET_MS} ms render budget. See ${BUDGET_DOC_URL} for details.`,

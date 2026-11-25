@@ -2,8 +2,7 @@
  * Generates deterministic stress-build fixtures for performance testing.
  *
  * Bricks are placed layer by layer in a grid pattern using 1×1 bricks.
- * The color is derived from (x + z + layer) % COLORS.length so that each
- * fixture is visually varied while remaining fully deterministic.
+ * The color is derived from (x + z + layer) % COLORS.length.
  *
  * Run: npx tsx scripts/gen-stress-build.ts
  */

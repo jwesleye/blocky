@@ -52,7 +52,7 @@ function useShare(createShareLink: () => string) {
   const handleShare = () => {
     const url = createShareLink()
     setShareUrl(url)
-    // Best-effort copy to clipboard; the link is also shown for manual copy.
+
     void navigator.clipboard?.writeText?.(url).catch(() => {})
   }
 
