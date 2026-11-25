@@ -2,7 +2,6 @@ npx lint-staged || { echo >&2 "pre-commit: lint-staged failed — commit aborted
 npm run typecheck || { echo >&2 "pre-commit: typecheck failed — commit aborted"; exit 1; }
 
 # --- BEGIN BEADS INTEGRATION v1.1.0 ---
-# This section is managed by beads. Do not remove these markers.
 if command -v bd >/dev/null 2>&1; then
   export BD_GIT_HOOK=1
   _bd_timeout=${BEADS_HOOK_TIMEOUT:-300}

@@ -96,10 +96,6 @@ export function reloadStore(): void {
 
 /**
  * Generates an unguessable build id from 128 bits of cryptographic entropy.
- *
- * `unlisted` builds are hidden from listings but loadable by direct id, so the
- * id is the only thing protecting them. A high-entropy random token (rather than
- * a sequential counter) keeps neighbouring ids from being derived or enumerated.
  */
 export function generateBuildId(): string {
   let candidate: string

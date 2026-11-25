@@ -48,9 +48,8 @@ describe('brickToBodySnapshot', () => {
 
     const snapshot = brickToBodySnapshot(brick)
 
-    // brick-2x4: width 2 studs, length 4 studs, height 3 plate units.
     expect(snapshot.size).toEqual([2, 3, 4])
-    // Position is the center of the occupied volume, not the corner origin.
+
     expect(snapshot.position).toEqual([4 + 1, 3 + 1.5, 2 + 2])
     expect(snapshot.id).toBe('b1')
     expect(snapshot.color).toBe(getBrickColor('red')?.hex)

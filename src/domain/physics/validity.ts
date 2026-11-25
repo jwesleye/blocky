@@ -26,8 +26,6 @@ export function getPlacementValidity(
   if (canPlaceGroup([ghost], placed, catalog, baseplateSize))
     return { valid: true }
 
-  // Explain an elevated hinge, or a rigid brick whose only support would be
-  // a hinge. Unrelated hinges must not relabel ordinary invalid placements.
   const unsupported =
     (isUnsupportedHingeGrammar(ghost) && ghost.y > 0) ||
     (placed.some(isUnsupportedHingeGrammar) &&

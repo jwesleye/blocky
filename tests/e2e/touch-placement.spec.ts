@@ -30,13 +30,10 @@ test.describe('touch placement flow', () => {
 
     const countBefore = await getBrickCount(page)
 
-    // Get canvas coordinates for a world point on the baseplate
     const pos = await projectToCanvas(page, 8, 0, 8)
 
-    // Use touchscreen.tap which fires pointerdown (sets ghost) then click (places)
     await page.touchscreen.tap(pos.x, pos.y)
 
-    // Wait for the brick count to increment
     await page.waitForFunction(
       (expectedCount) =>
         Object.keys(
@@ -67,7 +64,6 @@ test.describe('touch placement flow', () => {
     const cx = box!.x + box!.width / 2
     const cy = box!.y + box!.height / 2
 
-    // Drag (orbit gesture) — should not place a brick
     await page.mouse.move(cx, cy)
     await page.mouse.down()
     await page.mouse.move(cx + 100, cy + 50, { steps: 10 })

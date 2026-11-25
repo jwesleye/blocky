@@ -51,7 +51,6 @@ test('places a baseplate-mounted brick and rejects a floating elevated mounted p
 }) => {
   await gotoWithStore(page)
 
-  // Place the supported render-first mounted flow: px brick on the baseplate.
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'blue',
@@ -67,8 +66,6 @@ test('places a baseplate-mounted brick and rejects a floating elevated mounted p
 
   await expect(page.locator('canvas')).toBeVisible()
 
-  // Floating elevated mount is rejected: no standard brick provides lateral
-  // contact at y=3 for this SNOT brick's anti-stud face.
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'red',
@@ -79,7 +76,6 @@ test('places a baseplate-mounted brick and rejects a floating elevated mounted p
     mount: 'px',
   })
 
-  // It should be rejected (count remains 1).
   count = await getBrickCount(page)
   expect(count).toBe(1)
 })
@@ -89,14 +85,6 @@ test('rejects an elevated mounted brick when lateral support is still too unstab
 }) => {
   await gotoWithStore(page)
 
-  // Build a two-brick vertical stack so the top standard brick offers a valid
-  // lateral contact face for the mounted brick.
-  //
-  // Standard at x=0, y=3: xHi=1.0.
-  // Mounted 'px' at x=2, y=3: anti-stud = xCenter(2.5) - H/2(1.5) = 1.0.
-  // Even with that lateral contact, the store still runs collapse after
-  // placement and this narrow support stack is too unstable to keep the
-  // mounted brick in the build.
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'gray',
@@ -132,7 +120,6 @@ test('places an offset brick and rejects overlapping offset placements', async (
 }) => {
   await gotoWithStore(page)
 
-  // Place a valid offset brick on baseplate
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'yellow',
@@ -146,11 +133,8 @@ test('places an offset brick and rejects overlapping offset placements', async (
   let count = await getBrickCount(page)
   expect(count).toBe(1)
 
-  // Asserts the canvas renders non-blank
   await expect(page.locator('canvas')).toBeVisible()
 
-  // Place an overlapping brick (overlap by 0.5 stud)
-  // The first brick spans [5.5, 6.5]. A non-offset brick at x=6 spans [6.0, 7.0].
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'red',
@@ -160,7 +144,6 @@ test('places an offset brick and rejects overlapping offset placements', async (
     rot: 0,
   })
 
-  // It should be rejected (count remains 1)
   count = await getBrickCount(page)
   expect(count).toBe(1)
 })
@@ -170,7 +153,6 @@ test('places a baseplate-supported z-axis hinge brick and rejects a floating hin
 }) => {
   await gotoWithStore(page)
 
-  // Place a valid z-axis hinge brick resting on the baseplate.
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'blue',
@@ -186,7 +168,6 @@ test('places a baseplate-supported z-axis hinge brick and rejects a floating hin
 
   await expect(page.locator('canvas')).toBeVisible()
 
-  // Floating hinge brick (y>0, nothing below) is rejected.
   await placeBrick(page, {
     partId: 'brick-1x1',
     color: 'red',
@@ -197,7 +178,6 @@ test('places a baseplate-supported z-axis hinge brick and rejects a floating hin
     hinge: 'z',
   })
 
-  // It should be rejected (count remains 1).
   count = await getBrickCount(page)
   expect(count).toBe(1)
 })

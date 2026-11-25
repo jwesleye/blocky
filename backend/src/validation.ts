@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-// Must match MAX_BRICKS_PER_BUILD / MAX_BRICK_STRING_LENGTH from src/domain/model/build.ts.
 const MAX_BRICKS_PER_BUILD = 50_000
 const MAX_BRICK_STRING_LENGTH = 64
 
@@ -44,7 +43,6 @@ const serializedBrickSchema = z.object({
   hinge: brickHingeSchema.optional(),
 })
 
-// Must match SUPPORTED_BASEPLATE_SIZES from the frontend contract.
 const supportedBaseplateSizeSchema = z.union([
   z.literal(16),
   z.literal(32),

@@ -14,8 +14,7 @@ export type ConnectionGraph = Graph
  *
  * Delegates stud/anti-stud coupling — including the `hasTopStuds === false`
  * skip for smooth tiles — to the shared footprint-based graph builder in
- * placement.ts, then strips the synthetic BASEPLATE node so callers receive
- * a brick-only graph consistent with the old signature.
+ * placement.ts, then strips the synthetic BASEPLATE node.
  */
 export function buildConnectionGraph(
   bricks: PlacedBrick[],
@@ -34,7 +33,6 @@ export function buildConnectionGraph(
   const g: ConnectionGraph = buildFootprintGraph(footprints)
   if (g.hasNode(BASEPLATE)) g.dropNode(BASEPLATE)
 
-  // Preserve backward compat: bricks with unknown partIds become isolated nodes.
   for (const id of unknownIds) {
     if (!g.hasNode(id)) g.addNode(id)
   }

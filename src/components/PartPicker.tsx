@@ -52,7 +52,7 @@ export function PartPicker({ selected, onSelect }: PartPickerProps) {
       e.preventDefault()
       const nextPart = groupParts[nextIndex]
       onSelect(nextPart.id)
-      // Focus the next button
+
       const buttons = e.currentTarget.parentElement?.querySelectorAll('button')
       ;(buttons?.[nextIndex] as HTMLElement)?.focus()
     }

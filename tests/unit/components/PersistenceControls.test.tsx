@@ -38,7 +38,7 @@ describe('PersistenceControls', () => {
 
   it('generates a share link carrying a compressed build token, not raw JSON', () => {
     render(<PersistenceControls />)
-    // Seed the store with a recognizable brick.
+
     fireEvent.click(screen.getByRole('button', { name: 'Add Sample Brick' }))
     const placed = Object.values(useBuildStore.getState().bricks)
     expect(placed).toHaveLength(1)

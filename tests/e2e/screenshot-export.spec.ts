@@ -33,14 +33,11 @@ test('Export Screenshot downloads a non-empty PNG whose dimensions match the can
 
   expect(buffer.length).toBeGreaterThan(0)
 
-  // PNG signature: \x89PNG\r\n\x1a\n
   expect(buffer[0]).toBe(0x89)
-  expect(buffer[1]).toBe(0x50) // P
-  expect(buffer[2]).toBe(0x4e) // N
-  expect(buffer[3]).toBe(0x47) // G
+  expect(buffer[1]).toBe(0x50)
+  expect(buffer[2]).toBe(0x4e)
+  expect(buffer[3]).toBe(0x47)
 
-  // IHDR chunk: offset 8 = chunk length (4 bytes), offset 12 = "IHDR" (4 bytes),
-  // offset 16 = width (4 bytes big-endian), offset 20 = height (4 bytes big-endian)
   const pngWidth = buffer.readUInt32BE(16)
   const pngHeight = buffer.readUInt32BE(20)
 

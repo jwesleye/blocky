@@ -12,13 +12,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 const ROOT = process.cwd()
 
-// Husky v9 invokes each `.husky/<hook>` entrypoint via `sh -e "$s" "$@"` and
-// exits with its status — see node_modules/husky/husky. Anything appended
-// after that call in the generated `.husky/_/<hook>` shims is unreachable,
-// and those shims are regenerated (wiping any appended content) every time
-// `npm run prepare` (husky install) runs. The beads integration therefore
-// must live inside the versioned `.husky/<hook>` entrypoints, which this
-// test proves by actually executing them with stubbed dependencies.
 const HOOKS_DIR = join(ROOT, '.husky')
 
 let stubDir: string
@@ -101,7 +94,7 @@ describe('beads git hook integration (installed hooks actually run)', () => {
     writeFileSync(logPath, '')
     makeStub('npx')
     makeStub('npm')
-    // no `bd` stub — command -v bd should fail and the hook should still succeed
+
     expect(() => runHook('pre-commit')).not.toThrow()
     const log = readLog()
     expect(log).toMatch(/npx lint-staged/)

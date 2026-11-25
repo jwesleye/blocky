@@ -70,10 +70,7 @@ export function App() {
       typeof window === 'undefined'
         ? null
         : loadBuildFromShareSearch(window.location.search)
-    // A shared-URL build is untrusted input: enforce the §5.1 grounding and
-    // no-overlap invariants before adopting it, falling back to the local
-    // autosave when it would load a physically-invalid (floating/overlapping)
-    // structure (PRD §10).
+
     const sharedBuildInvariantError = getStructuralInvariantError(sharedBuild)
     if (sharedBuildInvariantError) {
       alert(`Invalid build file: ${sharedBuildInvariantError}`)
@@ -93,7 +90,7 @@ export function App() {
         baseplateSize: initialBuild.baseplate.size,
       })
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount hydration flag, not a render loop
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasHydratedPersistence(true)
   }, [])
 

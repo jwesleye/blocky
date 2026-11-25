@@ -1,4 +1,3 @@
-/* Tablet responsive layout — sidebar narrows so the canvas stays unobstructed. */
 .app-sidebar {
   width: 220px;
 }
@@ -15,7 +14,6 @@
     overflow: hidden;
   }
 
-  /* Collapse verbose labels while keeping a visible per-option token. */
   .app-sidebar .part-btn__label,
   .app-sidebar .baseplate-size-btn__label,
   .app-sidebar .color-swatch__label {
@@ -36,7 +34,6 @@
   }
 }
 
-/* Touch toolbar: floating overlay in the bottom-right of the canvas area. */
 .touch-toolbar {
   position: absolute;
   right: 1rem;

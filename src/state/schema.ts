@@ -15,8 +15,7 @@ import { CATALOG_BY_ID } from '@/domain/parts/catalog'
  *
  * The on-disk / on-wire form mirrors PRD §9.2: a versioned envelope around a
  * compact list of placed bricks. Runtime-only state (the selection) and the
- * per-session brick ids are intentionally excluded — ids are regenerated on
- * load so two clients never collide on a shared build.
+ * per-session brick ids are excluded. Ids are regenerated on load.
  */
 export { createBrickId }
 export { BUILD_SCHEMA_VERSION }

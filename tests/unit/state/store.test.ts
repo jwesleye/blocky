@@ -332,7 +332,7 @@ describe('useBuildStore', () => {
       const { bricks, selection } = useBuildStore.getState()
       expect(bricks[a].x).toBe(1)
       expect(bricks[b].x).toBe(5)
-      expect(bricks[c].x).toBe(8) // Unchanged
+      expect(bricks[c].x).toBe(8)
       expect(selection).toEqual(new Set([a, b]))
     })
 
@@ -343,7 +343,7 @@ describe('useBuildStore', () => {
       const initialState = useBuildStore.getState().bricks
       const success = useBuildStore
         .getState()
-        .moveSelection({ dx: 100, dy: 0, dz: 0 }) // Out of bounds
+        .moveSelection({ dx: 100, dy: 0, dz: 0 })
 
       expect(success).toBe(false)
       expect(useBuildStore.getState().bricks).toBe(initialState)
@@ -366,9 +366,6 @@ describe('useBuildStore', () => {
 
   describe('mirrorSelection', () => {
     it('commits reflected positions, preserves brick ids, and keeps selection', () => {
-      // Asymmetric group: brick-2x4 at x=0 (W=2) and brick-1x1 at x=5 (W=1)
-      // bounding box X: cells 0,1 and 5 → minX=0, maxX=5
-      // mirror x: a new_x=0+5-(0+2-1)=4, b new_x=0+5-(5+1-1)=0
       const a = placeBrick({ ...sampleBrick, x: 0 })
       const b = placeBrick({
         partId: 'brick-1x1',
@@ -392,10 +389,6 @@ describe('useBuildStore', () => {
     })
 
     it('rejects invalid mirrors and leaves state referentially unchanged', () => {
-      // Directly inject bricks bypassing placement validation:
-      // f1 floating at y=3, f2 grounded at y=0.
-      // Mirror x: f1→x=5,y=3 (still floating), f2→x=0,y=0.
-      // canPlaceGroup rejects because the mirrored f1 is floating.
       const f1Id = 'f1-test'
       const f2Id = 'f2-test'
       useBuildStore.setState({
@@ -432,7 +425,6 @@ describe('useBuildStore', () => {
     })
 
     it('is captured as a single undoable/redoable step', () => {
-      // Two brick-1x1 at x=0 and x=5, mirror swaps them: a→x=5, b→x=0
       const a = placeBrick({
         partId: 'brick-1x1',
         color: 'red',
@@ -489,7 +481,7 @@ describe('useBuildStore', () => {
         id: cloneId,
         y: 3,
       })
-      expect(bricks[a].y).toBe(0) // Original preserved
+      expect(bricks[a].y).toBe(0)
     })
 
     it('rejects invalid duplicates and leaves state unchanged', () => {
@@ -499,7 +491,7 @@ describe('useBuildStore', () => {
       const initialState = useBuildStore.getState()
       const success = useBuildStore
         .getState()
-        .duplicateSelection({ dx: 0, dy: 0, dz: 0 }) // Collision with original
+        .duplicateSelection({ dx: 0, dy: 0, dz: 0 })
 
       expect(success).toBe(false)
       expect(useBuildStore.getState().bricks).toBe(initialState.bricks)
@@ -546,7 +538,6 @@ describe('useBuildStore', () => {
       useBuildStore.getState().selectBrick(id1)
       useBuildStore.getState().selectBrick(id2, true)
 
-      // Move both bricks
       const moved = useBuildStore
         .getState()
         .moveSelection({ dx: 1, dy: 0, dz: 0 })
@@ -554,26 +545,21 @@ describe('useBuildStore', () => {
       expect(useBuildStore.getState().bricks[id1].x).toBe(1)
       expect(useBuildStore.getState().bricks[id2].x).toBe(9)
 
-      // Recolor one brick
       useBuildStore.getState().recolorBrick(id1, 'green')
       expect(useBuildStore.getState().bricks[id1].color).toBe('green')
 
-      // Undo recolor → color back to red, positions unchanged
       useBuildStore.getState().undo()
       expect(useBuildStore.getState().bricks[id1].color).toBe('red')
       expect(useBuildStore.getState().bricks[id1].x).toBe(1)
 
-      // Undo moveSelection → positions restored
       useBuildStore.getState().undo()
       expect(useBuildStore.getState().bricks[id1].x).toBe(0)
       expect(useBuildStore.getState().bricks[id2].x).toBe(8)
 
-      // Redo moveSelection → positions re-applied
       useBuildStore.getState().redo()
       expect(useBuildStore.getState().bricks[id1].x).toBe(1)
       expect(useBuildStore.getState().bricks[id2].x).toBe(9)
 
-      // Redo recolor → color re-applied
       useBuildStore.getState().redo()
       expect(useBuildStore.getState().bricks[id1].color).toBe('green')
     })
@@ -798,9 +784,6 @@ describe('useBuildStore', () => {
   })
 
   describe('triggerCollapse', () => {
-    // A grounded 2x4 at the origin (stays standing) plus two 1x1 bricks that
-    // float high above the baseplate, clear of the 2x4 footprint and of each
-    // other (no stud path to the ground → both collapse).
     const seedCollapseModel = () => {
       const grounded = placeBrick(sampleBrick)
       const floatA = 'float-a'
@@ -848,8 +831,7 @@ describe('useBuildStore', () => {
       expect(collapsed.bricks[floatA]).toBeUndefined()
       expect(collapsed.bricks[floatB]).toBeUndefined()
       expect(playSoundEffect).toHaveBeenLastCalledWith('collapse')
-      // Exactly one history entry was added (the graph subscription must not
-      // record a second one, since connectionGraph is not partialized).
+
       expect(pastStateCount()).toBe(before + 1)
 
       useBuildStore.getState().undo()
@@ -922,11 +904,11 @@ describe('useBuildStore', () => {
       expect(activeCollapse).not.toBeNull()
       const bodyIds = activeCollapse!.collapsingBodies.map((b) => b.id).sort()
       expect(bodyIds).toEqual([floatA, floatB].sort())
-      // The stable remainder is recorded as standing, never as a dynamic body.
+
       expect(activeCollapse!.standingBricks.map((b) => b.id)).toEqual([
         grounded,
       ])
-      // Bodies carry their original grid-derived position.
+
       const floatBody = activeCollapse!.collapsingBodies.find(
         (b) => b.id === floatA,
       )
@@ -969,8 +951,6 @@ describe('useBuildStore', () => {
       useBuildStore.getState().triggerCollapse()
       expect(useBuildStore.getState().lastCollapse).not.toBeNull()
 
-      // Any later state-changing action makes the collapse no longer the top
-      // undo entry, so its label must not linger.
       placeBrick({ ...sampleBrick, x: 20 })
       expect(useBuildStore.getState().lastCollapse).toBeNull()
     })

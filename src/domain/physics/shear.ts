@@ -131,7 +131,6 @@ export function findShearRegion(
     if (remainderIds.size === 0) continue
     if (!isConnectedRemainder(graph, remainderIds)) continue
 
-    // In minimal mode, any valid shear that leaves the remainder connected is enough.
     if (options.minimal) {
       return {
         shear: candidates.filter((candidate) => shearIds.has(candidate.id)),
@@ -141,7 +140,6 @@ export function findShearRegion(
 
     const remainder = component.filter((c) => remainderIds.has(c.id))
 
-    // Otherwise, expand until the remainder is also balanced.
     if (!isBalanced(remainder, CATALOG_BY_ID)) continue
 
     return {

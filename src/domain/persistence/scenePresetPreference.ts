@@ -10,9 +10,8 @@ export const SCENE_PRESET_STORAGE_KEY = 'blocky.scene.environmentPreset.v1'
 const defaultStorage = (): KeyValueStorage | null => {
   try {
     if (typeof localStorage !== 'undefined') return localStorage
-  } catch {
-    // Storage access can throw in sandboxed browser contexts.
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
   return null
 }
 
@@ -49,7 +48,6 @@ export const clearScenePresetPreference = (
   if (!storage) return
   try {
     storage.removeItem(SCENE_PRESET_STORAGE_KEY)
-  } catch {
-    // Clearing a UI preference is best-effort.
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
 }

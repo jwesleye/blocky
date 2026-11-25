@@ -55,7 +55,6 @@ describe('scene environment presets', () => {
   })
 
   it('rejects a color with no contrast against preset surfaces', () => {
-    // We use a custom preset where background and ground are the same to guarantee a failure case
     const lowContrastPreset = {
       ...SCENE_ENVIRONMENT_PRESETS[0],
       backgroundColor: '#ffffff',

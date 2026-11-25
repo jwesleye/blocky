@@ -192,24 +192,19 @@ describe('HUD Components', () => {
 
     expect(useCursorStore.getState().hinge).toBeUndefined()
 
-    // Click hinge
     fireEvent.click(hingeBtn)
     expect(useCursorStore.getState().hinge).toBe('x')
 
-    // Click half-stud offset
     fireEvent.click(offsetBtn)
     expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
 
-    // Click cycle mount
     fireEvent.click(mountBtn)
     expect(useCursorStore.getState().mount).toBe('px')
 
-    // All three are active
     expect(useCursorStore.getState().hinge).toBe('x')
     expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })
     expect(useCursorStore.getState().mount).toBe('px')
 
-    // Click hinge again to clear it
     fireEvent.click(hingeBtn)
     expect(useCursorStore.getState().hinge).toBeUndefined()
     expect(useCursorStore.getState().offset).toEqual({ x: 1, z: 0 })

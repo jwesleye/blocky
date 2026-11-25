@@ -134,14 +134,11 @@ describe('build id entropy and unpredictability', () => {
     const ids = Array.from({ length: 50 }, () => generateBuildId())
 
     for (const id of ids) {
-      // build_<22-char base64url token> carries 128 bits of entropy.
       expect(id).toMatch(/^build_[A-Za-z0-9_-]{22}$/)
-      // It must not be the old build_<base36 timestamp>_<base36 counter> shape
-      // whose suffix increments by 1 and is derivable from a prior id.
+
       expect(id).not.toMatch(/^build_[0-9a-z]{4,12}_[0-9a-z]{1,5}$/)
     }
 
-    // Every id is unique and, unlike the sequential counter format, not ordered.
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids).not.toEqual([...ids].sort())
   })

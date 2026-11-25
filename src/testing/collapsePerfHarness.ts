@@ -21,15 +21,13 @@ export interface MeasureCollapsePerfResult {
 }
 
 /**
- * Bundles the collapse performance measurement logic with static source imports
- * so Vite can resolve it for e2e/preview mode. Called from Playwright specs
- * via window.__blockyCollapsePerf.
+ * Collapse performance measurements called from Playwright specs via
+ * window.__blockyCollapsePerf.
  */
 export async function measureCollapsePerf({
   brickData,
   targetFrames,
 }: MeasureCollapsePerfInput): Promise<MeasureCollapsePerfResult> {
-  // Load the stress build through the real app state.
   useBuildStore.setState({
     bricks: Object.fromEntries(brickData.map((brick) => [brick.id, brick])),
   })
@@ -68,11 +66,6 @@ export async function measureCollapsePerf({
       }
 
       if (count === 0) {
-        // First RAF: invoke the real selectCollapsingBricks — exercises
-        // PART_CATALOG, buildConnectionGraph (stud-connection geometry,
-        // rotation-aware cell footprint), getFloatingBricks (BFS from y=0),
-        // and getUnbalancedBricks (connected components, convex hull, CoM).
-        // Any main-thread stall appears as an extended next-frame delta.
         const t0 = performance.now()
         const collapsingSet = selectCollapsingBricks(loadedBricks)
         computeMs = performance.now() - t0
@@ -88,7 +81,6 @@ export async function measureCollapsePerf({
             size: [2, 3, 4] as [number, number, number],
           }))
 
-        // Create a real CollapseTransaction through the actual app pipeline.
         transaction = createCollapseTransaction({
           allBricks: loadedBricks,
           collapsingBodies,
@@ -97,9 +89,6 @@ export async function measureCollapsePerf({
       }
 
       if (count > 0 && transaction !== null) {
-        // Subsequent frames: advance the collapse animation state and rebuild
-        // scene bodies — exercises advanceCollapseTransaction phase logic and
-        // createCollapseSceneBodies (the dynamic body creation pipeline).
         transaction = advanceCollapseTransaction(transaction, ts)
         createCollapseSceneBodies(transaction, [])
       }

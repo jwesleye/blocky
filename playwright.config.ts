@@ -1,7 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// https://playwright.dev/docs/test-configuration
-
 export default defineConfig({
   testDir: './tests',
   testMatch: ['e2e/**/*.spec.ts'],
@@ -20,7 +18,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
-          // D3D11 is Windows-only; use software WebGL on macOS/Linux CI.
           args:
             process.platform === 'win32'
               ? ['--use-angle=d3d11']
@@ -33,8 +30,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Firefox'],
         launchOptions: {
-          // Disable session restore to prevent Firefox teardown race:
-          // "can't access property _maybeDontRestoreTabs, this._windows[aWindow.__SSi] is undefined"
           firefoxUserPrefs: {
             'browser.sessionstore.resume_from_crash': false,
             'browser.sessionstore.max_resumed_crashes': -1,

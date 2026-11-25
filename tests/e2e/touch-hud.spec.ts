@@ -34,7 +34,7 @@ test.describe('tablet HUD layout', () => {
     })
 
     expect(layout).not.toBeNull()
-    // Canvas left edge must be at or to the right of the sidebar right edge
+
     expect(layout!.canvasLeft).toBeGreaterThanOrEqual(layout!.sidebarRight - 1)
   })
 })

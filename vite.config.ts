@@ -73,14 +73,9 @@ function enforceBundleBudget() {
   }
 }
 
-// https://vite.dev/config/  |  https://vitest.dev/config/
 export default defineConfig({
   plugins: [react(), enforceBundleBudget()],
   build: {
-    // Vite's chunkSizeWarningLimit is an uncompressed-size threshold. The gzip
-    // enforcement is handled by enforceBundleBudget above. BUNDLE_CHUNK_WARNING_LIMIT_KIB
-    // is a documented exception for the Three.js/Rapier runtime chunks, which are
-    // large uncompressed but still pass the gzip entry gate.
     chunkSizeWarningLimit: BUNDLE_CHUNK_WARNING_LIMIT_KIB,
     rollupOptions: {
       output: {
@@ -92,21 +87,14 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
-    // Deduplicate three.js and fiber so excluded @react-three/drei uses the
-    // same instance as the rest of the app (avoids multiple-Three warnings
-    // and infinite render loops when drei is not pre-bundled).
+
     dedupe: ['three', '@react-three/fiber', '@react-three/drei'],
   },
   optimizeDeps: {
-    // @react-three/drei is pure ESM; excluding from pre-bundling avoids a
-    // Vite 6.x issue where the bundle write stalls in some environments.
-    // stats.js is CJS and must be explicitly included so Vite adds an interop
-    // shim (drei imports it directly when drei itself is excluded).
     exclude: ['@react-three/drei'],
     include: ['stats.js'],
   },
   server: {
-    // Listen on all interfaces so the dev server is reachable from a container.
     host: true,
     port: 5173,
   },

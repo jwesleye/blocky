@@ -5,8 +5,7 @@ import { CATALOG_BY_ID, type PartCatalog } from '../parts/catalog'
 /**
  * Converts a placed brick into a {@link BrickBodySnapshot} positioned at the
  * center of the volume it occupies on the grid, with catalog-derived dimensions.
- * Used to seed Rapier rigid bodies for the sheared sub-region so a falling body
- * starts exactly where its static mesh stood (no teleporting on collapse).
+ * Used to seed Rapier rigid bodies for the sheared sub-region.
  *
  * Units: X/Z in studs, Y in plate units — matching the grid coordinate system.
  */
@@ -19,7 +18,6 @@ export function brickToBodySnapshot(
     throw new Error(`unknown partId "${brick.partId}"`)
   }
 
-  // Rotations 1 and 3 (90° / 270°) swap the footprint's width and length.
   const [width, length] =
     brick.rot % 2 === 0 ? [def.width, def.length] : [def.length, def.width]
   const height = def.height

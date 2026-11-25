@@ -19,14 +19,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )
 
-// Expose the Zustand store on window during development so Playwright tests
-// can interact with the build state directly.
 if (shouldExposeTestHooks) {
   window.__blockyStore = useBuildStore
   window.__blockyCursorStore = useCursorStore
   window.__blockyCollapseDebug = collapseDebug
 
-  // Lazy-load the perf harness to keep the production bundle lean
   import('./testing/collapsePerfHarness')
     .then((harness) => {
       window.__blockyCollapsePerf = harness

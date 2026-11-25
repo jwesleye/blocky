@@ -47,7 +47,7 @@ describe('encodeBuildToShareToken / decodeShareToken', () => {
 
   it('produces a compressed token, not raw JSON', () => {
     const token = encodeBuildToShareToken(sampleBuild())
-    // The raw serialized build contains these keys; the compressed token must not.
+
     expect(token).not.toContain('partId')
     expect(token).not.toContain('baseplate')
     expect(token).not.toContain('{')

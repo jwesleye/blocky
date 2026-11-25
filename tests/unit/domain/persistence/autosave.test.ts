@@ -148,7 +148,6 @@ describe('saveBuild never corrupts an existing good save', () => {
     const good = buildWith('green')
     expect(saveBuild(good, storage)).toBe(true)
 
-    // A structurally-invalid build must be rejected without touching storage.
     const invalid = {
       version: 1,
       baseplate: { size: 32 },
@@ -235,7 +234,7 @@ describe('createAutosaver', () => {
     autosaver.schedule(buildWith('red'))
     autosaver.schedule(buildWith('green'))
     autosaver.schedule(buildWith('blue'))
-    // Nothing written until the debounce window elapses.
+
     expect(loadBuild(storage)).toBeNull()
 
     vi.advanceTimersByTime(100)

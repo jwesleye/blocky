@@ -2,9 +2,7 @@ import { safeParseBuild, serializeBuild } from '@/domain/model/build'
 import type { Build } from '@/domain/model/build'
 
 /**
- * Minimal subset of the Web Storage API used for persistence. Accepting this
- * interface (rather than reaching for `localStorage` directly) keeps the module
- * pure and testable, and lets callers inject alternative backends.
+ * Minimal subset of the Web Storage API used for persistence.
  */
 export interface KeyValueStorage {
   getItem(key: string): string | null
@@ -17,15 +15,13 @@ export const AUTOSAVE_STORAGE_KEY = 'blocky.build.autosave.v1'
 
 /**
  * Resolve the default storage backend. Returns `null` when `localStorage` is
- * unavailable or access throws (private mode, disabled storage, SSR), so
- * callers degrade gracefully instead of crashing.
+ * unavailable or access throws (private mode, disabled storage, SSR).
  */
 const defaultStorage = (): KeyValueStorage | null => {
   try {
     if (typeof localStorage !== 'undefined') return localStorage
-  } catch {
-    // Accessing localStorage can throw in some sandboxed contexts.
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
   return null
 }
 
@@ -34,8 +30,7 @@ const defaultStorage = (): KeyValueStorage | null => {
  *
  * The build is validated and serialized *before* any write, and the write is a
  * single atomic `setItem`. If validation, serialization, or the write fails we
- * return `false` without touching storage — guaranteeing a save never corrupts
- * or partially overwrites the previously persisted build (PRD §10).
+ * return `false` without touching storage.
  */
 export const saveBuild = (
   build: Build,
@@ -81,9 +76,8 @@ export const clearBuild = (
   if (!storage) return
   try {
     storage.removeItem(AUTOSAVE_STORAGE_KEY)
-  } catch {
-    // Nothing to recover; clearing is best-effort.
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
 }
 
 export interface AutosaverOptions {

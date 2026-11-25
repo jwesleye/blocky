@@ -25,7 +25,7 @@ export function ColorPicker({ selected, onSelect }: ColorPickerProps) {
       e.preventDefault()
       const nextColor = COLOR_PALETTE[nextIndex]
       onSelect(nextColor.id)
-      // Focus the next button
+
       const buttons = e.currentTarget.parentElement?.querySelectorAll('button')
       ;(buttons?.[nextIndex] as HTMLElement)?.focus()
     }

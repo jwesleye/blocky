@@ -449,7 +449,7 @@ describe('galleryClient.load', () => {
             y: 0,
             z: 0,
             rot: 0,
-            mount: 'sideways', // Invalid
+            mount: 'sideways',
           },
         ],
       },

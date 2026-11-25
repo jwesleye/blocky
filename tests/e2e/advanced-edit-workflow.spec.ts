@@ -49,7 +49,6 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
   await page.goto('/')
   await waitForDevWindow(page)
 
-  // Switch to paint via keyboard shortcut B
   await page.keyboard.press('b')
   const toolAfterB = await page.evaluate(() => {
     return (
@@ -58,7 +57,6 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
   })
   expect(toolAfterB).toBe('paint')
 
-  // Switch to eyedropper via keyboard shortcut I
   await page.keyboard.press('i')
   const toolAfterI = await page.evaluate(() => {
     return (
@@ -67,7 +65,6 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
   })
   expect(toolAfterI).toBe('eyedropper')
 
-  // Switch to place via keyboard shortcut P
   await page.keyboard.press('p')
   const toolAfterP = await page.evaluate(() => {
     return (
@@ -76,7 +73,6 @@ test('keyboard shortcuts p/b/i switch editing tool', async ({ page }) => {
   })
   expect(toolAfterP).toBe('place')
 
-  // Pointer-driven switching still works (no regression)
   await page.click('[data-testid="tool-paint"]')
   await expect(page.locator('[data-testid="tool-paint"]')).toHaveAttribute(
     'aria-pressed',
@@ -96,7 +92,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   await page.goto('/')
   await waitForDevWindow(page)
 
-  // Place two grounded bricks
   const ids = await page.evaluate(() => {
     const store = (
       window as unknown as WorkflowDevWindow
@@ -123,7 +118,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   })
   expect(ids).toHaveLength(2)
 
-  // Multi-select both bricks
   await page.evaluate((ids) => {
     const store = (
       window as unknown as WorkflowDevWindow
@@ -138,7 +132,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   })
   expect(selectionSize).toBe(2)
 
-  // Move the selection
   const moveOk = await page.evaluate(() => {
     return (window as unknown as WorkflowDevWindow).__blockyStore
       .getState()
@@ -155,7 +148,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   expect(posAfterMove.x1).toBe(1)
   expect(posAfterMove.x2).toBe(9)
 
-  // Switch to paint and recolor id1
   await page.evaluate(() => {
     ;(window as unknown as WorkflowDevWindow).__blockyCursorStore
       .getState()
@@ -180,7 +172,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   })
   expect(brickCountAfterPaint).toBe(2)
 
-  // Undo recolor
   await page.evaluate(() => {
     ;(window as unknown as WorkflowDevWindow).__blockyStore.getState().undo()
   })
@@ -190,7 +181,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   }, ids)
   expect(colorAfterUndo1).toBe('red')
 
-  // Undo move
   await page.evaluate(() => {
     ;(window as unknown as WorkflowDevWindow).__blockyStore.getState().undo()
   })
@@ -203,7 +193,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   expect(posAfterUndo2.x1).toBe(0)
   expect(posAfterUndo2.x2).toBe(8)
 
-  // Redo move
   await page.evaluate(() => {
     ;(window as unknown as WorkflowDevWindow).__blockyStore.getState().redo()
   })
@@ -216,7 +205,6 @@ test('advanced-edit workflow: multi-select → move → paint → undo/redo', as
   expect(posAfterRedo1.x1).toBe(1)
   expect(posAfterRedo1.x2).toBe(9)
 
-  // Redo recolor
   await page.evaluate(() => {
     ;(window as unknown as WorkflowDevWindow).__blockyStore.getState().redo()
   })

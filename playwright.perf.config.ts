@@ -12,7 +12,6 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4173',
     trace: 'on-first-retry',
     launchOptions: {
-      // Prefer the host GPU for benchmarks; software WebGL is the Linux fallback.
       args:
         process.platform === 'win32'
           ? ['--use-angle=d3d11']

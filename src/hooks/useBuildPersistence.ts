@@ -19,9 +19,7 @@ import { useBuildStore } from '@/state/store'
 /**
  * Enforce the §5.1 grounding and no-overlap invariants on a build loaded from
  * an untrusted source (JSON import). Throws a descriptive `Error` — surfaced by
- * the import-error `alert` — so a corrupt/legacy payload can never replace and
- * autosave a physically-invalid model. Interactive placement guarantees these
- * invariants, but the load path bypasses it.
+ * the import-error `alert` — when the build violates these invariants.
  */
 function assertBuildInvariants(bricks: PlacedBrick[]): void {
   const { floating, colliding } = findBuildInvariantViolations(bricks)

@@ -24,7 +24,6 @@ describe('Performance Budgets consistency', () => {
   })
 
   it('matches collapse p95 budget', () => {
-    // Both use the same constant currently
     expect(docContent).toContain(`${budgets.P95_FRAME_BUDGET_MS}ms`)
   })
 

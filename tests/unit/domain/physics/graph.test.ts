@@ -6,8 +6,6 @@ import { BASEPLATE } from '@/domain/physics/placement'
 
 describe('buildConnectionGraph', () => {
   it('correctly drops the BASEPLATE node', () => {
-    // Two bricks that rest on the baseplate (bottomY === 0)
-    // The underlying placement graph building adds a BASEPLATE node and edges to these bricks.
     const bottomBrick: PlacedBrick = {
       id: 'bottom',
       partId: 'brick-2x2',
@@ -28,7 +26,7 @@ describe('buildConnectionGraph', () => {
     }
 
     const graph = buildConnectionGraph([bottomBrick, brick2], PART_CATALOG)
-    // Should contain 2 nodes, 'bottom' and 'brick2'. NOT BASEPLATE.
+
     expect(graph.order).toBe(2)
     expect(graph.hasNode('bottom')).toBe(true)
     expect(graph.hasNode('brick2')).toBe(true)
@@ -59,7 +57,7 @@ describe('buildConnectionGraph', () => {
       [bottomBrick, unknownBrick],
       PART_CATALOG,
     )
-    // Both nodes should be present, but without any edges between them
+
     expect(graph.order).toBe(2)
     expect(graph.hasNode('bottom')).toBe(true)
     expect(graph.hasNode('unknown-part')).toBe(true)
@@ -81,13 +79,13 @@ describe('buildConnectionGraph', () => {
       partId: 'brick-2x2',
       color: 'blue',
       x: 0,
-      y: 3, // brick-2x2 height is 3
+      y: 3,
       z: 0,
       rot: 0,
     }
 
     const graph = buildConnectionGraph([bottomBrick, topBrick], PART_CATALOG)
-    // graph order should be 2 because BASEPLATE is stripped.
+
     expect(graph.order).toBe(2)
     expect(graph.hasNode('bottom')).toBe(true)
     expect(graph.hasNode('top')).toBe(true)

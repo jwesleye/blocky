@@ -91,7 +91,6 @@ describe('theme store', () => {
     cleanup()
   })
 
-  // Persistence tests
   it('restores auto preference from localStorage', () => {
     localStorage.setItem('blocky:theme', 'auto')
     const cleanup = initializeTheme()

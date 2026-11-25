@@ -12,9 +12,6 @@ describe('vite.config chunkSizeWarningLimit', () => {
   })
 
   it('keeps the warning threshold above the known CollapseSimulation chunk size', () => {
-    // The current CollapseSimulation async chunk is about 2264 KiB minified in
-    // production builds. Keeping the warning threshold above that observed size
-    // prevents Rollup from warning on every otherwise-passing build.
     expect(BUNDLE_CHUNK_WARNING_LIMIT_KIB).toBeGreaterThan(2264)
   })
 
